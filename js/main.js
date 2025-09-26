@@ -2,18 +2,30 @@ import { switchView } from './ui.js';
 import { initializeSession, handleSessionCompletion } from './metisSession.js';
 import { initializeEbbinghaus } from './ebbinghaus.js';
 import { initializeGoalNavigator } from './goalNavigator.js';
+import { initializeReadingNotes } from './readingNotes.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENTS ---
     const navButtons = document.querySelectorAll('.nav-btn');
     const startSessionBtn = document.getElementById('start-session-btn');
     const startGoalNavigatorBtn = document.getElementById('start-goal-navigator-btn');
+    let lastView = 'dashboard';
 
-    // --- INITIALIZATION ---
+    // --- VIEW SWITCHING LOGIC ---
     const handleViewSwitch = (viewName) => {
+        const currentActive = document.querySelector('.view.active');
+        if (currentActive) {
+            lastView = currentActive.id;
+        }
+        
         switchView(viewName, navButtons);
-        if (viewName === 'ebbinghaus') {
+        
+        // Initialize modules based on the new view
+        if (viewName === 'dashboard' || viewName === 'storage') {
             initializeEbbinghaus();
+        }
+        if (viewName === 'knowledge-lab') {
+            initializeReadingNotes();
         }
     };
 
@@ -31,13 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeGoalNavigator();
     });
 
-    // Handle session completion event
+    // --- CUSTOM EVENT LISTENERS ---
     document.addEventListener('sessionComplete', () => {
-        handleViewSwitch('dashboard');
         handleSessionCompletion();
+        handleViewSwitch(lastView); // Return to the view before the session started
     });
 
-    // Handle goal selection event from navigator
     document.addEventListener('goalSelected', (e) => {
         const { level, text } = e.detail;
         const goalEl = document.querySelector('#main-book-goal');
@@ -45,6 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <strong>🎯 현재 목표 (레벨 ${level})</strong>
             <p>${text}</p>
         `;
+    });
+
+    document.addEventListener('startSessionFromNote', (e) => {
+        handleViewSwitch('metis-session');
+        initializeSession(e.detail.note);
     });
     
     // --- APP START ---

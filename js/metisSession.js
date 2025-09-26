@@ -12,7 +12,9 @@ const initialState = {
         finalWriting: ''
     },
     timerInterval: null,
-    timeLeft: 25 * 60
+    timeLeft: 25 * 60,
+    sourceBook: '',
+    initialGoal: ''
 };
 
 function startTimer() {
@@ -29,7 +31,7 @@ function startTimer() {
 
 function resetSession() {
     clearInterval(state.timerInterval);
-    state = JSON.parse(JSON.stringify(initialState)); // Deep copy
+    state = JSON.parse(JSON.stringify(initialState));
     updateTimerDisplay(state.timeLeft);
 }
 
@@ -61,34 +63,45 @@ async function handleNextStep(nextStep) {
     switchStep(nextStep);
 }
 
-function plantNewSeed() {
-    const plants = JSON.parse(localStorage.getItem('knowledgePlants')) || [];
-    const newPlant = {
+function plantNewCapsule() {
+    const capsules = JSON.parse(localStorage.getItem('knowledgeCapsules')) || [];
+    const newCapsule = {
         id: Date.now(),
-        title: state.userInputs.gap.substring(0, 40) + '...', // Use the gap as the title
-        sourceBook: document.querySelector('#main-book-slot h4').textContent, // Get book title from dashboard
+        title: state.userInputs.gap.substring(0, 40) + '...',
+        sourceBook: state.sourceBook,
         question: `다음 질문에 대해 설명하세요: "${state.userInputs.gap}"`,
         answer: state.userInputs.finalWriting,
-        lastReviewed: new Date().toISOString(),
-        strength: 1, // 1: Seedling, increases with reviews
+        strength: 1,
+        reviews: [{ date: new Date().toISOString(), confidence: 'confident' }]
     };
 
-    // Prevent duplicate plants based on the core question (gap)
-    if (!plants.some(p => p.question.includes(state.userInputs.gap))) {
-        plants.push(newPlant);
-        localStorage.setItem('knowledgePlants', JSON.stringify(plants));
-        console.log('New seed planted:', newPlant);
+    if (!capsules.some(c => c.question.includes(state.userInputs.gap))) {
+        capsules.push(newCapsule);
+        localStorage.setItem('knowledgeCapsules', JSON.stringify(capsules));
+        alert("지식 보관소에 새로운 타임캡슐을 보관했습니다!");
     }
 }
 
-
-export function initializeSession() {
+export function initializeSession(note = null) {
     resetSession();
     
-    // 세션 시작 시 대시보드의 현재 목표를 가져와 표시
-    const currentGoalHtml = document.getElementById('main-book-goal').innerHTML;
-    document.getElementById('session-goal-display').innerHTML = currentGoalHtml;
-
+    if (note) {
+        // Session started from a Reading Note
+        state.sourceBook = note.book;
+        state.initialGoal = note.content;
+        document.getElementById('session-goal-display').innerHTML = `
+            <strong>🎯 현재 목표 (독서 노트에서 가져옴)</strong>
+            <p>${note.content}</p>`;
+        // Prediction step can be auto-filled or modified
+        document.getElementById('prediction-input').value = `"${note.content}" 구절을 더 깊이 이해하기 위한 탐색.`;
+    } else {
+        // Session started from the Dashboard Main Book
+        state.sourceBook = document.querySelector('#main-book-slot h4').textContent;
+        state.initialGoal = document.querySelector('#main-book-goal p').textContent;
+        const currentGoalHtml = document.getElementById('main-book-goal').innerHTML;
+        document.getElementById('session-goal-display').innerHTML = currentGoalHtml;
+    }
+    
     switchStep(1);
 
     // Attach event listeners for this session
@@ -97,7 +110,7 @@ export function initializeSession() {
     });
 
     document.getElementById('back-to-dashboard-btn').onclick = () => {
-        if (confirm("세션을 중단하고 대시보드로 돌아가시겠습니까?")) {
+        if (confirm("세션을 중단하고 이전 화면으로 돌아가시겠습니까?")) {
             const event = new CustomEvent('sessionComplete');
             document.dispatchEvent(event);
         }
@@ -108,19 +121,16 @@ export function initializeSession() {
         state.userInputs.gap = document.getElementById('gap-input').value; 
         
         if (!state.userInputs.gap || !state.userInputs.finalWriting) {
-            alert('핵심 질문과 체화 글쓰기를 모두 작성해야 씨앗을 심을 수 있습니다.');
+            alert('핵심 질문과 체화 글쓰기를 모두 작성해야 캡슐을 보관할 수 있습니다.');
             return;
         }
 
-        plantNewSeed();
-        alert("지식 정원에 새로운 씨앗을 심었습니다!");
-
+        plantNewCapsule();
         const event = new CustomEvent('sessionComplete');
         document.dispatchEvent(event);
     };
 }
 
 export function handleSessionCompletion() {
-    console.log("Session state at completion:", state);
     resetSession();
 }
