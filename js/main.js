@@ -51,6 +51,10 @@ async function main() {
 }
 
 function setupEventListeners() {
+  // 메인 콘텐츠 영역의 스크롤 이벤트를 감지
+  const mainContent = document.querySelector('.main-content');
+  mainContent.addEventListener('scroll', UI.Library.handleAltitudeScroll);
+
   document.body.addEventListener('click', async (event) => {
     const target = event.target;
 
@@ -63,11 +67,8 @@ function setupEventListeners() {
       if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
       if (viewName === 'library') {
           await Library.load();
-          // '다 읽은 책' 선반에 스크롤 이벤트 리스너 추가
-          const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"] .book-grid');
-          if (finishedShelf) {
-              finishedShelf.addEventListener('scroll', UI.Library.updateFinishedShelfBackground);
-          }
+          // 뷰 전환 시 고도 배경 즉시 업데이트
+          UI.Library.handleAltitudeScroll();
       }
       return;
     }
@@ -119,20 +120,12 @@ function setupEventListeners() {
         }
         carousel.style.transform = `translateX(-${appState.libraryCarouselIndex * 100}%)`;
 
-        // Shelf title update
         const shelfTitles = ['읽고 있는 책', '읽고 싶은 책', '다 읽은 책'];
         const shelfData = [Library.books.filter(b=>b.shelf==='reading'), Library.books.filter(b=>b.shelf==='toread'), Library.books.filter(b=>b.shelf==='finished')];
         document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
 
-        // '다 읽은 책' 선반으로 이동했을 때 스크롤 이벤트 리스너 추가
-        if (appState.libraryCarouselIndex === 2) {
-            const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"] .book-grid');
-            if (finishedShelf) {
-                finishedShelf.addEventListener('scroll', UI.Library.updateFinishedShelfBackground);
-                 // 초기 로드 시 한 번 실행
-                UI.Library.updateFinishedShelfBackground({ target: finishedShelf });
-            }
-        }
+        // 선반 변경 시 고도 배경 즉시 업데이트
+        UI.Library.handleAltitudeScroll();
         return;
     }
 
