@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    
     <style>
         :root {
             --primary-color: #4285F4;
@@ -89,11 +98,6 @@
         #book-explorer-confirmation img { max-width: 180px; margin: 16px auto; border-radius: var(--border-radius); box-shadow: var(--shadow); }
 
         /* Goal Navigator Modal */
-        .toc-item { background-color: var(--background-color); border: 1px solid var(--border-color); border-radius: var(--border-radius); margin-bottom: 8px; }
-        .toc-title { padding: 12px 16px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .toc-chapters { display: none; padding: 0 16px 12px; }
-        .toc-chapter { padding: 8px 16px; cursor: pointer; border-radius: 4px; }
-        .toc-chapter:hover { background-color: #e8f0fe; }
         .quest-selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; }
         .quest-card { border: 2px solid var(--border-color); padding: 16px; border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; }
         .quest-card:hover { border-color: var(--primary-color); background-color: #f8f9fa; }
@@ -101,7 +105,6 @@
         
         /* Metis Session */
         #metis-session-view { max-width: 800px; margin: 0 auto; }
-        .session-progress { text-align: center; margin-bottom: 16px; font-size: 18px; color: var(--text-light-color); }
         .goal-display { background-color: var(--background-color); border-left: 4px solid var(--primary-color); padding: 16px; margin-bottom: 24px; }
         .step { display: none; }
         .step.active { display: block; animation: fadeInView 0.5s; }
@@ -133,8 +136,7 @@
         .journey-node.book { width: 100px; height: 100px; background-color: var(--primary-dark); z-index: 10; font-weight: 700; }
         .journey-node.plant { width: 70px; height: 70px; font-size: 11px; z-index: 5; }
         #journey-map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: white; padding: 12px 24px; border-radius: var(--border-radius); z-index: 2000; transition: bottom 0.5s ease; }
-        .toast.show { bottom: 20px; }
+        .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: white; padding: 12px 24px; border-radius: var(--border-radius); z-index: 2000; opacity: 0; transition: bottom 0.5s ease, opacity 0.5s ease; }
         .toast.success { background-color: var(--color-healthy); }
         .toast.error { background-color: var(--color-urgent); }
 

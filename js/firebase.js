@@ -3,7 +3,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-import { getFunctions } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A",
@@ -17,9 +16,6 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-// 3. 클라이언트에서 함수 호출 지역을 'us-central1'으로 변경
-export const functions = getFunctions(app, 'us-central1');
 
 export const ensureUserIsAuthenticated = () => {
   return new Promise((resolve) => {
