@@ -18,26 +18,18 @@
                     <span class="icon">🏠</span> 대시보드
                 </button>
                 <button class="nav-btn" data-view="storage">
-                    <span class="icon">📦</span> 지식 보관소
-                </button>
-                <button class="nav-btn" data-view="knowledge-lab">
-                    <span class="icon">🔬</span> 지식 연구소
+                    <span class="icon">📦</span> 지식 타임캡슐
                 </button>
             </nav>
         </aside>
 
         <main class="main-content">
+            <!-- ============== 대시보드 뷰 ============== -->
             <div id="dashboard" class="view active">
                 <header class="view-header">
                     <h2>오늘의 지식 탐험</h2>
-                    <p>시스템이 잠금 해제한 지식을 복습하고, 새로운 지식을 탐험하세요.</p>
+                    <p>메인북을 중심으로 새로운 지식을 탐험하고, 당신의 자산으로 만드세요.</p>
                 </header>
-
-                <div id="mission-board" class="card">
-                    <h3>오늘의 미션: 개봉된 타임캡슐</h3>
-                    <div id="mission-list">
-                        </div>
-                </div>
 
                 <div class="dashboard-grid">
                     <div id="main-book-slot" class="main-book-slot card">
@@ -65,7 +57,7 @@
                         <button id="start-goal-navigator-btn" class="btn">AI 목표 설정 시작하기</button>
                     </div>
                     <div class="sub-book-shelf-container card">
-                        <h3>📚 서브북 선반</h3>
+                        <h3>📚 관심 서재 (서브북)</h3>
                         <div class="sub-book-shelf">
                             <img src="https://image.aladin.co.kr/product/30883/29/cover500/k252830635_1.jpg" alt="책 표지1" class="sub-book-cover"><img src="https://image.aladin.co.kr/product/10/3/cover500/8932917248_2.jpg" alt="책 표지2" class="sub-book-cover"><img src="https://image.aladin.co.kr/product/33359/29/cover500/k252938250_1.jpg" alt="책 표지3" class="sub-book-cover"><img src="https://image.aladin.co.kr/product/1324/3/cover500/890120935x_1.jpg" alt="책 표지4" class="sub-book-cover"><img src="https://image.aladin.co.kr/product/29306/17/cover500/s972837389_1.jpg" alt="책 표지5" class="sub-book-cover">
                         </div>
@@ -73,45 +65,68 @@
                 </div>
             </div>
             
+            <!-- ============== 지식 타임캡슐 뷰 ============== -->
             <div id="storage" class="view">
                 <header class="view-header">
-                    <h2>📦 지식 보관소</h2>
-                    <p>당신의 모든 지식 타임캡슐이 보관되어 있습니다. 개봉일이 되면 자동으로 잠금 해제됩니다.</p>
+                    <h2>📦 지식 타임캡슐</h2>
+                    <p>당신의 모든 지식 자산이 보관되어 있습니다. 개봉일이 되면 자동으로 잠금 해제됩니다.</p>
                 </header>
+                <div class="storage-controls card">
+                    <button class="btn filter-btn active" data-filter="unlocked">🔑 오늘의 복습</button>
+                    <button class="btn filter-btn" data-filter="all">📂 전체 캡슐</button>
+                    <button class="btn filter-btn" data-filter="locked">🔒 잠긴 캡슐</button>
+                </div>
                 <div id="storage-container" class="storage-container">
-                    </div>
+                    <!-- 캡슐들이 여기에 렌더링됩니다. -->
+                </div>
             </div>
 
+            <!-- ============== 메티스 세션 뷰 ============== -->
             <div id="metis-session" class="view">
-                 <header class="view-header"> <button id="back-to-dashboard-btn" class="btn btn-secondary">← 뒤로가기</button> <h2>🧠 메티스 학습 세션</h2> <p id="step-title">단계 1: 학습 예측</p> </header> <div class="session-content"> <div id="step-1" class="step active card"> <div id="session-goal-display" class="goal-display card"> </div> <h4>학습 예측 (Prediction)</h4> <p>위 목표와 관련하여 책에서 어떤 내용을 다룰 것 같습니까? 핵심 내용을 예측해보세요.</p> <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고, 사람들의 비합리적 선택을 유도하는 사례를 보여줄 것 같다."></textarea> <button class="btn btn-primary next-step-btn" data-next="2">예측 완료, 집중 독서 시작</button> </div> <div id="step-2" class="step card"> <h4>집중 독서 (Focused Reading)</h4> <p>이제 25분간 목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p> <div id="timer">25:00</div> <button class="btn btn-primary next-step-btn" data-next="3">독서 완료, 생각 기록하기</button> </div> <div id="step-3" class="step card"> <h4>생각 기록 (Brain Dump)</h4> <p>방금 읽은 내용과 그에 대한 당신의 생각을 5분간 자유롭게 기록하세요.</p> <textarea id="braindump-input" placeholder="정리되지 않아도 괜찮습니다. 떠오르는 모든 것을 기록하세요."></textarea> <button class="btn btn-primary next-step-btn" data-next="4">기록 완료, AI 피드백 예측하기</button> </div> <div id="step-4" class="step card"> <h4>AI 피드백 예측 (Metacognition)</h4> <p>AI가 당신의 기록에 대해 어떤 피드백을 줄 것 같습니까? 당신이 놓친 부분이나 잘못 이해한 부분은 무엇일까요?</p> <textarea id="ai-prediction-input" placeholder="예: 개념 설명은 잘했지만, 각 요소가 어떻게 상호작용하는지에 대한 설명이 부족하다고 지적할 것 같다."></textarea> <button class="btn btn-primary next-step-btn" data-next="5">예측 완료, 결과 확인하기</button> </div> <div id="step-5" class="step card"> <h4>비교 분석 (The Reveal)</h4> <p>자신의 이해도와 실제 이해도 사이의 격차(Gap)를 객관적으로 인지하세요.</p> <div class="comparison-grid"> <div class="comparison-col"><h5>🤔 내 생각</h5><div id="reveal-my-thoughts" class="comparison-content"></div></div> <div class="comparison-col"><h5>🤖 AI 피드백</h5><div id="reveal-ai-feedback" class="comparison-content ai-output"></div></div> <div class="comparison-col"><h5>🔮 내 예측</h5><div id="reveal-my-prediction" class="comparison-content"></div></div> <div class="comparison-col"><h5> A 전문가 요약</h5><div id="reveal-expert-summary" class="comparison-content ai-output"></div></div> </div> <button class="btn btn-primary next-step-btn" data-next="6">분석 완료, 핵심 질문 추출하기</button> </div> <div id="step-6" class="step card"> <h4>글쓰기를 위한 핵심 질문 추출</h4> <p>당신의 생각과 AI의 분석 사이에서 발견한 '격차(Gap)'는 무엇이었나요? 이 격차를 해소하는 것이 바로 글의 주제가 됩니다. 가장 핵심적인 질문 하나를 뽑아보세요.</p> <textarea id="gap-input" placeholder="예: 나는 개념의 나열에 그쳤지만, AI는 '개념 간의 연결성 부족'을 지적했다. 그렇다면, 각 개념들은 어떻게 유기적으로 연결되는가?"></textarea> <button class="btn btn-primary next-step-btn" data-next="7">질문 추출 완료, 체화 글쓰기 시작</button> </div> <div id="step-7" class="step card"> <h4>완벽한 체화를 위한 글쓰기</h4> <p>축하합니다! 이제 마지막 단계입니다. 방금 추출한 질문에 대한 답을 스스로 설명하는 한 편의 글을 완성하세요. 이 과정에서 당신의 지식은 비로소 응용 가능한 자산이 됩니다.</p> <textarea id="final-writing-input" class="final-writing" placeholder="6단계에서 뽑아낸 질문을 바탕으로, 오늘 배운 내용을 다른 사람에게 설명하듯 자유롭게 글을 작성해보세요."></textarea> <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 타임캡슐 보관</button> </div> </div>
-            </div>
-            
-            <div id="knowledge-lab" class="view">
-                <header class="view-header">
-                    <h2>🔬 지식 연구소</h2>
-                    <p>날것의 생각을 수집, 정제하여 지식의 씨앗으로 만드세요.</p>
-                </header>
-                <div class="lab-grid">
-                    <div id="reading-notes-section" class="card lab-section">
-                        <h3>독서 노트: 생각의 정제소</h3>
-                        <div id="reading-notes-controls">
-                            <select id="note-book-select">
-                                </select>
-                            <textarea id="new-note-input" placeholder="책을 읽다 발견한 인상 깊은 구절이나 생각을 기록하세요..."></textarea>
-                            <button id="add-note-btn" class="btn btn-primary">노트 추가</button>
-                        </div>
-                        <div id="reading-notes-container">
-                            </div>
-                    </div>
-                    <div class="synapse-map card lab-section">
-                         <h3>🗺️ 시냅스 맵 (예정)</h3>
-                         <p>학습한 개념들이 어떻게 연결되는지 탐험해보세요.</p>
-                    </div>
-                </div>
+                 <header class="view-header">
+                     <button id="back-to-dashboard-btn" class="btn btn-secondary">← 뒤로가기</button>
+                     <h2>🧠 메티스 학습 세션</h2>
+                     <p id="step-title">단계 1: 학습 예측</p>
+                 </header>
+                 <div class="session-content">
+                     <!-- 단계 1: 예측 -->
+                     <div id="step-1" class="step active card">
+                         <div id="session-goal-display" class="goal-display card"></div>
+                         <h4>[1단계] 학습 예측 (Prediction)</h4>
+                         <p>위 목표와 관련하여 책에서 어떤 내용을 다룰 것 같습니까? 핵심 내용을 예측해보세요.</p>
+                         <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고, 사람들의 비합리적 선택을 유도하는 사례를 보여줄 것 같다."></textarea>
+                         <button class="btn btn-primary next-step-btn" data-next="2">예측 완료, 집중 독서 시작</button>
+                     </div>
+
+                     <!-- 단계 2: 집중 독서 -->
+                     <div id="step-2" class="step card">
+                         <h4>[2단계] 집중 독서 (Focused Reading)</h4>
+                         <p>이제 25분간 목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p>
+                         <div id="timer">25:00</div>
+                         <button class="btn btn-primary next-step-btn" data-next="3">독서 완료, 핵심 인출하기</button>
+                     </div>
+
+                     <!-- 단계 3: 핵심 인출 -->
+                     <div id="step-3" class="step card">
+                         <h4>[3단계] 핵심 내용 인출 (Brain Dump)</h4>
+                         <p>방금 읽은 내용의 핵심을 당신의 언어로 요약하고 재구성하세요. 완벽하지 않아도 괜찮습니다.</p>
+                         <textarea id="braindump-input" placeholder="떠오르는 키워드, 개념, 문장 등을 자유롭게 기록하세요."></textarea>
+                         <button class="btn btn-primary next-step-btn" data-next="4">인출 완료, 체화 글쓰기 시작</button>
+                     </div>
+                     
+                     <!-- 단계 4: 체화 글쓰기 -->
+                     <div id="step-4" class="step card">
+                         <h4>[4단계] 완벽한 체화를 위한 글쓰기</h4>
+                         <p>축하합니다! 이제 마지막 단계입니다. 3단계에서 인출한 내용을 바탕으로, 최초 목표에 대한 답을 설명하는 한 편의 글을 완성하세요. 이 글이 당신의 지식 타임캡슐이 됩니다.</p>
+                         <textarea id="final-writing-input" class="final-writing" placeholder="오늘 배운 내용을 다른 사람에게 설명하듯 자유롭게 글을 작성해보세요."></textarea>
+                         <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 타임캡슐 봉인</button>
+                     </div>
+                 </div>
             </div>
         </main>
     </div>
 
+    <!-- ============== 모달 창들 ============== -->
     <div id="challenge-modal-overlay" class="modal-overlay">
         <div id="challenge-modal" class="modal-content"></div>
     </div>
@@ -122,9 +137,9 @@
     </div>
     <div id="loader" class="loader-overlay">
         <div class="loader"></div>
-        <p>AI가 분석 중입니다...</p>
     </div>
 
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
+    

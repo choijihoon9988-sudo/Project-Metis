@@ -3,8 +3,8 @@ import { showGoalNavigator, hideGoalNavigator, renderGoalNavigatorStep } from '.
 let state = {};
 
 // --- Mock Data ---
+// 실제 앱에서는 이 부분이 AI API 호출로 대체될 수 있습니다.
 const getGoalPackForBook = (bookTitle) => {
-    // In a real app, this would be a sophisticated analysis of the table of contents.
     return [
         { level: 1, text: `'${bookTitle}'에서 '핵심 개념 A'의 정의를 찾고, 실생활 사례 1가지 찾아보기.` },
         { level: 2, text: `'${bookTitle}'의 1부에서 설명하는 '주요 원칙 3가지'를 활용하여, 나의 현재 문제를 해결할 구체적인 액션 플랜 작성하기.` },
@@ -14,31 +14,27 @@ const getGoalPackForBook = (bookTitle) => {
 };
 
 const getSolverGoal = (bookTitle, problem) => {
-    // Simulates AI matching problem to book content
+    // AI가 사용자의 문제를 책 내용과 연결하여 목표를 생성하는 것을 시뮬레이션합니다.
     return {
         level: 2,
-        text: `'${bookTitle}'의 2장과 5장 내용을 활용하여, '${problem.substring(0, 20)}...' 문제를 해결하기 위한 3가지 실행 가능한 전략을 도출하시오.`
+        text: `'${bookTitle}'의 내용을 활용하여, '${problem.substring(0, 20)}...' 문제를 해결하기 위한 3가지 실행 가능한 전략을 도출하시오.`
     };
 };
 
 // --- Event Handlers & Logic ---
 function attachEventListeners() {
     const modeButtons = document.querySelectorAll('.mode-select-btn');
-    if (modeButtons) {
-        modeButtons.forEach(btn => {
-            btn.onclick = () => handleModeSelection(btn.dataset.mode);
-        });
-    }
+    modeButtons.forEach(btn => {
+        btn.onclick = () => handleModeSelection(btn.dataset.mode);
+    });
 
     const goalCards = document.querySelectorAll('.goal-card');
-    if (goalCards) {
-        goalCards.forEach(card => {
-            card.onclick = () => {
-                state.selectedGoal = { level: card.dataset.level, text: card.dataset.text };
-                renderStep('architect', state.selectedGoal);
-            };
-        });
-    }
+    goalCards.forEach(card => {
+        card.onclick = () => {
+            state.selectedGoal = { level: card.dataset.level, text: card.dataset.text };
+            renderStep('architect', state.selectedGoal);
+        };
+    });
     
     const solverSubmitBtn = document.getElementById('solver-submit-problem');
     if(solverSubmitBtn) {
@@ -59,7 +55,7 @@ function attachEventListeners() {
             const finalText = document.getElementById('architect-goal-editor').value;
             state.selectedGoal.text = finalText;
             
-            // Dispatch event to notify main.js
+            // main.js에 목표가 선택되었음을 알리는 커스텀 이벤트 발생
             const event = new CustomEvent('goalSelected', { detail: state.selectedGoal });
             document.dispatchEvent(event);
 

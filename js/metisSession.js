@@ -1,18 +1,16 @@
-import { switchStep, updateTimerDisplay, populateComparisonView, showLoader } from './ui.js';
-import { getFeedback, getExpertSummary } from './api.js';
+import { switchStep, updateTimerDisplay } from './ui.js';
 
 let state = {};
+// 단순화된 4단계 세션을 위한 초기 상태
 const initialState = {
     currentStep: 1,
     userInputs: {
         prediction: '',
         brainDump: '',
-        aiPrediction: '',
-        gap: '',
         finalWriting: ''
     },
     timerInterval: null,
-    timeLeft: 25 * 60,
+    timeLeft: 25 * 60, // 25분
     sourceBook: '',
     initialGoal: ''
 };
@@ -25,110 +23,110 @@ function startTimer() {
         if (state.timeLeft <= 0) {
             clearInterval(state.timerInterval);
             alert("집중 독서 시간이 종료되었습니다!");
+            // 자동으로 다음 단계로 이동
+            handleNextStep(3);
         }
     }, 1000);
 }
 
 function resetSession() {
     clearInterval(state.timerInterval);
+    // Deep copy to avoid reference issues
     state = JSON.parse(JSON.stringify(initialState));
     updateTimerDisplay(state.timeLeft);
 }
 
-async function handleNextStep(nextStep) {
+// 다음 단계로 이동하는 로직
+function handleNextStep(nextStep) {
     const currentStep = state.currentStep;
 
-    // Save input from current step
+    // 현재 단계의 사용자 입력을 상태에 저장
     if (currentStep === 1) state.userInputs.prediction = document.getElementById('prediction-input').value;
     if (currentStep === 3) state.userInputs.brainDump = document.getElementById('braindump-input').value;
-    if (currentStep === 4) state.userInputs.aiPrediction = document.getElementById('ai-prediction-input').value;
-    if (currentStep === 6) state.userInputs.gap = document.getElementById('gap-input').value;
 
-    // Handle special actions for next steps
+    // 특정 단계 진입 시 특별한 액션 처리
     if (nextStep === 2) {
         startTimer();
-    }
-    
-    if (nextStep === 5) {
-        showLoader(true);
-        const [feedback, expertSummary] = await Promise.all([
-            getFeedback(state.userInputs.brainDump),
-            getExpertSummary()
-        ]);
-        populateComparisonView(state.userInputs, { feedback, expertSummary });
-        showLoader(false);
     }
     
     state.currentStep = nextStep;
     switchStep(nextStep);
 }
 
+// 세션 완료 후 새로운 지식 타임캡슐을 생성하는 함수
 function plantNewCapsule() {
     const capsules = JSON.parse(localStorage.getItem('knowledgeCapsules')) || [];
+    
+    // 최종 글쓰기 내용을 기반으로 캡슐 생성
     const newCapsule = {
         id: Date.now(),
-        title: state.userInputs.gap.substring(0, 40) + '...',
+        title: state.initialGoal.substring(0, 40) + '...', // 목표를 제목으로 사용
         sourceBook: state.sourceBook,
-        question: `다음 질문에 대해 설명하세요: "${state.userInputs.gap}"`,
-        answer: state.userInputs.finalWriting,
-        strength: 1,
-        reviews: [{ date: new Date().toISOString(), confidence: 'confident' }]
+        question: `[목표] ${state.initialGoal}\n\n위 목표에 대해 당신이 체화한 지식을 설명하세요.`, // 복습 시 질문
+        answer: state.userInputs.finalWriting, // 사용자의 최종 글이 정답
+        strength: 1, // 기억 강도 초기값
+        // 에빙하우스 곡선 시작을 위해 첫 리뷰 날짜를 오늘로 기록
+        reviews: [{ date: new Date().toISOString(), confidence: 'confident' }] 
     };
 
-    if (!capsules.some(c => c.question.includes(state.userInputs.gap))) {
+    // 중복 방지 (같은 목표의 캡슐이 이미 있는지 확인)
+    if (!capsules.some(c => c.title === newCapsule.title)) {
         capsules.push(newCapsule);
         localStorage.setItem('knowledgeCapsules', JSON.stringify(capsules));
-        alert("지식 보관소에 새로운 타임캡슐을 보관했습니다!");
+        alert("지식 타임캡슐 보관소에 새로운 지식을 봉인했습니다!");
+    } else {
+        alert("이미 동일한 목표에 대한 캡슐이 존재합니다.");
     }
 }
 
-export function initializeSession(note = null) {
+export function initializeSession() {
     resetSession();
     
-    if (note) {
-        // Session started from a Reading Note
-        state.sourceBook = note.book;
-        state.initialGoal = note.content;
-        document.getElementById('session-goal-display').innerHTML = `
-            <strong>🎯 현재 목표 (독서 노트에서 가져옴)</strong>
-            <p>${note.content}</p>`;
-        // Prediction step can be auto-filled or modified
-        document.getElementById('prediction-input').value = `"${note.content}" 구절을 더 깊이 이해하기 위한 탐색.`;
-    } else {
-        // Session started from the Dashboard Main Book
-        state.sourceBook = document.querySelector('#main-book-slot h4').textContent;
-        state.initialGoal = document.querySelector('#main-book-goal p').textContent;
-        const currentGoalHtml = document.getElementById('main-book-goal').innerHTML;
-        document.getElementById('session-goal-display').innerHTML = currentGoalHtml;
-    }
+    // 대시보드에서 설정된 메인북 정보 가져오기
+    state.sourceBook = document.querySelector('#main-book-slot h4').textContent;
+    state.initialGoal = document.querySelector('#main-book-goal p').textContent;
+    const currentGoalHtml = document.getElementById('main-book-goal').innerHTML;
+    document.getElementById('session-goal-display').innerHTML = currentGoalHtml;
     
     switchStep(1);
 
-    // Attach event listeners for this session
-    document.querySelectorAll('#metis-session .next-step-btn').forEach(btn => {
-        btn.onclick = () => handleNextStep(parseInt(btn.dataset.next, 10));
-    });
-
-    document.getElementById('back-to-dashboard-btn').onclick = () => {
+    // 이벤트 리스너 (람다 함수 대신 고유 함수를 사용해 중복 방지)
+    const onNextStepClick = (e) => {
+        handleNextStep(parseInt(e.target.dataset.next, 10));
+    };
+    
+    const onBackClick = () => {
         if (confirm("세션을 중단하고 이전 화면으로 돌아가시겠습니까?")) {
-            const event = new CustomEvent('sessionComplete');
+            const event = new CustomEvent('sessionComplete', { detail: { finished: false } });
             document.dispatchEvent(event);
         }
     };
 
-    document.getElementById('finish-session-btn').onclick = () => {
+    const onFinishClick = () => {
         state.userInputs.finalWriting = document.getElementById('final-writing-input').value;
-        state.userInputs.gap = document.getElementById('gap-input').value; 
         
-        if (!state.userInputs.gap || !state.userInputs.finalWriting) {
-            alert('핵심 질문과 체화 글쓰기를 모두 작성해야 캡슐을 보관할 수 있습니다.');
+        if (!state.userInputs.finalWriting.trim()) {
+            alert('체화 글쓰기를 작성해야 캡슐을 봉인할 수 있습니다.');
             return;
         }
 
         plantNewCapsule();
-        const event = new CustomEvent('sessionComplete');
+        const event = new CustomEvent('sessionComplete', { detail: { finished: true } });
         document.dispatchEvent(event);
     };
+
+    // 기존 리스너 제거 후 새로 추가
+    document.querySelectorAll('#metis-session .next-step-btn').forEach(btn => {
+        btn.removeEventListener('click', onNextStepClick);
+        btn.addEventListener('click', onNextStepClick);
+    });
+    const backBtn = document.getElementById('back-to-dashboard-btn');
+    backBtn.removeEventListener('click', onBackClick);
+    backBtn.addEventListener('click', onBackClick);
+    
+    const finishBtn = document.getElementById('finish-session-btn');
+    finishBtn.removeEventListener('click', onFinishClick);
+    finishBtn.addEventListener('click', onFinishClick);
 }
 
 export function handleSessionCompletion() {
