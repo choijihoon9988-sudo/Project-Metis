@@ -259,9 +259,9 @@
                         <h4>☕️ 휴식 (Active Break)</h4>
                         <p>잠시 휴식을 취하며 뇌를 정리합니다. 아래 질문에 대해 가볍게 생각해보세요.</p>
                         <div id="timer-break">00:00</div>
-                        <div class="card">
-                            <h5>중간 예측 점검</h5>
-                            <p>지금까지 읽은 내용을 바탕으로, 처음의 예측을 수정하거나 보완하고 싶은 부분이 있나요?</p>
+                        <div class="card" id="break-question-card">
+                            <h5></h5>
+                            <p></p>
                         </div>
                         <button class="btn btn-primary" id="start-next-cycle-btn">휴식 완료, 다음 세션 시작</button>
                     </div>
@@ -496,29 +496,20 @@
                     writing: {}
                 };
 
+                const MIN_WRITING_PER_STEP = 1; // 최소 글쓰기 시간 (분)
+                const NUM_WRITING_STEPS = 5;
+                const MIN_TOTAL_WRITING_MINS = MIN_WRITING_PER_STEP * NUM_WRITING_STEPS;
+
                 let remainingMinutes = totalMinutes;
+
+                // 1. Secure minimum writing time
+                const totalWritingTime = Math.max(MIN_TOTAL_WRITING_MINS, Math.floor(totalMinutes / 3));
+                remainingMinutes -= totalWritingTime;
                 
-                // 1. Allocate full Pomodoro cycles (25+5)
-                const fullCycles = Math.floor(remainingMinutes / 30);
-                for (let i = 0; i < fullCycles; i++) {
-                    allocations.focusSessions.push(25);
-                    allocations.breakSessions.push(5);
-                }
-                remainingMinutes -= fullCycles * 30;
+                // Distribute writing time
+                const writingPerStep = Math.floor(totalWritingTime / NUM_WRITING_STEPS);
+                let writingRemainder = totalWritingTime % NUM_WRITING_STEPS;
 
-                // 2. Allocate remaining time
-                // Ratio: 5 (Reading) to 3 (Writing)
-                const writingTotal = Math.floor(remainingMinutes * (3 / 8));
-                const readingTotal = remainingMinutes - writingTotal;
-
-                if (readingTotal > 0) {
-                    allocations.focusSessions.push(readingTotal);
-                }
-
-                // Distribute writing time across 5 steps
-                const writingPerStep = Math.floor(writingTotal / 5);
-                let writingRemainder = writingTotal % 5;
-                
                 this.stepSequence.forEach(stepId => {
                     if(stepId.startsWith('step-') && this.stepSequence.indexOf(stepId) !== 4) { // Exclude step-5
                         let time = writingPerStep;
@@ -529,6 +520,20 @@
                         allocations.writing[stepId] = time * 60; // to seconds
                     }
                 });
+
+
+                // 2. Allocate Pomodoro cycles from the rest
+                const fullCycles = Math.floor(remainingMinutes / 30);
+                for (let i = 0; i < fullCycles; i++) {
+                    allocations.focusSessions.push(25);
+                    allocations.breakSessions.push(5);
+                }
+                remainingMinutes -= fullCycles * 30;
+
+                // 3. Allocate leftover to a final focus session
+                if (remainingMinutes > 0) {
+                    allocations.focusSessions.push(remainingMinutes);
+                }
 
                 return allocations;
             },
@@ -548,22 +553,37 @@
                 }, 1000);
             },
             
-            handleStepLogic(stepId) {
+            async handleStepLogic(stepId) {
                 this.state.currentStepId = stepId;
                 UI.switchStep(stepId);
                 clearInterval(this.state.timerInterval);
 
-                if (this.state.timeAllocations.writing[stepId]) {
+                if (this.state.timeAllocations.writing[stepId] > 0) {
                     const duration = this.state.timeAllocations.writing[stepId];
                     const timerId = `timer-${stepId}`;
                     this.startTimer(duration, timerId, () => this.proceed());
                 } else if (stepId === 'step-2') {
                     UI.updateProgress(this.generateProgressHTML());
                     const duration = (this.state.timeAllocations.focusSessions[this.state.cyclesCompleted] || 0) * 60;
-                    this.startTimer(duration, 'timer', () => this.handleFocusEnd());
+                    if(duration > 0) {
+                        this.startTimer(duration, 'timer', () => this.handleFocusEnd());
+                    } else {
+                        this.handleFocusEnd(); // Skip if no time
+                    }
                 } else if (stepId === 'step-break') {
                     const duration = (this.state.timeAllocations.breakSessions[this.state.cyclesCompleted - 1] || 0) * 60;
-                    this.startTimer(duration, 'timer-break', () => this.handleBreakEnd());
+                    const question = await this.getDynamicBreakQuestion(this.state.userInputs.prediction);
+                    const questionCard = document.getElementById('break-question-card');
+                    questionCard.querySelector('h5').textContent = question.title;
+                    questionCard.querySelector('p').textContent = question.body;
+
+                    if(duration > 0) {
+                        this.startTimer(duration, 'timer-break', () => this.handleBreakEnd());
+                    } else {
+                         this.handleBreakEnd(); // Skip if no time
+                    }
+                } else {
+                     this.proceed(); // For steps with no timer like step-5
                 }
             },
 
@@ -588,21 +608,21 @@
                     return;
                 } else if (currentIndex < this.stepSequence.length - 1) {
                     nextStepId = this.stepSequence[currentIndex + 1];
-                } else {
-                    this.complete();
-                    return;
                 }
                  
-                if(nextStepId) this.handleStepLogic(nextStepId);
+                if(nextStepId) {
+                    this.handleStepLogic(nextStepId);
+                } else {
+                    this.complete(); // Should be called from button click
+                }
             },
 
             handleFocusEnd() {
                 this.state.cyclesCompleted++;
                 if (this.state.cyclesCompleted < this.state.timeAllocations.focusSessions.length) {
-                    // Check if there's a break session available
                     if(this.state.cyclesCompleted <= this.state.timeAllocations.breakSessions.length) {
                         this.handleStepLogic('step-break');
-                    } else { // No more breaks, just another focus session
+                    } else { 
                         this.handleStepLogic('step-2');
                     }
                 } else {
@@ -618,10 +638,11 @@
 
             generateProgressHTML(){
                 const totalCycles = this.state.timeAllocations.focusSessions.length;
+                if (totalCycles === 0) return '';
                 let html = '';
                 for(let i = 0; i < totalCycles; i++){
                     html += (i < this.state.cyclesCompleted) ? '✅' : '🍅';
-                    if(i < totalCycles - 1) html += ' ☕️ ';
+                    if(i < this.state.timeAllocations.breakSessions.length) html += ' ☕️ ';
                 }
                 return `Cycle ${this.state.cyclesCompleted + 1} / ${totalCycles} <br> ${html}`;
             },
@@ -639,6 +660,7 @@
             },
 
             complete() { 
+                clearInterval(this.state.timerInterval);
                 this.state.userInputs.finalWriting = document.getElementById('final-writing-input').value; 
                 if (!this.state.userInputs.finalWriting.trim()) { 
                     UI.showToast('체화 글쓰기를 작성해야 캡슐을 봉인할 수 있습니다.', 'error'); return; 
@@ -648,7 +670,21 @@
 
             simulateApi: (data, delay = 1000) => new Promise(res => setTimeout(() => res(data), delay)),
             getAIFeedback(text) { return this.simulateApi(`사용자의 기록을 분석한 결과, 핵심 개념은 파악했으나 각 요소 간의 유기적 '연결성'에 대한 설명이 부족합니다.`); },
-            getExpertSummary() { return this.simulateApi(`**넛지(Nudge):** 인간은 체계적으로 편향되어 있으며, '선택 설계'를 통해 더 나은 결정을 내리도록 부드럽게 개입할 수 있다.`); }
+            getExpertSummary() { return this.simulateApi(`**넛지(Nudge):** 인간은 체계적으로 편향되어 있으며, '선택 설계'를 통해 더 나은 결정을 내리도록 부드럽게 개입할 수 있다.`); },
+            getDynamicBreakQuestion(predictionText) {
+                const genericQuestions = [
+                    { title: "핵심 개념 시각화", body: "지금까지 읽은 내용의 핵심 개념을 머릿속에 하나의 이미지나 다이어그램으로 그려본다면 어떤 모습일까요?" },
+                    { title: "저자에게 질문하기", body: "만약 저자에게 딱 한 가지 질문을 할 수 있다면, 무엇을 물어보고 싶나요?" },
+                    { title: "가장 놀라운 사실", body: "지금까지 읽은 내용 중 가장 놀랍거나 예상과 달랐던 부분은 무엇인가요?" },
+                    { title: "실생활 연결하기", body: "방금 읽은 내용을 당신의 일상이나 업무에 어떻게 적용해볼 수 있을까요?" }
+                ];
+
+                if (predictionText && predictionText.trim().length > 10) {
+                     return this.simulateApi({ title: "중간 예측 점검", body: `당신의 초기 예측이었던 "${predictionText.substring(0, 30)}..."(은)는 현재까지 얼마나 유효한가요? 수정하거나 보완하고 싶은 부분이 있나요?` });
+                } else {
+                    return this.simulateApi(genericQuestions[Math.floor(Math.random() * genericQuestions.length)]);
+                }
+            }
         };
 
         // =================================================================================
