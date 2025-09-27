@@ -7,25 +7,25 @@ Cody Blueprint: 프로젝트 메티스 (Project Metis)
 파일 구조
 index.html: 애플리케이션의 전체적인 구조와 UI 요소를 정의합니다. JavaScript 모듈과 외부 라이브러리(Chart.js)를 로드합니다.
 
-style.css: 전문적인 디자인 테마와 함께 '지식 정원', '기억 곡선 대시보드' 등 핵심 기능의 시각적 요소를 정의합니다.
-
 /js/main.js: 애플리케이션의 진입점(Entry Point)으로서, 각 모듈을 초기화하고 뷰 전환 등 핵심 이벤트를 관리합니다.
 
 /js/ui.js: UI 렌더링을 전담하는 모듈. '지식 정원', '기억 곡선 대시보드'의 동적 생성을 담당합니다.
 
-/js/metisSession.js: '메티스 세션'의 7단계 학습 사이클 로직을 관리하며, 세션 완료 시 '지식 식물' 데이터를 생성합니다.
+/js/metisSession.js: '메티스 세션'의 8단계 학습 사이클 로직을 관리하며, '전략적 고정값' 시스템에 따라 세션 시간을 자동 배분합니다. 세션 완료 시 '지식 식물' 데이터를 생성합니다.
 
 /js/ebbinghaus.js: '지식 정원'과 '기억 곡선 대시보드'의 모든 핵심 로직을 관리합니다. 식물의 상태 계산, 데이터 시각화, 복습 세션 진행 등을 담당합니다.
 
-/js/goalNavigator.js: (수정) 사용자가 입력한 책과 챕터 제목을 기반으로, Firebase Functions에 통합된 Gemini API를 호출하여 3가지 레벨의 학습 목표(퀘스트)를 생성하고 제안하는 로직을 관리합니다.
+/js/goalNavigator.js: 사용자가 입력한 책과 챕터 제목을 기반으로, Gemini API를 호출하여 3가지 레벨의 학습 목표(퀘스트)를 생성하고 제안하는 로직을 관리합니다.
 
 /js/bookExplorer.js: Google Books API를 사용하여 책을 검색하고 선택하는 'AI 도서 탐색기' 로직을 관리합니다.
 
-/js/api.js: 외부 API(Google Books)와의 통신을 담당합니다.
+/js/api.js: 외부 API(Google Books, Gemini)와의 통신을 담당합니다.
 
-/functions/index.js: (신규) Firebase Cloud Functions 백엔드 로직. Gemini API와 연동하여 'AI 목표 설계자' 기능을 수행하는 서버리스 함수를 포함합니다.
+/functions/index.js: Firebase Cloud Functions 백엔드 로직. Gemini API와 연동하여 'AI 목표 설계자' 기능을 수행하는 서버리스 함수를 포함합니다.
 
 변경 기록
+2025-09-27 v7.0: '전략적 고정값' 시스템 및 '강제 휴식' 기능 도입. metisSession.js에 COURSE_PRESETS을 추가하여 코스별 시간 배분을 자동화하고, 25분 이상 학습 시 5분 휴식 단계를 추가하여 학습 효율을 극대화. 60분 이상 코스에 '심화 예측' 옵션 제공.
+
 2025-09-27 v6.0: 'AI 목표 설계자' 기능 도입. goalNavigator.js의 AI 목표 생성 로직을 Firebase Functions와 Gemini API를 사용하도록 전면 개편. 기존의 불안정한 목표 추천 기능을 대체하여 사용자가 직접 입력한 챕터 정보를 바탕으로 정교한 3-Level 학습 목표를 생성하는 기능 추가.
 
 2025-09-27 v5.3: 새 Firebase 프로젝트(metisv2) 생성에 따라 js/firebase.js의 firebaseConfig 정보 업데이트. 관련 초기 설정 가이드 문서 생성.
