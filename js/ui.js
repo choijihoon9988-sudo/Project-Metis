@@ -340,15 +340,14 @@ export const UI = {
                 { count: 100, text: '🚀 무중력 공간에 오신 것을 환영합니다!', row: 25 },
             ];
             
-            // Calculate total rows to determine percentage-based positioning
             const totalRows = Math.ceil(bookCount / 4);
-            if (totalRows <= 2) return ''; // Don't show milestones if not scrollable yet
+            if (totalRows <= 2) return '';
 
             let milestonesHTML = '';
             MILESTONES.forEach(m => {
                 if (bookCount >= m.count) {
                     const topPercentage = (m.row / totalRows) * 100;
-                    if(topPercentage < 100) { // Only show milestones within the current scroll area
+                    if(topPercentage < 100) {
                        milestonesHTML += `<div class="knowledge-milestone" style="top: ${topPercentage}%;">${m.text}</div>`;
                     }
                 }
@@ -364,17 +363,16 @@ export const UI = {
             const scrollHeight = grid.scrollHeight;
             const clientHeight = grid.clientHeight;
             
-            // 스크롤이 불가능하면 (콘텐츠가 div보다 작으면) 함수 종료
             if (scrollHeight <= clientHeight) {
-                background.style.backgroundPosition = 'center 100%'; // 맨 아래(땅)로 고정
+                background.style.backgroundPosition = 'center 0%'; // 스크롤 없으면 맨 위(우주)
                 return;
             }
             
             const scrollTop = grid.scrollTop;
             const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
 
-            // 스크롤 0%일 때 Y위치 100%(아래), 100%일 때 Y위치 0%(위)
-            const backgroundYPosition = 100 - (scrollPercentage * 100);
+            // 스크롤 0%일 때 Y위치 0%(위, 우주), 100%일 때 Y위치 100%(아래, 땅)
+            const backgroundYPosition = scrollPercentage * 100;
             background.style.backgroundPosition = `center ${backgroundYPosition}%`;
         },
         renderBookDetail(book, skills, recommendation) {
