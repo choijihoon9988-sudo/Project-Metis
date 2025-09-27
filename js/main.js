@@ -7,6 +7,7 @@ import { MetisSession } from './metisSession.js';
 import { BookExplorer } from './bookExplorer.js';
 import { GoalNavigator } from './goalNavigator.js';
 import { Refinement } from './refinement.js';
+import { Library } from './library.js';
 
 const appState = {
   user: null,
@@ -35,11 +36,13 @@ async function main() {
     appState.user = user;
     Ebbinghaus.setUser(user.uid);
     Refinement.setUser(user.uid);
+    Library.setUser(user.uid);
     loadMainBook(); // 페이지 로드 시 저장된 메인북 정보 불러오기
     UI.switchView('dashboard');
     setupEventListeners();
     await Ebbinghaus.initGarden();
     await Refinement.load();
+    await Library.load();
   } else {
     console.error("Firebase 인증 실패. 앱을 초기화할 수 없습니다.");
     UI.showToast("사용자 인증에 실패했습니다. 새로고침 해주세요.", "error");
@@ -57,6 +60,7 @@ function setupEventListeners() {
       UI.switchView(viewName);
       if (viewName === 'garden') await Ebbinghaus.initGarden();
       if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
+      if (viewName === 'library') await Library.load();
       return;
     }
 
@@ -86,6 +90,14 @@ function setupEventListeners() {
       courseBtn.classList.add('active');
       return;
     }
+
+    // --- 나의 서재 ---
+    const libraryBook = target.closest('.library-book');
+    if (libraryBook) {
+        const bookId = libraryBook.dataset.bookId;
+        Library.showBookDetail(bookId);
+    }
+
 
     // --- 메티스 세션 버튼 ---
     if (target.closest('.next-step-btn')) {
@@ -170,6 +182,7 @@ function setupEventListeners() {
         UI.Challenge.hide();
         UI.BookExplorer.hide();
         UI.GoalNavigator.hide();
+        UI.Library.hide();
         // 모든 모달 오버레이를 닫도록 일반화
         document.querySelectorAll('.modal-overlay').forEach(overlay => overlay.style.display = 'none');
         return;
@@ -219,6 +232,11 @@ function setupEventListeners() {
         UI.switchView('dashboard');
         await Refinement.load();
     }
+  });
+
+  document.addEventListener('addBookToLibrary', e => {
+      const { book, shelf } = e.detail;
+      Library.addBook(book, shelf);
   });
 }
 

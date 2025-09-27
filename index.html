@@ -27,6 +27,7 @@
             <h1>Project Metis</h1>
             <nav>
                 <button class="nav-btn active" data-view="dashboard">대시보드</button>
+                <button class="nav-btn" data-view="library">나의 서재</button>
                 <button class="nav-btn" data-view="garden">지식 정원</button>
                 <button class="nav-btn" data-view="journey">지적 여정 맵</button>
             </nav>
@@ -89,6 +90,17 @@
                     </div>
                 </div>
             </div>
+
+            <div id="library" class="view">
+                <header class="view-header">
+                    <h2>나의 서재</h2>
+                    <p>나의 지적 성장을 한눈에 보여주는 개인 맞춤형 대시보드입니다.</p>
+                </header>
+                <div id="library-stats" class="card">
+                    </div>
+                <div id="library-shelves">
+                    </div>
+            </div>
             
             <div id="garden" class="view">
                  <header class="view-header">
@@ -96,8 +108,7 @@
                     <p>당신의 모든 지식 자산(식물)이 자라고 있습니다. 상태를 보고 관리해주세요.</p>
                 </header>
                 <div class="garden-container" id="garden-container">
-                    <!-- Garden cards will be rendered here -->
-                </div>
+                    </div>
             </div>
             
             <div id="journey" class="view">
@@ -214,7 +225,6 @@
         <div class="loader-text">AI가 분석 중입니다...</div>
     </div>
 
-    <!-- Modals -->
     <div id="book-explorer-modal-overlay" class="modal-overlay">
         <div id="book-explorer-modal" class="modal-content"></div>
     </div>
@@ -239,6 +249,10 @@
             </div>
         </div>
     </div>
+    <div id="library-book-detail-modal-overlay" class="modal-overlay">
+        <div id="library-book-detail-modal" class="modal-content" style="max-width: 800px;">
+            </div>
+    </div>
     
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
@@ -246,5 +260,3 @@
     <script src="./js/main.js" type="module"></script>
 </body>
 </html>
-
-

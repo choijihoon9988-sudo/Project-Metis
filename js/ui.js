@@ -189,8 +189,15 @@ export const UI = {
                                 <p>${data.author}</p>
                             </div>
                             <div class="modal-controls">
-                                <button id="book-explorer-back-btn" class="btn">다시 검색</button>
-                                <button id="book-explorer-confirm-btn" class="btn btn-primary">이 책으로 목표 설정하기</button>
+                                <button id="book-explorer-add-btn" class="btn btn-primary">내 서재에 추가</button>
+                            </div>`;
+                    break;
+                case 'shelf-selection':
+                     html = `${closeBtn}<div class="modal-header"><h3>어느 선반에 추가할까요?</h3></div>
+                            <div class="modal-controls" style="justify-content: center; gap: 16px;">
+                                <button class="btn shelf-select-btn" data-shelf="reading">읽고 있는 책</button>
+                                <button class="btn shelf-select-btn" data-shelf="toread">읽고 싶은 책</button>
+                                <button class="btn shelf-select-btn" data-shelf="finished">다 읽은 책</button>
                             </div>`;
                     break;
             }
@@ -245,6 +252,81 @@ export const UI = {
                     break;
             }
             this.content.innerHTML = html;
+        }
+    },
+
+    Library: {
+        overlay: document.getElementById('library-book-detail-modal-overlay'),
+        content: document.getElementById('library-book-detail-modal'),
+        show() { this.overlay.style.display = 'flex'; },
+        hide() { if(this.overlay) this.overlay.style.display = 'none'; },
+        render(books, skills) {
+            const container = document.getElementById('library-shelves');
+            if (!container) return;
+
+            const shelves = {
+                reading: books.filter(b => b.shelf === 'reading'),
+                toread: books.filter(b => b.shelf === 'toread'),
+                finished: books.filter(b => b.shelf === 'finished'),
+            };
+
+            container.innerHTML = `
+                <div class="bookshelf">
+                    <h3>읽고 있는 책 (${shelves.reading.length})</h3>
+                    <div class="book-list">${shelves.reading.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                </div>
+                <div class="bookshelf">
+                    <h3>읽고 싶은 책 (${shelves.toread.length})</h3>
+                    <div class="book-list">${shelves.toread.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                </div>
+                <div class="bookshelf">
+                    <h3>다 읽은 책 (${shelves.finished.length})</h3>
+                    <div class="book-list">${shelves.finished.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                </div>
+            `;
+            
+            // Stats & Challenge
+            const statsContainer = document.getElementById('library-stats');
+            const finishedThisMonth = books.filter(b => b.shelf === 'finished' && new Date(b.finishedAt).getMonth() === new Date().getMonth()).length;
+            statsContainer.innerHTML = `
+                <h4>나의 독서 통계</h4>
+                <p>이번 달에 ${finishedThisMonth}권의 책을 완독하셨습니다!</p>
+                <hr style="margin: 16px 0;">
+                <h4>이주의 챌린지</h4>
+                <p>이번 주, '자기계발' 분야 책 1권 읽기</p>
+            `;
+        },
+        renderBook(book) {
+            return `
+                <div class="library-book" data-book-id="${book.id}">
+                    <img src="${book.cover}" alt="${book.title}">
+                    <p>${book.title}</p>
+                </div>
+            `;
+        },
+        renderBookDetail(book, skills, recommendation) {
+            this.content.innerHTML = `
+                <button class="modal-close-btn">&times;</button>
+                <div class="modal-header" style="text-align: left; display:flex; gap: 24px;">
+                    <img src="${book.cover}" alt="${book.title}" style="width: 150px; height: 225px; object-fit: cover; border-radius: var(--border-radius); flex-shrink: 0;">
+                    <div>
+                        <h3>${book.title}</h3>
+                        <p>${book.author}</p>
+                        <span class="book-tag">${book.category}</span>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="card">
+                        <h5>핵심 성장 스킬</h5>
+                        <p>${book.skillFocus}</p>
+                    </div>
+                    <div class="card">
+                        <h5>AI 연관 도서 추천</h5>
+                        <p>${recommendation}</p>
+                    </div>
+                </div>
+            `;
+            this.show();
         }
     },
 

@@ -33,13 +33,27 @@ export const BookExplorer = {
     handleEvents(e) {
         const resultCard = e.target.closest('.book-result-card');
         if (resultCard) {
-            // API로부터 받은 데이터를 기반으로 선택된 책 정보를 구성합니다.
             this.state.selectedBook = {
                 title: resultCard.dataset.title,
                 author: resultCard.dataset.author,
                 cover: resultCard.dataset.cover,
             };
             UI.BookExplorer.render('confirmation', this.state.selectedBook);
+            return;
+        }
+
+        if (e.target.id === 'book-explorer-add-btn') {
+            UI.BookExplorer.render('shelf-selection');
+            return;
+        }
+        
+        const shelfBtn = e.target.closest('.shelf-select-btn');
+        if (shelfBtn) {
+            const shelf = shelfBtn.dataset.shelf;
+            document.dispatchEvent(new CustomEvent('addBookToLibrary', { 
+                detail: { book: this.state.selectedBook, shelf: shelf }
+            }));
+            UI.BookExplorer.hide();
             return;
         }
 

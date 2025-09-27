@@ -10,9 +10,9 @@ const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 
 // Gemini AI 인스턴스를 여기서 생성하여 다른 모듈에서 사용하도록 합니다.
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-// 수정: 2025년 9월 기준으로 모델 이름을 'gemini-2.5-flash'로 업데이트. (이전 'gemini-1.5-flash'는 지원 중단됨)
-// 만약 최신 preview를 원하시면 'gemini-2.5-flash-preview-09-2025'로 변경하세요.
-export const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+export const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+export const geminiTextModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { responseMimeType: "text/plain" } });
+
 
 export const GoogleBooksAPI = {
     /**
