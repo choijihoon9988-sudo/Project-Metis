@@ -574,11 +574,12 @@ textarea {
 
 
 /* 나의 서재 (My Library) - Carousel Styles */
-#library-carousel-container {
+#library-carousel-container.card {
     position: relative;
     overflow: hidden;
 	background-color: transparent;
 	padding: 0;
+	border: none;
 }
 
 .library-carousel {
@@ -592,10 +593,12 @@ textarea {
     padding: 24px 48px;
 	position: relative;
 	background-color: var(--surface-color);
+	border-radius: var(--border-radius);
 }
 
 .library-shelf[data-shelf="finished"] {
 	background-color: transparent;
+	padding: 0; /* Remove padding to allow background to fill edges */
 }
 
 /* '지식의 고도' 동적 배경 */
@@ -606,14 +609,19 @@ textarea {
     width: 100%;
     height: 100%;
     z-index: 0;
-    transition: background 1.5s ease-out;
+	border-radius: var(--border-radius);
+    background-size: cover;
+    background-position: center bottom;
+    /* 사용자 지정 이미지 사용시 아래 주석을 풀고 URL을 입력하세요. */
+    /* background-image: url('YOUR_CUSTOM_IMAGE_URL_HERE'); */
 }
 
-.altitude-ground { background: #D2B48C; }
-.altitude-sky { background: linear-gradient(to top, #87CEEB 0%, #B0E0E6 100%); }
-.altitude-sunset { background: linear-gradient(to top, #ff7e5f, #feb47b); }
-.altitude-night { background: linear-gradient(to top, #0f2027, #203a43, #2c5364); }
-.altitude-space { background: linear-gradient(to top, #000000, #434343); }
+.altitude-ground { background: linear-gradient(to top, #6E4C2F 0%, #906B3F 2%, #558042 3%, #A2BE22 5%, #87CEEB 7%); }
+.altitude-sky { background: linear-gradient(to top, #A2BE22 0%, #87CEEB 10%, #4682B4 80%); }
+.altitude-sunset { background: linear-gradient(to top, #4682B4, #FF7F50, #FF6347); }
+.altitude-night { background: linear-gradient(to top, #FF6347, #483D8B, #191970); }
+.altitude-space { background: linear-gradient(to top, #191970, #000000); }
+
 
 /* '지식 이정표' */
 .knowledge-milestone {
@@ -661,8 +669,8 @@ textarea {
 .shelf-arrow:hover {
     background-color: var(--background-color);
 }
-.shelf-arrow.prev { left: 0; }
-.shelf-arrow.next { right: 0; }
+.shelf-arrow.prev { left: 24px; } /* 패딩 고려 */
+.shelf-arrow.next { right: 24px; }
 
 .shelf-title {
     font-size: 22px;
@@ -680,6 +688,7 @@ textarea {
     margin: 0 auto;
 	position: relative;
 	z-index: 1;
+	max-height: 60vh; /* 스크롤이 생기도록 높이 제한 */
 }
 
 .library-shelf[data-shelf="finished"] .book-grid {
@@ -688,6 +697,7 @@ textarea {
 	-webkit-backdrop-filter: blur(10px);
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	border-radius: var(--border-radius);
+	padding: 24px;
 }
 
 
