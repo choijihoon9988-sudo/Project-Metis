@@ -70,7 +70,7 @@ function setupEventListeners() {
       MetisSession.init();
       return;
     }
-    if (target.closest('#change-book-btn')) {
+    if (target.closest('#change-book-btn') || target.closest('#add-new-book-to-library-btn')) {
       BookExplorer.init();
       return;
     }
