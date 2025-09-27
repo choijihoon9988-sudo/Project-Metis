@@ -273,21 +273,33 @@ export const UI = {
             };
 
             container.innerHTML = `
-                <div class="altitude-background"></div>
                 <div class="shelf-header">
                     <button class="shelf-arrow prev" data-direction="prev">&#10094;</button>
                     <h3 class="shelf-title">${Object.values(shelves)[0].title} (${Object.values(shelves)[0].books.length})</h3>
                     <button class="shelf-arrow next" data-direction="next">&#10095;</button>
                 </div>
                 <div class="library-carousel">
-                    ${Object.entries(shelves).map(([shelfKey, shelf]) => `
+                    ${Object.entries(shelves).map(([shelfKey, shelf]) => {
+                        const bookCount = shelf.books.length;
+                        let altitudeClass = '';
+                        if (shelfKey === 'finished') {
+                            if (bookCount >= 100)      altitudeClass = 'altitude-space';
+                            else if (bookCount >= 70) altitudeClass = 'altitude-night';
+                            else if (bookCount >= 30) altitudeClass = 'altitude-sunset';
+                            else if (bookCount >= 10)  altitudeClass = 'altitude-sky';
+                            else                      altitudeClass = 'altitude-ground';
+                        }
+                        
+                        return `
                         <div class="library-shelf" data-shelf="${shelfKey}">
-                             ${shelfKey === 'finished' ? this.renderMilestones(shelf.books.length) : ''}
+                             ${shelfKey === 'finished' ? `<div class="altitude-background ${altitudeClass}"></div>` : ''}
+                             ${shelfKey === 'finished' ? this.renderMilestones(bookCount) : ''}
                             <div class="book-grid">
                                 ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
                             </div>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
             
@@ -323,37 +335,47 @@ export const UI = {
         renderMilestones(bookCount) {
             const MILESTONES = [
                 { count: 10, text: '🕊️ 63빌딩 높이에 도달했습니다!', row: 2 },
-                { count: 30, text: '✈️ 에베레스트 산보다 높이 있습니다!', row: 6 },
-                { count: 70, text: '🎈 성층권에 진입했습니다!', row: 14 },
-                { count: 100, text: '🚀 무중력 공간에 오신 것을 환영합니다!', row: 20 },
+                { count: 30, text: '✈️ 에베레스트 산보다 높이 있습니다!', row: 7 },
+                { count: 70, text: '🎈 성층권에 진입했습니다!', row: 17 },
+                { count: 100, text: '🚀 무중력 공간에 오신 것을 환영합니다!', row: 25 },
             ];
             
+            // Calculate total rows to determine percentage-based positioning
+            const totalRows = Math.ceil(bookCount / 4);
+            if (totalRows <= 2) return ''; // Don't show milestones if not scrollable yet
+
             let milestonesHTML = '';
             MILESTONES.forEach(m => {
                 if (bookCount >= m.count) {
-                    const topPosition = (m.row * 180); // 대략적인 책 한 줄 높이
-                    milestonesHTML += `<div class="knowledge-milestone" style="top: ${topPosition}px;">${m.text}</div>`;
+                    const topPercentage = (m.row / totalRows) * 100;
+                    if(topPercentage < 100) { // Only show milestones within the current scroll area
+                       milestonesHTML += `<div class="knowledge-milestone" style="top: ${topPercentage}%;">${m.text}</div>`;
+                    }
                 }
             });
             return milestonesHTML;
         },
         updateFinishedShelfBackground(event) {
-            const shelf = event.target;
-            const background = shelf.closest('.library-shelf').querySelector('.altitude-background');
+            const grid = event.target;
+            const shelf = grid.closest('.library-shelf');
+            const background = shelf.querySelector('.altitude-background');
             if (!background) return;
 
-            const bookCount = shelf.querySelectorAll('.library-book').length;
+            const scrollHeight = grid.scrollHeight;
+            const clientHeight = grid.clientHeight;
             
-            let altitudeClass = 'altitude-ground';
-            if (bookCount >= 100)      altitudeClass = 'altitude-space';
-            else if (bookCount >= 70) altitudeClass = 'altitude-night';
-            else if (bookCount >= 30) altitudeClass = 'altitude-sunset';
-            else if (bookCount >= 10)  altitudeClass = 'altitude-sky';
-            
-            if (!background.classList.contains(altitudeClass)) {
-                background.className = 'altitude-background'; // Reset
-                background.classList.add(altitudeClass);
+            // 스크롤이 불가능하면 (콘텐츠가 div보다 작으면) 함수 종료
+            if (scrollHeight <= clientHeight) {
+                background.style.backgroundPosition = 'center 100%'; // 맨 아래(땅)로 고정
+                return;
             }
+            
+            const scrollTop = grid.scrollTop;
+            const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
+
+            // 스크롤 0%일 때 Y위치 100%(아래), 100%일 때 Y위치 0%(위)
+            const backgroundYPosition = 100 - (scrollPercentage * 100);
+            background.style.backgroundPosition = `center ${backgroundYPosition}%`;
         },
         renderBookDetail(book, skills, recommendation) {
             this.content.innerHTML = `
