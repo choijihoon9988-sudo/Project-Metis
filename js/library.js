@@ -15,6 +15,40 @@ export const Library = {
 
     async load() {
         if (!this.userId) return;
+
+        // =================================================================
+        // 지식의 고도 테스트용 코드 블록
+        // =================================================================
+        const isTestingAltitude = true; // 🚀 이 값을 true로 바꾸면 테스트 모드 활성화
+
+        if (isTestingAltitude) {
+            console.log("🚀 '지식의 고도' 테스트 모드가 활성화되었습니다.");
+            const testBooks = [];
+            for (let i = 0; i < 101; i++) { // 100권을 넘어 우주로 가기 위해 101권 생성
+                testBooks.push({
+                    id: `test_${i}`,
+                    title: `테스트용 도서 ${i + 1}`,
+                    author: "가상 저자",
+                    cover: `https://via.placeholder.com/128x192.png?text=Book+${i+1}`,
+                    shelf: 'finished' // 모두 '다 읽은 책'으로 설정
+                });
+            }
+            this.books = testBooks;
+            UI.Library.render(this.books, this.skills);
+            
+            // 뷰가 완전히 렌더링 된 후 스크롤 계산을 위해 약간의 지연을 줍니다.
+            setTimeout(() => {
+                const mainContent = document.querySelector('.main-content');
+                UI.Library.updateFinishedShelfBackground({ target: mainContent });
+            }, 100);
+            
+            return; // 테스트 모드에서는 실제 데이터 로드를 중단합니다.
+        }
+        // =================================================================
+        // 테스트가 끝나면 이 블록을 삭제하거나 isTestingAltitude를 false로 바꾸세요.
+        // =================================================================
+
+
         const booksCol = collection(db, 'users', this.userId, 'library');
         const snapshot = await getDocs(booksCol);
         this.books = snapshot.docs.map(doc => doc.data());
