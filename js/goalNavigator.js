@@ -1,13 +1,9 @@
-// js/goalNavigator.js (최종 수정본)
+// js/goalNavigator.js (수정된 최종 코드)
 
 import { UI } from "./ui.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// 💡 네가 준 API 키를 여기에 넣었어!
-const API_KEY = "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A"; 
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+// getFunctions와 app을 직접 가져오는 대신, firebase.js에서 만들어둔 functions를 가져옵니다.
+import { functions } from "./firebase.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
 export const GoalNavigator = {
     state: {},
@@ -31,39 +27,23 @@ export const GoalNavigator = {
         this.state.chapterTitle = chapterTitle;
         UI.showLoader(true, "AI가 챕터를 분석하고 퀘스트를 생성 중입니다...");
 
-        const prompt = `
-          '${this.state.book.title}'라는 책의 '${this.state.chapterTitle}' 챕터(또는 소주제)의 핵심 내용을 바탕으로, 아래 3가지 레벨의 학습 퀘스트를 생성해줘.
-
-          - **레벨 1 (개념 분석):** 핵심 개념을 정의하거나 설명하는 질문.
-          - **레벨 2 (실용 적용):** 개념을 실생활이나 개인적인 경험에 적용해보는 질문.
-          - **레벨 3 (비판적 사고):** 개념의 한계, 반론, 또는 다른 아이디어와 연결하는 심화 질문.
-
-          다른 설명은 모두 제외하고, 반드시 아래와 같은 JSON 배열 형식으로만 응답해줘.
-          
-          [
-            { "level": 1, "type": "개념 분석", "text": "생성된 레벨 1 퀘스트 내용" },
-            { "level": 2, "type": "실용 적용", "text": "생성된 레벨 2 퀘스트 내용" },
-            { "level": 3, "type": "비판적 사고", "text": "생성된 레벨 3 퀘스트 내용" }
-          ]
-        `;
-
         try {
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
+            const generateQuestsForChapter = httpsCallable(functions, "generateQuestsForChapter");
+            const result = await generateQuestsForChapter({ 
+                bookTitle: this.state.book.title,
+                chapterTitle: this.state.chapterTitle 
+            });
             
-            const cleanedJson = text.replace(/^```json\s*|```\s*$/g, "").trim();
-            const quests = JSON.parse(cleanedJson);
-
-            if (!quests || quests.length === 0) {
-                 throw new Error("AI가 유효한 퀘스트를 생성하지 못했습니다.");
+            const quests = result.data.quests || [];
+            if (quests.length === 0) {
+                 throw new Error("AI가 퀘스트를 생성하지 못했습니다.");
             }
             
             UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests });
 
         } catch (error) {
             console.error("AI 퀘스트 생성 실패:", error);
-            UI.showToast("퀘스트 생성에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해주세요.", "error");
+            UI.showToast("퀘스트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
             UI.GoalNavigator.render("chapterInput", { bookTitle: this.state.book.title });
         } finally {
             UI.showLoader(false);
@@ -71,7 +51,6 @@ export const GoalNavigator = {
     },
 
     handleEvents(e) {
-        // (이하 handleEvents 함수 내용은 기존과 동일)
         if (e.target.id === 'generate-quests-btn') {
             this.generateQuests();
             return;
@@ -92,7 +71,7 @@ export const GoalNavigator = {
             return;
         }
         if (e.target.id === "goal-editor-back-btn") {
-            UI.GoalNavigator.render("chapterInput", { bookTitle: this.state.book.title });
+            this.generateQuests(); 
             return;
         }
 
