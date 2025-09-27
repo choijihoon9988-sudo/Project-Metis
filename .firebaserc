@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "metis-project-test",
+    "default": "metisv2",
     "test": "metis-project-test"
   },
   "targets": {},

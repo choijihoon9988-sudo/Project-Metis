@@ -1,4 +1,6 @@
+cody_blueprint.md
 Cody Blueprint: 프로젝트 메티스 (Project Metis)
+
 프로젝트 개요
 '프로젝트 메티스'는 사용자의 독서 경험을 **'지식의 복리 엔진'**으로 전환하기 위한 개인화 웹 애플리케이션입니다. **'질문 → 학습 → 체화'**의 유기적인 사이클을 통해 지식을 습득하고, 그 지식의 생명 주기를 '망각 곡선' 이론에 기반하여 과학적으로 시각화하고 관리하는 것을 목표로 합니다. 사용자는 이 시스템을 통해 지식을 정원처럼 가꾸는 동시에, 데이터 기반의 전략가로서 자신의 기억을 최적화하는 경험을 하게 됩니다.
 
@@ -15,14 +17,17 @@ style.css: 전문적인 디자인 테마와 함께 '지식 정원', '기억 곡�
 
 /js/ebbinghaus.js: '지식 정원'과 '기억 곡선 대시보드'의 모든 핵심 로직을 관리합니다. 식물의 상태 계산, 데이터 시각화, 복습 세션 진행 등을 담당합니다.
 
-/js/goalNavigator.js: 'AI 목표 내비게이터'의 3단계 상호작용 로직을 관리합니다.
+/js/goalNavigator.js: (수정) 사용자가 입력한 책과 챕터 제목을 기반으로, Firebase Functions에 통합된 Gemini API를 호출하여 3가지 레벨의 학습 목표(퀘스트)를 생성하고 제안하는 로직을 관리합니다.
+
+/js/bookExplorer.js: Google Books API를 사용하여 책을 검색하고 선택하는 'AI 도서 탐색기' 로직을 관리합니다.
 
 /js/api.js: 외부 API(Google Books)와의 통신을 담당합니다.
 
-핵심 기능 상세
-(기능 상세 내용은 이전과 동일)
+/functions/index.js: (신규) Firebase Cloud Functions 백엔드 로직. Gemini API와 연동하여 'AI 목표 설계자' 기능을 수행하는 서버리스 함수를 포함합니다.
 
 변경 기록
+2025-09-27 v6.0: 'AI 목표 설계자' 기능 도입. goalNavigator.js의 AI 목표 생성 로직을 Firebase Functions와 Gemini API를 사용하도록 전면 개편. 기존의 불안정한 목표 추천 기능을 대체하여 사용자가 직접 입력한 챕터 정보를 바탕으로 정교한 3-Level 학습 목표를 생성하는 기능 추가.
+
 2025-09-27 v5.3: 새 Firebase 프로젝트(metisv2) 생성에 따라 js/firebase.js의 firebaseConfig 정보 업데이트. 관련 초기 설정 가이드 문서 생성.
 
 2025-09-27 v5.2: goalNavigator.js에서 발생하는 모듈 로드 오류 수정. firebase.js에 functions 초기화 및 export 구문 추가.

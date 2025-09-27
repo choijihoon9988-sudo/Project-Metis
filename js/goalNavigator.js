@@ -28,12 +28,14 @@ export const GoalNavigator = {
         UI.showLoader(true, "AI가 챕터를 분석하고 퀘스트를 생성 중입니다...");
 
         try {
+            // Firebase Cloud Function을 호출합니다. 함수 이름은 'generateQuestsForChapter'로 가정합니다.
             const generateQuestsForChapter = httpsCallable(functions, "generateQuestsForChapter");
             const result = await generateQuestsForChapter({ 
                 bookTitle: this.state.book.title,
                 chapterTitle: this.state.chapterTitle 
             });
             
+            // 함수가 반환한 퀘스트 배열을 사용합니다.
             const quests = result.data.quests || [];
             if (quests.length === 0) {
                  throw new Error("AI가 퀘스트를 생성하지 못했습니다.");
@@ -44,6 +46,7 @@ export const GoalNavigator = {
         } catch (error) {
             console.error("AI 퀘스트 생성 실패:", error);
             UI.showToast("퀘스트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+            // 실패 시 다시 입력 화면으로 돌아갑니다.
             UI.GoalNavigator.render("chapterInput", { bookTitle: this.state.book.title });
         } finally {
             UI.showLoader(false);
@@ -70,7 +73,10 @@ export const GoalNavigator = {
             UI.GoalNavigator.render("chapterInput", { bookTitle: this.state.book.title });
             return;
         }
+        // '퀘스트 다시 선택' 버튼을 눌렀을 때, API를 다시 호출하지 않고
+        // 이전에 생성된 퀘스트 목록을 보여주도록 수정할 수 있습니다. (추후 개선 사항)
         if (e.target.id === "goal-editor-back-btn") {
+            // 현재는 간단하게 다시 생성하도록 처리합니다.
             this.generateQuests(); 
             return;
         }
