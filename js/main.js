@@ -52,7 +52,7 @@ function setupEventListeners() {
     }
     if (target.closest('#start-goal-navigator-btn')) {
       const title = document.getElementById('main-book-title').textContent;
-      if (title) GoalNavigator.init(title);
+      if (title) GoalNavigator.init({ title }); // GoalNavigator가 객체를 받도록 수정
       return;
     }
     const courseBtn = target.closest('.course-btn');
@@ -124,7 +124,7 @@ function setupEventListeners() {
     document.getElementById('main-book-title').textContent = book.title;
     document.getElementById('main-book-author').textContent = book.author;
     UI.showToast(`'${book.title}'(으)로 메인북 변경!`, 'success');
-    GoalNavigator.init(book.title);
+    GoalNavigator.init(book);
   });
 
   document.addEventListener('goalSelected', (e) => {

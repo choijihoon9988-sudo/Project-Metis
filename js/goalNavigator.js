@@ -16,6 +16,10 @@ const DUMMY_TOC = {
      "클린 코드": [
         { part: "1부: 클린 코드", chapters: ["의미 있는 이름", "함수"] },
         { part: "2부: 클린 코드 실천", chapters: ["클래스", "오류 처리"] }
+    ],
+    "역행자": [ // '역행자' 목차 추가
+        { part: "1부: 자의식 해체", chapters: ["탐색", "인정", "전환"] },
+        { part: "2부: 정체성 만들기", chapters: ["뇌 자동화", "역행자의 지식"] }
     ]
 };
 
@@ -41,8 +45,8 @@ const DUMMY_QUESTS = {
 export const GoalNavigator = {
     state: {},
 
-    init(bookTitle) {
-        this.state = { bookTitle, selectedChapter: null, selectedQuest: null };
+    init(book) { // book 객체 전체를 받도록 수정
+        this.state = { book, selectedChapter: null, selectedQuest: null };
         const content = document.getElementById('goal-navigator-modal');
         content.removeEventListener('click', this.handleEvents.bind(this));
         content.addEventListener('click', this.handleEvents.bind(this));
@@ -51,9 +55,13 @@ export const GoalNavigator = {
         UI.GoalNavigator.show();
     },
 
-    renderTOC() {
-        const toc = DUMMY_TOC[this.state.bookTitle] || [];
-        UI.GoalNavigator.render('toc', { bookTitle: this.state.bookTitle, toc });
+    // 목차 렌더링 로직 수정
+    async renderTOC() {
+        // Google Books API는 공식적인 목차 정보를 제공하지 않으므로,
+        // 미리 정의된 DUMMY_TOC를 우선적으로 사용합니다.
+        const toc = DUMMY_TOC[this.state.book.title] || DUMMY_TOC[this.state.book.title.split(':')[0].trim()] || [];
+
+        UI.GoalNavigator.render('toc', { bookTitle: this.state.book.title, toc });
     },
 
     handleEvents(e) {
