@@ -61,7 +61,14 @@ function setupEventListeners() {
       UI.switchView(viewName);
       if (viewName === 'garden') await Ebbinghaus.initGarden();
       if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
-      if (viewName === 'library') await Library.load();
+      if (viewName === 'library') {
+          await Library.load();
+          // '다 읽은 책' 선반에 스크롤 이벤트 리스너 추가
+          const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"] .book-grid');
+          if (finishedShelf) {
+              finishedShelf.addEventListener('scroll', UI.Library.updateFinishedShelfBackground);
+          }
+      }
       return;
     }
 
@@ -117,6 +124,15 @@ function setupEventListeners() {
         const shelfData = [Library.books.filter(b=>b.shelf==='reading'), Library.books.filter(b=>b.shelf==='toread'), Library.books.filter(b=>b.shelf==='finished')];
         document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
 
+        // '다 읽은 책' 선반으로 이동했을 때 스크롤 이벤트 리스너 추가
+        if (appState.libraryCarouselIndex === 2) {
+            const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"] .book-grid');
+            if (finishedShelf) {
+                finishedShelf.addEventListener('scroll', UI.Library.updateFinishedShelfBackground);
+                 // 초기 로드 시 한 번 실행
+                UI.Library.updateFinishedShelfBackground({ target: finishedShelf });
+            }
+        }
         return;
     }
 

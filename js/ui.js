@@ -273,14 +273,16 @@ export const UI = {
             };
 
             container.innerHTML = `
+                <div class="altitude-background"></div>
                 <div class="shelf-header">
                     <button class="shelf-arrow prev" data-direction="prev">&#10094;</button>
                     <h3 class="shelf-title">${Object.values(shelves)[0].title} (${Object.values(shelves)[0].books.length})</h3>
                     <button class="shelf-arrow next" data-direction="next">&#10095;</button>
                 </div>
                 <div class="library-carousel">
-                    ${Object.values(shelves).map(shelf => `
-                        <div class="library-shelf">
+                    ${Object.entries(shelves).map(([shelfKey, shelf]) => `
+                        <div class="library-shelf" data-shelf="${shelfKey}">
+                             ${shelfKey === 'finished' ? this.renderMilestones(shelf.books.length) : ''}
                             <div class="book-grid">
                                 ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
                             </div>
@@ -298,9 +300,13 @@ export const UI = {
                 return finishedDate.getFullYear() === now.getFullYear() && finishedDate.getMonth() === now.getMonth();
             }).length;
             
+            const finishedBookCount = shelves.finished.books.length;
+            const altitude = finishedBookCount * 50; // 1권당 50m
+            
             statsContainer.innerHTML = `
                 <h4>나의 독서 통계</h4>
                 <p>이번 달에 ${finishedThisMonth}권의 책을 완독하셨습니다!</p>
+                <p>현재 지식 고도: <strong>${altitude.toLocaleString()}m</strong></p>
                 <hr style="margin: 16px 0;">
                 <h4>이주의 챌린지</h4>
                 <p>이번 주, '자기계발' 분야 책 1권 읽기</p>
@@ -313,6 +319,41 @@ export const UI = {
                     <p>${book.title}</p>
                 </div>
             `;
+        },
+        renderMilestones(bookCount) {
+            const MILESTONES = [
+                { count: 10, text: '🕊️ 63빌딩 높이에 도달했습니다!', row: 2 },
+                { count: 30, text: '✈️ 에베레스트 산보다 높이 있습니다!', row: 6 },
+                { count: 70, text: '🎈 성층권에 진입했습니다!', row: 14 },
+                { count: 100, text: '🚀 무중력 공간에 오신 것을 환영합니다!', row: 20 },
+            ];
+            
+            let milestonesHTML = '';
+            MILESTONES.forEach(m => {
+                if (bookCount >= m.count) {
+                    const topPosition = (m.row * 180); // 대략적인 책 한 줄 높이
+                    milestonesHTML += `<div class="knowledge-milestone" style="top: ${topPosition}px;">${m.text}</div>`;
+                }
+            });
+            return milestonesHTML;
+        },
+        updateFinishedShelfBackground(event) {
+            const shelf = event.target;
+            const background = shelf.closest('.library-shelf').querySelector('.altitude-background');
+            if (!background) return;
+
+            const bookCount = shelf.querySelectorAll('.library-book').length;
+            
+            let altitudeClass = 'altitude-ground';
+            if (bookCount >= 100)      altitudeClass = 'altitude-space';
+            else if (bookCount >= 70) altitudeClass = 'altitude-night';
+            else if (bookCount >= 30) altitudeClass = 'altitude-sunset';
+            else if (bookCount >= 10)  altitudeClass = 'altitude-sky';
+            
+            if (!background.classList.contains(altitudeClass)) {
+                background.className = 'altitude-background'; // Reset
+                background.classList.add(altitudeClass);
+            }
         },
         renderBookDetail(book, skills, recommendation) {
             this.content.innerHTML = `
