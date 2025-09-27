@@ -97,6 +97,7 @@ function setupEventListeners() {
     if (libraryBook) {
         const bookId = libraryBook.dataset.bookId;
         Library.showBookDetail(bookId);
+        return;
     }
     const shelfArrow = target.closest('.shelf-arrow');
     if (shelfArrow) {
@@ -110,6 +111,13 @@ function setupEventListeners() {
             appState.libraryCarouselIndex = (appState.libraryCarouselIndex - 1 + slideCount) % slideCount;
         }
         carousel.style.transform = `translateX(-${appState.libraryCarouselIndex * 100}%)`;
+
+        // Shelf title update
+        const shelfTitles = ['읽고 있는 책', '읽고 싶은 책', '다 읽은 책'];
+        const shelfData = [Library.books.filter(b=>b.shelf==='reading'), Library.books.filter(b=>b.shelf==='toread'), Library.books.filter(b=>b.shelf==='finished')];
+        document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
+
+        return;
     }
 
 

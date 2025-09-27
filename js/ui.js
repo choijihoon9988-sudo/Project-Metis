@@ -263,27 +263,29 @@ export const UI = {
         show() { this.overlay.style.display = 'flex'; },
         hide() { if(this.overlay) this.overlay.style.display = 'none'; },
         render(books, skills) {
-            const container = document.getElementById('library-shelves');
+            const container = document.getElementById('library-carousel-container');
             if (!container) return;
 
             const shelves = {
-                reading: books.filter(b => b.shelf === 'reading'),
-                toread: books.filter(b => b.shelf === 'toread'),
-                finished: books.filter(b => b.shelf === 'finished'),
+                reading: { title: '읽고 있는 책', books: books.filter(b => b.shelf === 'reading') },
+                toread: { title: '읽고 싶은 책', books: books.filter(b => b.shelf === 'toread') },
+                finished: { title: '다 읽은 책', books: books.filter(b => b.shelf === 'finished') },
             };
 
             container.innerHTML = `
-                <div class="bookshelf">
-                    <h3>읽고 있는 책 (${shelves.reading.length})</h3>
-                    <div class="book-list">${shelves.reading.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
+                <div class="shelf-header">
+                    <button class="shelf-arrow prev" data-direction="prev">&#10094;</button>
+                    <h3 class="shelf-title">${Object.values(shelves)[0].title} (${Object.values(shelves)[0].books.length})</h3>
+                    <button class="shelf-arrow next" data-direction="next">&#10095;</button>
                 </div>
-                <div class="bookshelf">
-                    <h3>읽고 싶은 책 (${shelves.toread.length})</h3>
-                    <div class="book-list">${shelves.toread.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
-                </div>
-                <div class="bookshelf">
-                    <h3>다 읽은 책 (${shelves.finished.length})</h3>
-                    <div class="book-list">${shelves.finished.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
+                <div class="library-carousel">
+                    ${Object.values(shelves).map(shelf => `
+                        <div class="library-shelf">
+                            <div class="book-grid">
+                                ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
             
