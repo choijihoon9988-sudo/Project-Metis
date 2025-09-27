@@ -1,4 +1,4 @@
-/* style.css (버튼 스타일 복원 및 '나의 서재' 추가) */
+/* style.css (버튼 및 지식 정원 스타일 복원 및 '나의 서재' 추가) */
 :root {
 	--primary-color: #4285F4;
 	--primary-dark: #3367D6;
@@ -587,7 +587,7 @@ textarea {
     display: flex;
     gap: 20px;
     overflow-x: auto;
-    padding-bottom: 20px;
+    padding: 10px;
 }
 .library-book {
     flex-shrink: 0;
@@ -628,6 +628,16 @@ textarea {
     border-radius: 4px;
 }
 
+.book-tag {
+    display: inline-block;
+    background-color: #e8f0fe;
+    color: var(--primary-dark);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+}
 
 /* Other UI Styles */
 .loader-overlay {

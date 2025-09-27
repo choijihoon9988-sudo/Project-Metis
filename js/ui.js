@@ -189,7 +189,9 @@ export const UI = {
                                 <p>${data.author}</p>
                             </div>
                             <div class="modal-controls">
-                                <button id="book-explorer-add-btn" class="btn btn-primary">내 서재에 추가</button>
+                                <button id="book-explorer-back-btn" class="btn">다시 검색</button>
+                                <button id="book-explorer-add-btn" class="btn">내 서재에 추가</button>
+                                <button id="book-explorer-select-main-btn" class="btn btn-primary">이 책으로 목표 설정하기</button>
                             </div>`;
                     break;
                 case 'shelf-selection':
@@ -273,21 +275,27 @@ export const UI = {
             container.innerHTML = `
                 <div class="bookshelf">
                     <h3>읽고 있는 책 (${shelves.reading.length})</h3>
-                    <div class="book-list">${shelves.reading.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                    <div class="book-list">${shelves.reading.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
                 </div>
                 <div class="bookshelf">
                     <h3>읽고 싶은 책 (${shelves.toread.length})</h3>
-                    <div class="book-list">${shelves.toread.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                    <div class="book-list">${shelves.toread.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
                 </div>
                 <div class="bookshelf">
                     <h3>다 읽은 책 (${shelves.finished.length})</h3>
-                    <div class="book-list">${shelves.finished.map(b => this.renderBook(b)).join('') || '<p>책이 없습니다.</p>'}</div>
+                    <div class="book-list">${shelves.finished.map(b => this.renderBook(b)).join('') || '<p class="empty-message" style="grid-column: 1 / -1;">책장에서 책을 추가하세요.</p>'}</div>
                 </div>
             `;
             
             // Stats & Challenge
             const statsContainer = document.getElementById('library-stats');
-            const finishedThisMonth = books.filter(b => b.shelf === 'finished' && new Date(b.finishedAt).getMonth() === new Date().getMonth()).length;
+            const finishedThisMonth = books.filter(b => {
+                if (!b.finishedAt) return false;
+                const finishedDate = new Date(b.finishedAt);
+                const now = new Date();
+                return finishedDate.getFullYear() === now.getFullYear() && finishedDate.getMonth() === now.getMonth();
+            }).length;
+            
             statsContainer.innerHTML = `
                 <h4>나의 독서 통계</h4>
                 <p>이번 달에 ${finishedThisMonth}권의 책을 완독하셨습니다!</p>
@@ -307,7 +315,7 @@ export const UI = {
         renderBookDetail(book, skills, recommendation) {
             this.content.innerHTML = `
                 <button class="modal-close-btn">&times;</button>
-                <div class="modal-header" style="text-align: left; display:flex; gap: 24px;">
+                <div class="modal-header" style="text-align: left; display:flex; gap: 24px; align-items: flex-start;">
                     <img src="${book.cover}" alt="${book.title}" style="width: 150px; height: 225px; object-fit: cover; border-radius: var(--border-radius); flex-shrink: 0;">
                     <div>
                         <h3>${book.title}</h3>

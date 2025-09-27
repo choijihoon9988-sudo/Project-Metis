@@ -62,7 +62,7 @@ export const BookExplorer = {
             return;
         }
 
-        if (e.target.id === 'book-explorer-confirm-btn') {
+        if (e.target.id === 'book-explorer-select-main-btn') {
             document.dispatchEvent(new CustomEvent('bookSelected', { detail: this.state.selectedBook }));
             UI.BookExplorer.hide();
         }

@@ -1,6 +1,6 @@
 // js/library.js (신규 파일)
 import { db } from './firebase.js';
-import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { UI } from './ui.js';
 import { geminiModel, geminiTextModel } from './api.js';
 
@@ -19,8 +19,8 @@ export const Library = {
         const snapshot = await getDocs(booksCol);
         this.books = snapshot.docs.map(doc => doc.data());
         
-        const skillsDoc = doc(db, 'users', this.userId, 'skills', 'summary');
-        const skillsSnapshot = await getDoc(skillsDoc);
+        const skillsDocRef = doc(db, 'users', this.userId, 'skills', 'summary');
+        const skillsSnapshot = await getDoc(skillsDocRef);
         if (skillsSnapshot.exists()) {
             this.skills = skillsSnapshot.data();
         }
@@ -39,6 +39,7 @@ export const Library = {
             shelf: shelf,
             category: await this.getAIBookCategory(book.title),
             skillFocus: await this.getAISkillFocus(book.title),
+            finishedAt: shelf === 'finished' ? new Date().toISOString() : null
         };
 
         const bookRef = doc(db, 'users', this.userId, 'library', newBook.id);
@@ -60,6 +61,7 @@ export const Library = {
         
         UI.showLoader(false);
         UI.Library.renderBookDetail(book, this.skills, relatedBookRec);
+        UI.Library.show();
     },
     
     // --- AI Helper Functions ---
