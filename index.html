@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Chart.js 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -156,7 +155,6 @@
         </aside>
 
         <main class="main-content">
-            <!-- ============== Dashboard View ============== -->
             <div id="dashboard" class="view active">
                 <header class="view-header">
                     <h2>오늘의 지식 탐험</h2>
@@ -205,18 +203,15 @@
                 </div>
             </div>
             
-            <!-- ============== Knowledge Garden View ============== -->
             <div id="garden" class="view">
                 <header class="view-header">
                     <h2>🌿 지식 정원</h2>
                     <p>당신의 모든 지식 자산(식물)이 자라고 있습니다. 상태를 보고 관리해주세요.</p>
                 </header>
                 <div class="garden-container" id="garden-container">
-                    <!-- Knowledge plants will be rendered here -->
-                </div>
+                    </div>
             </div>
 
-            <!-- ============== Journey Map View ============== -->
             <div id="journey" class="view">
                 <header class="view-header">
                     <h2>🗺️ 지적 여정 맵</h2>
@@ -224,11 +219,9 @@
                 </header>
                 <div id="journey-map-container">
                     <svg id="journey-map-svg"></svg>
-                    <!-- Nodes will be rendered here via JS -->
-                </div>
+                    </div>
             </div>
 
-            <!-- ============== Metis Session View ============== -->
             <div id="metis-session" class="view">
                  <header class="view-header">
                      <button id="back-to-dashboard-btn" class="btn btn-secondary">← 뒤로가기</button>
@@ -236,8 +229,8 @@
                      <p id="step-title">단계 1: 학습 예측</p>
                  </header>
                  <div class="session-content">
+                    <div id="session-goal-display" class="goal-display"></div>
                     <div class="session-progress" id="session-progress"></div>
-                     <!-- Step 1: Prediction -->
                      <div id="step-1" class="step active card">
                         <div class="step-header">
                             <h4>[1/7] 학습 예측 (Prediction)</h4>
@@ -247,14 +240,12 @@
                         <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고, 사람들의 비합리적 선택을 유도하는 사례를 보여줄 것 같다."></textarea>
                         <button class="btn btn-primary next-step-btn">예측 완료, 집중 독서 시작</button>
                     </div>
-                    <!-- Step 2: Reading -->
-                     <div id="step-2" class="step card">
+                    <div id="step-2" class="step card">
                          <h4>[2/7] 집중 독서 (Focused Reading)</h4>
                          <p>목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p>
                          <div id="timer">00:00</div>
                          <button class="btn btn-primary" id="finish-reading-btn">독서 완료</button>
                      </div>
-                    <!-- Break Step -->
                     <div id="step-break" class="step card">
                         <h4>☕️ 휴식 (Active Break)</h4>
                         <p>잠시 휴식을 취하며 뇌를 정리합니다. 아래 질문에 대해 가볍게 생각해보세요.</p>
@@ -265,8 +256,7 @@
                         </div>
                         <button class="btn btn-primary" id="start-next-cycle-btn">휴식 완료, 다음 세션 시작</button>
                     </div>
-                    <!-- Step 3: Brain Dump -->
-                     <div id="step-3" class="step card">
+                    <div id="step-3" class="step card">
                         <div class="step-header">
                             <h4>[3/7] 생각 기록 (Brain Dump)</h4>
                             <div class="step-timer" id="timer-step-3">00:00</div>
@@ -275,8 +265,7 @@
                         <textarea id="braindump-input" placeholder="정리되지 않아도 괜찮습니다. 떠오르는 모든 것을 기록하세요."></textarea>
                         <button class="btn btn-primary next-step-btn">기록 완료</button>
                     </div>
-                    <!-- Step 4: AI Prediction -->
-                     <div id="step-4" class="step card">
+                    <div id="step-4" class="step card">
                         <div class="step-header">
                             <h4>[4/7] AI 피드백 예측 (Metacognition)</h4>
                             <div class="step-timer" id="timer-step-4">00:00</div>
@@ -285,7 +274,6 @@
                         <textarea id="ai-prediction-input" placeholder="예: 개념 설명은 잘했지만, 각 요소가 어떻게 상호작용하는지에 대한 설명이 부족하다고 지적할 것 같다."></textarea>
                         <button class="btn btn-primary next-step-btn">예측 완료</button>
                     </div>
-                    <!-- Step 5: Reveal -->
                     <div id="step-5" class="step card">
                         <div class="step-header">
                             <h4>[5/7] 비교 분석 (The Reveal)</h4>
@@ -299,8 +287,7 @@
                         </div>
                         <button class="btn btn-primary next-step-btn">분석 완료</button>
                     </div>
-                    <!-- Step 6: Gap Extraction -->
-                     <div id="step-6" class="step card">
+                    <div id="step-6" class="step card">
                         <div class="step-header">
                             <h4>[6/7] 글쓰기를 위한 핵심 질문 추출</h4>
                             <div class="step-timer" id="timer-step-6">00:00</div>
@@ -309,8 +296,7 @@
                         <textarea id="gap-input" placeholder="예: 나는 개념의 나열에 그쳤지만, AI는 '개념 간의 연결성 부족'을 지적했다. 그렇다면, 각 개념들은 어떻게 유기적으로 연결되는가?"></textarea>
                         <button class="btn btn-primary next-step-btn">질문 추출 완료</button>
                     </div>
-                    <!-- Step 7: Final Writing -->
-                     <div id="step-7" class="step card">
+                    <div id="step-7" class="step card">
                         <div class="step-header">
                              <h4>[7/7] 완벽한 체화를 위한 글쓰기</h4>
                              <div class="step-timer" id="timer-step-7">00:00</div>
@@ -324,11 +310,9 @@
         </main>
     </div>
 
-    <!-- ============== Modals ============== -->
     <div id="loader" class="loader-overlay"><div class="loader"></div><div class="loader-text">AI가 당신의 생각을 분석 중입니다...</div></div>
     <div id="challenge-modal-overlay" class="modal-overlay"><div id="challenge-modal" class="modal-content"></div></div>
     <div id="goal-navigator-modal-overlay" class="modal-overlay"><div id="goal-navigator-modal" class="modal-content"><div id="goal-navigator-content"></div></div></div>
-    <!-- 기억 곡선 대시보드 모달 -->
     <div id="dashboard-modal-overlay" class="modal-overlay">
         <div id="dashboard-modal" class="modal-content dashboard-modal-content">
             <div class="dashboard-header">
@@ -874,4 +858,3 @@
     </script>
 </body>
 </html>
-
