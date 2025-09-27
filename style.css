@@ -617,30 +617,27 @@ textarea {
     background-size: 100% 200%; /* Make gradient taller for parallax effect */
     background-position: center 0%; /* Start at the top (space) */
 	background-image: linear-gradient(to bottom,
-		/* 0% ~ 10%: 우주 (Space) */
-		#000000 0%, 
-		#020108 10%, 
-		
-		/* 10% ~ 30%: 밤하늘 (Night Sky) */
-		#03020e 15%, 
-		#2c2a59 25%, 
-		#3b3a79 30%,
-		
-		/* 30% ~ 50%: 노을 (Sunset) */
-		#6a579a 35%, 
-		#d68a9c 45%, 
-		#f8a38c 50%,
-		
-		/* 50% ~ 85%: 낮 하늘 (Day Sky) */
-		#f8c3a1 55%, 
-		#a5d7f5 70%, 
-		#87CEEB 85%,
-		
+		/* 0% ~ 20%: 깊은 우주 (Deep Space) */
+		#0c0c1e 0%,       /* 아주 어두운 남색 */
+		#1a1a3a 15%,      /* 깊은 남색 */
+
+		/* 20% ~ 40%: 성층권/밤하늘 (Stratosphere/Night Sky) */
+		#3a3a6a 25%,      /* 보라색 섞인 밤하늘 */
+		#5a4a8b 35%,      /* 새벽녘 보라색 */
+
+		/* 40% ~ 60%: 일출/일몰 (Sunrise/Sunset) */
+		#e87a5a 50%,      /* 밝은 주황색 */
+		#f8c3a1 58%,      /* 연한 살구색 */
+
+		/* 60% ~ 85%: 낮 하늘 (Day Sky) */
+		#a5d7f5 65%,      /* 밝은 하늘색 */
+		#87CEEB 80%,      /* 스카이 블루 */
+
 		/* 85% ~ 100%: 지상 (Ground) */
-		#a2be22 90%, /* 잔디 */
-		#698b45 95%, /* 짙은 잔디 */
-		#8a6e58 98%, /* 흙 */
-		#6E4C2F 100% /* 깊은 흙 */
+		#b0a08b 90%,      /* 마른 흙/모래 */
+		#8b7d6b 95%,      /* 젖은 흙 */
+		#5a4d3b 98%,      /* 어두운 흙 */
+		#3b2f2f 100%      /* 거의 검은 흙/암석 */
 	);
 }
 
