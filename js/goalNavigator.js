@@ -4,7 +4,7 @@ import { UI } from "./ui.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // 💡 네가 준 API 키를 여기에 넣었어!
-const API_KEY = "AIzaSyCULah5vm81WCnhcZuhumLO2cJ-82OJXJA"; 
+const API_KEY = "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A"; 
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });

@@ -2,7 +2,7 @@
 // 이 모듈은 외부 API(Google Books API)와의 통신을 담당합니다.
 
 // 중요: 이 API 키는 실제 프로젝트에서는 서버 측에서 안전하게 관리해야 합니다.
-const API_KEY = "AIzaSyCULah5vm81WCnhcZuhumLO2cJ-82OJXJA"; // 여기에 당신의 Google Cloud Platform API 키를 넣으세요.
+const API_KEY = "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A"; // 여기에 당신의 Google Cloud Platform API 키를 넣으세요.
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 
 export const GoogleBooksAPI = {
