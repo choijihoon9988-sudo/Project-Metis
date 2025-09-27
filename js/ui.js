@@ -5,10 +5,6 @@ export const switchView = (viewName, navButtons) => {
     navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewName));
 };
 
-export const showLoader = (show) => {
-    document.getElementById('loader').style.display = show ? 'flex' : 'none';
-};
-
 // --- 메티스 세션 UI ---
 export const switchStep = (stepNumber) => {
     document.querySelectorAll('#metis-session .step').forEach(step => step.classList.remove('active'));
@@ -21,15 +17,16 @@ export const switchStep = (stepNumber) => {
 export const updateTimerDisplay = (timeLeft) => {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
-    document.getElementById('timer').textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const timerEl = document.getElementById('timer');
+    if(timerEl) timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
 // --- 지식 타임캡슐 UI ---
-export const renderCapsuleStorage = (capsulesToRender, onReview, filter) => {
+export const renderCapsuleStorage = (capsulesToRender, filter) => {
     const container = document.getElementById('storage-container');
     if (!container) return;
     
-    container.innerHTML = ''; // 컨테이너 비우기
+    container.innerHTML = '';
     
     if (capsulesToRender.length === 0) {
         let message = '';
@@ -44,7 +41,6 @@ export const renderCapsuleStorage = (capsulesToRender, onReview, filter) => {
         return;
     }
     
-    // 날짜순으로 정렬 (최신 캡슐이 위로)
     capsulesToRender.sort((a, b) => b.id - a.id);
 
     capsulesToRender.forEach(capsule => {
@@ -64,16 +60,48 @@ export const renderCapsuleStorage = (capsulesToRender, onReview, filter) => {
             <div class="capsule-source">출처: ${capsule.sourceBook}</div>
             ${statusHTML}
         `;
-        
-        // 잠금 해제된 캡슐만 클릭 가능
-        if (capsule.state === 'unlocked') {
-            capsuleEl.onclick = () => onReview(capsule);
-        }
         container.appendChild(capsuleEl);
     });
 };
 
-// --- 모달 UI ---
+// --- 모달 및 알림 UI ---
+export const showToast = (message, type = 'info') => {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+};
+
+export const showConfirmModal = (message, onConfirm) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.display = 'flex';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.innerHTML = `
+        <p>${message}</p>
+        <div class="modal-controls">
+            <button id="confirm-cancel" class="btn">취소</button>
+            <button id="confirm-ok" class="btn btn-primary">확인</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    document.getElementById('confirm-ok').onclick = () => {
+        onConfirm();
+        overlay.remove();
+    };
+    document.getElementById('confirm-cancel').onclick = () => {
+        overlay.remove();
+    };
+};
+
 const challengeModalOverlay = document.getElementById('challenge-modal-overlay');
 const challengeModalContent = document.getElementById('challenge-modal');
 export const showChallengeModal = (capsule, onComplete) => {
@@ -95,28 +123,24 @@ export const showChallengeModal = (capsule, onComplete) => {
             <button id="challenge-submit-btn" class="btn btn-primary" disabled>복습 완료</button>
         </div>`;
     
-    const submitBtn = document.getElementById('challenge-submit-btn');
+    challengeModalOverlay.style.display = 'flex';
     let selectedConfidence = null;
 
-    document.querySelectorAll('.confidence-buttons .btn').forEach(btn => {
-        btn.onclick = () => {
+    challengeModalContent.onclick = (e) => {
+        const target = e.target;
+        if(target.closest('.confidence-buttons .btn')){
             document.querySelectorAll('.confidence-buttons .btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            selectedConfidence = btn.dataset.confidence;
-            submitBtn.disabled = false;
-        }
-    });
-
-    document.getElementById('challenge-cancel-btn').onclick = hideChallengeModal;
-    document.getElementById('challenge-submit-btn').onclick = () => {
-        if (selectedConfidence) {
-            onComplete(selectedConfidence);
+            target.closest('.btn').classList.add('active');
+            selectedConfidence = target.closest('.btn').dataset.confidence;
+            challengeModalContent.querySelector('#challenge-submit-btn').disabled = false;
+        } else if (target.id === 'challenge-cancel-btn'){
+            hideChallengeModal();
+        } else if (target.id === 'challenge-submit-btn'){
+            if(selectedConfidence) onComplete(selectedConfidence);
         }
     };
-    
-    challengeModalOverlay.style.display = 'flex';
 };
-export const hideChallengeModal = () => { challengeModalOverlay.style.display = 'none'; };
+export const hideChallengeModal = () => { if(challengeModalOverlay) challengeModalOverlay.style.display = 'none'; };
 
 const goalModalOverlay = document.getElementById('goal-navigator-modal-overlay');
 const goalModalContent = document.getElementById('goal-navigator-content');
@@ -140,3 +164,4 @@ export const renderGoalNavigatorStep = (step, data) => {
     } 
     goalModalContent.innerHTML = content; 
 };
+
