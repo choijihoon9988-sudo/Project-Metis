@@ -616,23 +616,32 @@ textarea {
 	border-radius: var(--border-radius);
     background-size: 100% 200%; /* Make gradient taller for parallax effect */
     background-position: center 0%; /* Start at the top (space) */
-    background-image: linear-gradient(to bottom, 
-        /* Space */
-        #000000 0%, 
-        #191970 15%,
-        /* Night */
-        #483D8B 25%,
-        #FF6347 35%,
-        /* Sunset */
-        #FF7F50 45%,
-        #4682B4 60%,
-        /* Sky */
-        #87CEEB 80%,
-        #A2BE22 90%,
-        /* Ground */
-        #558042 95%,
-        #6E4C2F 100%
-    );
+	background-image: linear-gradient(to bottom,
+		/* 0% ~ 10%: 우주 (Space) */
+		#000000 0%, 
+		#020108 10%, 
+		
+		/* 10% ~ 30%: 밤하늘 (Night Sky) */
+		#03020e 15%, 
+		#2c2a59 25%, 
+		#3b3a79 30%,
+		
+		/* 30% ~ 50%: 노을 (Sunset) */
+		#6a579a 35%, 
+		#d68a9c 45%, 
+		#f8a38c 50%,
+		
+		/* 50% ~ 85%: 낮 하늘 (Day Sky) */
+		#f8c3a1 55%, 
+		#a5d7f5 70%, 
+		#87CEEB 85%,
+		
+		/* 85% ~ 100%: 지상 (Ground) */
+		#a2be22 90%, /* 잔디 */
+		#698b45 95%, /* 짙은 잔디 */
+		#8a6e58 98%, /* 흙 */
+		#6E4C2F 100% /* 깊은 흙 */
+	);
 }
 
 /* 별 애니메이션 */
