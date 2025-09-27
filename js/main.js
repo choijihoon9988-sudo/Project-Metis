@@ -6,10 +6,12 @@ import { Ebbinghaus } from './ebbinghaus.js';
 import { MetisSession } from './metisSession.js';
 import { BookExplorer } from './bookExplorer.js';
 import { GoalNavigator } from './goalNavigator.js';
+import { Refinement } from './refinement.js'; // 신규 임포트
 
 const appState = {
   user: null,
   currentPlant: null,
+  currentRefinement: null, // 현재 리뷰 중인 정제 데이터
 };
 
 async function main() {
@@ -17,9 +19,11 @@ async function main() {
   if (user) {
     appState.user = user;
     Ebbinghaus.setUser(user.uid);
+    Refinement.setUser(user.uid); // Refinement 모듈에도 사용자 ID 설정
     UI.switchView('dashboard');
     setupEventListeners();
     await Ebbinghaus.initGarden();
+    await Refinement.load(); // 정제 데이터 로드
   } else {
     console.error("Firebase 인증 실패. 앱을 초기화할 수 없습니다.");
     UI.showToast("사용자 인증에 실패했습니다. 새로고침 해주세요.", "error");
@@ -83,6 +87,41 @@ function setupEventListeners() {
       return;
     }
 
+    // --- 메티스 세션 클리핑 버튼 ---
+    if (target.id === 'add-clipping-btn') {
+        document.getElementById('clipping-modal-overlay').style.display = 'flex';
+        document.getElementById('clipping-input').focus();
+        return;
+    }
+    if (target.id === 'cancel-clipping-btn' || !target.closest('.modal-content') && target.closest('#clipping-modal-overlay')) {
+        document.getElementById('clipping-modal-overlay').style.display = 'none';
+        document.getElementById('clipping-input').value = '';
+        return;
+    }
+    if (target.id === 'save-clipping-btn') {
+        const text = document.getElementById('clipping-input').value;
+        MetisSession.addClipping(text);
+        document.getElementById('clipping-modal-overlay').style.display = 'none';
+        document.getElementById('clipping-input').value = '';
+        return;
+    }
+
+    // --- 지식 정제소 리뷰 버튼 ---
+    const reviewBtn = target.closest('.review-refinement-btn');
+    if (reviewBtn) {
+        const refinementId = reviewBtn.dataset.id;
+        appState.currentRefinement = Refinement.getById(refinementId);
+        if (appState.currentRefinement) {
+            UI.ClippingReview.render(appState.currentRefinement);
+            UI.switchView('clipping-review-view');
+        }
+        return;
+    }
+     if (target.id === 'back-to-dashboard-from-review') {
+        UI.switchView('dashboard');
+        return;
+    }
+
     // --- 지식 정원 & 대시보드 모달 ---
     const plantCard = target.closest('.plant-card');
     if (plantCard) {
@@ -124,6 +163,7 @@ function setupEventListeners() {
     }
   });
 
+  // --- 커스텀 이벤트 리스너 ---
   document.addEventListener('bookSelected', (e) => {
     const book = e.detail;
     document.getElementById('main-book-cover').src = book.cover;
@@ -141,9 +181,8 @@ function setupEventListeners() {
 
   document.addEventListener('sessionComplete', async (e) => {
     if (e.detail.finished) {
-      await Ebbinghaus.plantSeed(e.detail.data);
-      UI.switchView('garden');
-      await Ebbinghaus.initGarden();
+        UI.switchView('dashboard');
+        await Refinement.load();
     }
   });
 }

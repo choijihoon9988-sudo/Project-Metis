@@ -1,6 +1,7 @@
 // js/metisSession.js
 import { UI } from './ui.js';
 import { geminiModel } from './api.js';
+import { Refinement } from './refinement.js'; // 지식 정제소 모듈 임포트
 
 // 코스별 '전략적 고정값' 시간표 (단위: 초)
 const COURSE_PRESETS = {
@@ -49,6 +50,8 @@ export const MetisSession = {
         userInputs: { prediction: '', brainDump: '', aiPrediction: '', gap: '', finalWriting: '' },
         timerInterval: null,
         timePreset: null,
+        clippings: [], // 클리핑을 저장할 배열 추가
+        currentBook: {}, // 현재 책 정보를 저장할 객체 추가
     },
 
     init() {
@@ -56,6 +59,10 @@ export const MetisSession = {
         const selectedCourse = document.querySelector('.course-btn.active');
         const totalMinutes = selectedCourse ? parseInt(selectedCourse.dataset.duration, 10) : 30;
         this.state.timePreset = COURSE_PRESETS[totalMinutes];
+        this.state.currentBook = {
+            title: document.getElementById('main-book-title').textContent,
+            cover: document.getElementById('main-book-cover').src,
+        };
         this.buildStepSequence();
 
         document.getElementById('session-goal-display').innerHTML = document.getElementById('main-book-goal').innerHTML;
@@ -180,23 +187,30 @@ export const MetisSession = {
         UI.showLoader(false);
     },
 
-    complete() {
+    async complete() {
         clearInterval(this.state.timerInterval);
         const finalWriting = document.getElementById('final-writing-input').value;
 
         if (!finalWriting.trim()) {
-            UI.showToast('체화 글쓰기를 작성해야 씨앗을 심을 수 있습니다!', 'error');
-            this.state.currentStepId = 'step-7';
-            this.state.currentStepIndex = this.stepSequence.indexOf('step-7');
+            UI.showToast('체화 글쓰기를 작성해야 합니다!', 'error');
             return;
         }
         this.state.userInputs.finalWriting = finalWriting;
 
+        // 세션 완료 시, 정제소로 클리핑 데이터 전송
+        await Refinement.startRefinement(this.state.clippings, this.state.currentBook);
+        
+        UI.showToast(`'${this.state.currentBook.title}'에 대한 ${this.state.clippings.length}개의 지식 조각이 정제소로 이동했습니다.`, 'success');
+        
         document.dispatchEvent(new CustomEvent('sessionComplete', {
-            detail: {
-                finished: true,
-                data: this.state.userInputs
-            }
+            detail: { finished: true }
         }));
+    },
+
+    addClipping(text) {
+        if(text.trim()) {
+            this.state.clippings.push(text);
+            UI.showToast(`클리핑 추가 완료! (현재 ${this.state.clippings.length}개)`, 'success');
+        }
     }
 };

@@ -1,4 +1,4 @@
-// js/firebase.js (최종 수정본)
+// js/firebase.js
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -10,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA",
   authDomain: "metisv2.firebaseapp.com",
   projectId: "metisv2",
-  storageBucket: "metisv2.firebasestorage.app",
+  storageBucket: "metisv2.appspot.com",
   messagingSenderId: "958929810493",
   appId: "1:958929810493:web:024b4e6c8f0768c7bf2654"
 };

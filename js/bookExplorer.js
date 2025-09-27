@@ -37,7 +37,7 @@ export const BookExplorer = {
             this.state.selectedBook = {
                 title: resultCard.dataset.title,
                 author: resultCard.dataset.author,
-                cover: resultCard.querySelector('img').src,
+                cover: resultCard.dataset.cover,
             };
             UI.BookExplorer.render('confirmation', this.state.selectedBook);
             return;
@@ -54,4 +54,3 @@ export const BookExplorer = {
         }
     }
 };
-

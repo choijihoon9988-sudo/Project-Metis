@@ -117,6 +117,31 @@
         .comparison-content { background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 16px; min-height: 150px; overflow-y: auto; }
         #prediction-options { display: none; margin-top: 16px; } /* 심화 예측 버튼 */
         
+        /* 지식 정제소 UI 스타일 */
+        #refinement-section { margin-top: 24px; }
+        .refinement-card { 
+            display: flex; align-items: center; gap: 16px; 
+            padding: 16px; border: 1px solid var(--border-color);
+            border-radius: var(--border-radius); background-color: var(--surface-color);
+            margin-bottom: 12px;
+        }
+        .refinement-card img { width: 40px; height: 60px; object-fit: cover; border-radius: 4px; }
+        .refinement-info p { margin: 0; font-weight: 500; }
+        .refinement-info .status { font-size: 14px; color: var(--text-light-color); }
+        .refinement-card .btn { margin-left: auto; }
+        
+        /* 클리핑 리뷰 뷰 스타일 */
+        #clipping-review-view .clipping-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+        .clipping-item.highlighted { background-color: #fffbe6; border-color: #ffe58f; }
+        .clipping-text::selection { background: #ffe58f; }
+        .clipping-controls { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+        .note-input { display: none; margin-top: 10px; }
+
         /* Other UI Styles */
         .loader-overlay { display: none; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000; }
         .loader { border: 6px solid rgba(255,255,255,0.3); border-top: 6px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
@@ -163,6 +188,14 @@
                     <h2>오늘의 지식 탐험</h2>
                     <p>메인북을 중심으로 새로운 지식을 탐험하고, 당신의 자산으로 만드세요.</p>
                 </header>
+
+                <div id="refinement-section" class="card">
+                    <h3>💎 지식 정제소</h3>
+                    <div id="refinement-list">
+                        <p class="empty-message">정제 중인 지식이 없습니다.</p>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid">
                     <div id="main-book-slot" class="main-book-slot card">
                         <div class="book-info">
@@ -248,9 +281,10 @@
                     </div>
                     <div id="step-2" class="step card">
                          <h4>[2/8] 집중 독서 (Focused Reading)</h4>
-                         <p>목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p>
+                         <p>목표에만 집중하여 책을 읽습니다. 중요한 문장을 발견하면 '클리핑' 하세요.</p>
                          <div id="timer-step-2" class="timer-display">00:00</div>
-                         <button class="btn btn-primary next-step-btn">독서 완료</button>
+                         <button id="add-clipping-btn" class="btn" style="width: 100%; margin-bottom: 8px;">+ 현재 문단 클리핑하기</button>
+                         <button class="btn btn-primary next-step-btn" style="width: 100%;">독서 완료</button>
                     </div>
                      <div id="step-2-break" class="step card">
                          <h4>[3/8] 두뇌 휴식 (Brain Break)</h4>
@@ -305,9 +339,21 @@
                         </div>
                          <p>제한 시간 안에, 방금 추출한 질문에 대한 답을 스스로 설명하는 한 편의 글을 완성하세요.</p>
                          <textarea id="final-writing-input" placeholder="6단계에서 뽑아낸 질문을 바탕으로, 오늘 배운 내용을 다른 사람에게 설명하듯 자유롭게 글을 작성해보세요."></textarea>
-                         <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 정원에 씨앗 심기</button>
+                         <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 정제소로 보내기</button>
                      </div>
                  </div>
+            </div>
+
+            <div id="clipping-review-view" class="view">
+                <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <button id="back-to-dashboard-from-review" class="btn btn-secondary">← 대시보드로 돌아가기</button>
+                    <h2 style="margin:0;">지식 리뷰</h2>
+                    <p id="clipping-review-header" style="margin:0;"></p>
+                </header>
+                <div id="clipping-review-content" class="card"></div>
+                <div class="modal-controls">
+                    <button id="finish-review-btn" class="btn btn-primary">리뷰 완료</button>
+                </div>
             </div>
         </main>
     </div>
@@ -335,6 +381,18 @@
     </div>
     <div id="dashboard-modal-overlay" class="modal-overlay">
         <div id="dashboard-modal-content" class="modal-content" style="max-width: 800px;"></div>
+    </div>
+    <div id="clipping-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>지식 조각 클리핑</h3><p>책에서 발견한 핵심 내용을 붙여넣으세요.</p></div>
+            <div class="modal-body">
+                <textarea id="clipping-input" placeholder="여기에 중요한 문단을 복사-붙여넣기 하세요..."></textarea>
+            </div>
+            <div class="modal-controls">
+                <button id="cancel-clipping-btn" class="btn">취소</button>
+                <button id="save-clipping-btn" class="btn btn-primary">저장하기</button>
+            </div>
+        </div>
     </div>
     
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>

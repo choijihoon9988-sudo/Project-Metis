@@ -1,12 +1,14 @@
 // js/ebbinghaus.js
 import { UI } from './ui.js';
+// Firebase의 Firestore 기능을 사용하기 위해 필요한 함수들을 가져옵니다.
 import { db } from './firebase.js';
 import { collection, doc, getDocs, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export const Ebbinghaus = {
     plants: [],
-    userId: null, 
+    userId: null, // 현재 사용자의 고유 ID를 저장할 변수
 
+    // 사용자 ID를 받아와서 모듈 내에 저장합니다.
     setUser(userId) {
         this.userId = userId;
     },
@@ -18,6 +20,7 @@ export const Ebbinghaus = {
         return Math.round(this.getReviewInterval(strength - 1) * 1.8);
     },
 
+    // Firestore에서 데이터를 비동기적으로 불러옵니다.
     async load() {
         if (!this.userId) return;
         const plantsCol = collection(db, 'users', this.userId, 'plants');
@@ -26,12 +29,15 @@ export const Ebbinghaus = {
         this.plants.forEach(p => this.updatePlantState(p));
     },
 
+    // Firestore에 데이터를 비동기적으로 저장합니다.
     async savePlant(plantData) {
         if (!this.userId) return;
+        // 각 plant의 id를 Firestore 문서의 id로 사용합니다.
         const plantRef = doc(db, 'users', this.userId, 'plants', String(plantData.id));
         await setDoc(plantRef, plantData);
     },
     
+    // Firestore의 특정 식물 데이터를 업데이트합니다.
     async updatePlant(plantData) {
         if (!this.userId) return;
         const plantRef = doc(db, 'users', this.userId, 'plants', String(plantData.id));
@@ -39,6 +45,7 @@ export const Ebbinghaus = {
     },
 
     updatePlantState(plant) {
+        // ... (기존 updatePlantState 로직은 동일)
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
@@ -61,30 +68,31 @@ export const Ebbinghaus = {
         else plant.memoryStage = '장기 기억';
     },
 
-    async plantSeed(sessionData) {
-        const goal = document.querySelector('#main-book-goal p').textContent;
-        const sourceBook = document.getElementById('main-book-title').textContent;
+    async plantSeed(sessionData, bookInfo) {
+        const sourceBook = bookInfo.title;
         const { gap, finalWriting } = sessionData;
 
         const newPlant = {
             id: Date.now(),
-            title: goal,
+            title: gap, // 하이라이트/질문이 제목이 됨
             sourceBook,
-            question: `[핵심 질문] ${gap || '정의된 질문 없음'}\n\n당신이 체화한 지식:`,
-            answer: finalWriting,
+            question: `[핵심 내용]\n${gap}`, // 질문은 핵심 내용
+            answer: finalWriting, // 답변은 내 생각
             strength: 1,
             reviews: [{ date: new Date().toISOString() }]
         };
+
         this.updatePlantState(newPlant);
         await this.savePlant(newPlant);
     },
 
     async initGarden() {
-        await this.load();
+        await this.load(); // Firestore에서 데이터를 불러올 때까지 기다립니다.
         UI.renderGarden(this.plants);
     },
 
     getPlantById(id) {
+        // Firestore에서 불러온 데이터는 id가 숫자일 수 있으므로 문자열로 비교합니다.
         return this.plants.find(p => String(p.id) === String(id));
     },
     
@@ -104,14 +112,15 @@ export const Ebbinghaus = {
             if (confidence === 'confident') plant.strength += 1;
             else if (confidence === 'guess') plant.strength = Math.max(1, plant.strength - 1);
             
-            this.updatePlantState(plant);
-            await this.updatePlant(plant); 
+            this.updatePlantState(plant); // 상태 업데이트 후
+            await this.updatePlant(plant); // Firestore에 업데이트된 정보 저장
             
-            await this.initGarden();
+            await this.initGarden(); // 정원 다시 그리기
             UI.showToast('복습 완료! 지식의 힘이 강해졌습니다.', 'success');
         });
     },
 
+    // ... (generateCurveData와 createChartConfig 함수는 기존과 동일)
     generateCurveData(startDate, strength) {
         const data = [];
         const decayRate = 0.3 / Math.log(strength + 1.5);

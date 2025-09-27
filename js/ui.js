@@ -244,6 +244,117 @@ export const UI = {
             if(existingSimIndex > -1) this.chart.data.datasets.splice(existingSimIndex, 1);
             this.chart.data.datasets.push(newData);
             this.chart.update();
+        },
+        renderRefinements(refinements) {
+            const container = document.getElementById('refinement-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (refinements.length === 0) {
+                container.innerHTML = `<p class="empty-message">정제 중인 지식이 없습니다.</p>`;
+                return;
+            }
+
+            const now = new Date();
+            refinements.forEach(r => {
+                const unlocksAt = new Date(r.unlocksAt);
+                const isLocked = now < unlocksAt;
+                
+                let statusText = '';
+                let buttonText = '';
+                
+                switch(r.stage) {
+                    case 1: 
+                        statusText = `2단계: 핵심 선별까지`;
+                        buttonText = '클리핑 리뷰하기';
+                        break;
+                    case 2:
+                        statusText = `3단계: 생각 연결까지`;
+                        buttonText = '하이라이트 리뷰';
+                        break;
+                    case 3:
+                        statusText = `최종: 정원 심기까지`;
+                        buttonText = '지식 정원에 심기';
+                        break;
+                }
+
+                if (isLocked) {
+                    const diffHours = Math.ceil((unlocksAt - now) / (1000 * 60 * 60));
+                    statusText += ` ${diffHours}시간 남음`;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'refinement-card';
+                card.innerHTML = `
+                    <img src="${r.bookCover}" alt="${r.bookTitle}">
+                    <div class="refinement-info">
+                        <p>${r.bookTitle}</p>
+                        <span class="status">${statusText}</span>
+                    </div>
+                    <button class="btn ${isLocked ? '' : 'btn-primary'} review-refinement-btn" data-id="${r.id}" ${isLocked ? 'disabled' : ''}>
+                        ${isLocked ? '잠김' : buttonText}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+    },
+    
+    ClippingReview: {
+        render(refinement) {
+            const content = document.getElementById('clipping-review-content');
+            const header = document.getElementById('clipping-review-header');
+            let instruction = '';
+
+            switch(refinement.stage) {
+                case 1:
+                    instruction = '<h4>1일차 리뷰: 핵심 선별</h4><p>어제 수집한 지식 조각 중, 정말 중요하다고 생각하는 문장에만 하이라이트를 칠해주세요. 마우스로 드래그하면 하이라이트됩니다.</p>';
+                    header.textContent = "2단계: 핵심 선별";
+                    break;
+                case 2:
+                    instruction = '<h4>7일차 리뷰: 생각 연결</h4><p>일주일 전 하이라이트한 내용입니다. 왜 이 부분이 중요하다고 생각했는지, 어떻게 적용할 수 있을지 옆의 아이콘을 눌러 당신의 생각을 기록하세요.</p>';
+                     header.textContent = "3단계: 생각 연결";
+                    break;
+                case 3:
+                    instruction = '<h4>30일차 리뷰: 최종 체화</h4><p>한 달간 정제한 지식의 정수입니다. 이 중 영구적으로 간직할 지식을 선택하여 당신의 정원에 씨앗으로 심어주세요.</p>';
+                     header.textContent = "4단계: 정원에 심기";
+                    break;
+            }
+            
+            content.innerHTML = instruction + refinement.clippings.map(clip => this.renderClippingItem(clip, refinement.stage)).join('');
+        },
+
+        renderClippingItem(clip, stage) {
+            const isHighlighted = clip.highlighted;
+            let controls = '';
+
+            switch(stage) {
+                case 1:
+                    controls = `<button class="btn ${isHighlighted ? 'active' : ''}" data-action="toggle-highlight" data-clip-id="${clip.id}">${isHighlighted ? '하이라이트 해제' : '하이라이트'}</button>`;
+                    break;
+                case 2:
+                    if(isHighlighted) {
+                        controls = `<button class="btn" data-action="add-note" data-clip-id="${clip.id}">✏️ 생각 추가하기</button>`;
+                    }
+                    break;
+                case 3:
+                     if(isHighlighted && clip.note) {
+                        controls = `<input type="checkbox" class="plant-seed-checkbox" data-clip-id="${clip.id}" style="width: 20px; height: 20px;">`;
+                    }
+                    break;
+            }
+
+            return `
+                <div class="clipping-item ${isHighlighted ? 'highlighted' : ''}" data-clip-id="${clip.id}">
+                    <p class="clipping-text">${clip.text}</p>
+                    ${clip.note ? `<div style="padding: 10px; margin-top: 10px; background: #e8f0fe; border-radius: 4px;"><p><strong>내 생각:</strong> ${clip.note}</p></div>` : ''}
+                    <div class="clipping-controls">${controls}</div>
+                    <div class="note-input">
+                        <textarea placeholder="생각을 기록하세요..."></textarea>
+                        <button class="btn btn-primary" data-action="save-note" data-clip-id="${clip.id}">저장</button>
+                    </div>
+                </div>
+            `;
         }
     },
 
