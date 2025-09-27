@@ -1,8 +1,8 @@
 // js/api.js
 // 이 모듈은 외부 API(Google Books API)와의 통신을 담당합니다.
 
-// 중요: 이 API 키는 실제 프로젝트에서는 서버 측에서 안전하게 관리해야 합니다.
-const API_KEY = "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A"; // 여기에 당신의 Google Cloud Platform API 키를 넣으세요.
+// ⚠️ 중요: 아래 따옴표 안에 Google Cloud에서 새로 생성한 API 키를 붙여넣으세요!
+const API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA"; 
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 
 export const GoogleBooksAPI = {
@@ -12,9 +12,7 @@ export const GoogleBooksAPI = {
      * @returns {Promise<Array<object>>} - 검색된 책 정보 배열
      */
     async searchBooks(query) {
-        // 'YOUR_GOOGLE_BOOKS_API_KEY'는 키가 입력되지 않았을 때의 초기값 이름입니다.
-        // 키가 비어있거나 초기값 이름 그대로일 때만 임시 데이터를 사용하도록 수정했습니다.
-        if (!API_KEY || API_KEY === "YOUR_GOOGLE_BOOKS_API_KEY") {
+        if (!API_KEY || API_KEY === "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA") {
             console.warn("Google Books API 키가 설정되지 않았습니다. /js/api.js 파일을 확인해주세요. 임시 데이터를 사용합니다.");
             return this.getDummyBooks(query);
         }
@@ -22,11 +20,10 @@ export const GoogleBooksAPI = {
         try {
             const response = await fetch(`${GOOGLE_BOOKS_API_URL}?q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=12&lang=ko`);
             if (!response.ok) {
-                throw new Error(`API 요청 실패: ${response.status}`);
+                throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
             
-            // API 응답을 우리가 사용하기 좋은 형태로 가공합니다.
             return (data.items || []).map(item => ({
                 id: item.id,
                 title: item.volumeInfo.title,
@@ -35,8 +32,7 @@ export const GoogleBooksAPI = {
             }));
         } catch (error) {
             console.error("Google Books API 호출 중 오류 발생:", error);
-            // UI.showToast는 UI 모듈에 의존하므로 여기서는 console.error만 사용합니다.
-            return []; // 오류 발생 시 빈 배열 반환
+            return [];
         }
     },
 
