@@ -3,7 +3,7 @@
 
 // 중요: 이 API 키는 실제 프로젝트에서는 서버 측에서 안전하게 관리해야 합니다.
 // 실제 배포 시에는 보안 조치가 필요합니다.
-const API_KEY = "YOUR_GOOGLE_BOOKS_API_KEY"; // 여기에 당신의 Google Cloud Platform API 키를 넣으세요.
+const API_KEY = "AIzaSyC3PHEzQiJP00mBnalnfiAceevq1UKYBmk"; // 여기에 당신의 Google Cloud Platform API 키를 넣으세요.
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 
 export const GoogleBooksAPI = {
@@ -13,7 +13,7 @@ export const GoogleBooksAPI = {
      * @returns {Promise<Array<object>>} - 검색된 책 정보 배열
      */
     async searchBooks(query) {
-        if (!API_KEY || API_KEY === "YOUR_GOOGLE_BOOKS_API_KEY") {
+        if (!API_KEY || API_KEY === "AIzaSyC3PHEzQiJP00mBnalnfiAceevq1UKYBmk") {
             console.warn("Google Books API 키가 설정되지 않았습니다. /js/api.js 파일을 확인해주세요. 임시 데이터를 사용합니다.");
             // API 키가 없을 경우, 기존의 더미 데이터를 반환하여 기능 테스트는 가능하게 합니다.
             return this.getDummyBooks(query);
