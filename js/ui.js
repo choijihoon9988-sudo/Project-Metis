@@ -32,11 +32,6 @@ export const UI = {
         }
     },
 
-    updateProgress(progressHTML) {
-        const progressEl = document.getElementById('session-progress');
-        if(progressEl) progressEl.innerHTML = progressHTML;
-    },
-
     showLoader(show, text = "AI가 분석 중입니다...") {
          const loader = document.getElementById('loader');
          loader.querySelector('.loader-text').textContent = text;
@@ -50,13 +45,11 @@ export const UI = {
         t.textContent = message;
         document.body.appendChild(t);
         
-        // Fading in
         setTimeout(() => {
             t.style.bottom = '20px';
             t.style.opacity = '1';
         }, 10);
         
-        // Fading out
         setTimeout(() => {
             t.style.opacity = '0';
              setTimeout(() => { t.remove(); }, 500);
@@ -142,7 +135,7 @@ export const UI = {
                     break;
                 case 'results':
                     html = (data.results.length > 0 ? data.results.map(book => `
-                        <div class="book-result-card" data-title="${book.title}" data-author="${book.author || ''}">
+                        <div class="book-result-card" data-title="${book.title}" data-author="${book.author || ''}" data-cover="${book.cover}">
                             <img src="${book.cover}" alt="${book.title}">
                         </div>`).join('') : '<p style="text-align:center; color: var(--text-light-color);">검색 결과가 없습니다.</p>');
                     break;
@@ -229,9 +222,9 @@ export const UI = {
                         <h4>상태 분석</h4>
                         <p>현재 이 지식은 '<strong>${plant.memoryStage}</strong>' 상태입니다. 기억 강도는 <strong>${plant.strength}</strong>입니다.</p>
                         <hr style="margin: 16px 0;">
-                        <h4>시뮬레이션</h4>
+                        <h4>미래 예측</h4>
                         <p>지금 복습하면 미래의 기억 곡선이 어떻게 변할까요?</p>
-                        <button id="simulate-review-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px;">오늘 복습 시뮬레이션</button>
+                        <button id="simulate-review-btn" class="btn" style="width: 100%; margin-top: 8px;">오늘 복습 시뮬레이션</button>
                     </div>
                 </div>
                 <div class="modal-controls">
@@ -244,7 +237,7 @@ export const UI = {
             
             this.overlay.style.display = 'flex';
         },
-        hide() { this.overlay.style.display = 'none'; },
+        hide() { if(this.overlay) this.overlay.style.display = 'none'; },
         updateChart(newData) {
             if (!this.chart) return;
             const existingSimIndex = this.chart.data.datasets.findIndex(d => d.label.includes('시뮬레이션'));
@@ -273,14 +266,14 @@ export const UI = {
             this.content.innerHTML = `
                 <div class="modal-body">
                     ${challengeHTML}
-                    <div class="challenge-prompt">${challenge.question.replace(/\n/g, '<br>')}</div>
+                    <div class="challenge-prompt" style="padding: 16px; background-color: #f8f9fa; border-radius: 8px; margin: 16px 0;">${challenge.question.replace(/\n/g, '<br>')}</div>
                     <textarea id="challenge-answer" placeholder="당신의 언어로 자유롭게 설명해보세요..."></textarea>
                     <div class="confidence-rating">
                         <p>이번 답변에 얼마나 확신했나요?</p>
-                        <div class="confidence-buttons">
-                            <button class="btn" data-confidence="confident">✅ 확신함</button>
-                            <button class="btn" data-confidence="unsure">🤔 긴가민가함</button>
-                            <button class="btn" data-confidence="guess">❓ 거의 추측함</button>
+                        <div class="confidence-buttons" style="display: flex; gap: 8px;">
+                            <button class="btn" data-confidence="confident" style="flex:1;">✅ 확신함</button>
+                            <button class="btn" data-confidence="unsure" style="flex:1;">🤔 긴가민가함</button>
+                            <button class="btn" data-confidence="guess" style="flex:1;">❓ 거의 추측함</button>
                         </div>
                     </div>
                 </div>

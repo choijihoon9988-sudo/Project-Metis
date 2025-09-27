@@ -52,7 +52,12 @@ function setupEventListeners() {
     }
     if (target.closest('#start-goal-navigator-btn')) {
       const title = document.getElementById('main-book-title').textContent;
-      if (title) GoalNavigator.init({ title }); // GoalNavigator가 객체를 받도록 수정
+      const book = {
+          title: title,
+          author: document.getElementById('main-book-author').textContent,
+          cover: document.getElementById('main-book-cover').src
+      }
+      if (title) GoalNavigator.init(book);
       return;
     }
     const courseBtn = target.closest('.course-btn');
@@ -91,10 +96,12 @@ function setupEventListeners() {
     }
     
     // --- 모달 관련 버튼 ---
-    const dashboardModal = target.closest('#dashboard-modal-overlay');
-    if (dashboardModal && !target.closest('.modal-content')) {
-      UI.Dashboard.hide();
-      return;
+    if (!target.closest('.modal-content') && target.closest('.modal-overlay')) {
+        UI.Dashboard.hide();
+        UI.Challenge.hide();
+        UI.BookExplorer.hide();
+        UI.GoalNavigator.hide();
+        return;
     }
     if (target.closest('#simulate-review-btn')) {
       if (!appState.currentPlant) return;
@@ -117,7 +124,6 @@ function setupEventListeners() {
     }
   });
 
-  // --- 커스텀 이벤트 리스너 ---
   document.addEventListener('bookSelected', (e) => {
     const book = e.detail;
     document.getElementById('main-book-cover').src = book.cover;
