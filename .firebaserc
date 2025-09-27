@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "project-metis-c8528",
+    "default": "metis-project-test",
     "test": "metis-project-test"
   },
   "targets": {},
