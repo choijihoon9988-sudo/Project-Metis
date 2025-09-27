@@ -53,7 +53,7 @@ async function main() {
 function setupEventListeners() {
   // 메인 콘텐츠 영역의 스크롤 이벤트를 감지
   const mainContent = document.querySelector('.main-content');
-  mainContent.addEventListener('scroll', UI.Library.handleAltitudeScroll);
+  mainContent.addEventListener('scroll', UI.Library.handleAltitudeScrollEffects);
 
   document.body.addEventListener('click', async (event) => {
     const target = event.target;
@@ -68,7 +68,7 @@ function setupEventListeners() {
       if (viewName === 'library') {
           await Library.load();
           // 뷰 전환 시 고도 배경 즉시 업데이트
-          UI.Library.handleAltitudeScroll();
+          UI.Library.handleAltitudeScrollEffects({ target: mainContent });
       }
       return;
     }
@@ -125,7 +125,7 @@ function setupEventListeners() {
         document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
 
         // 선반 변경 시 고도 배경 즉시 업데이트
-        UI.Library.handleAltitudeScroll();
+        UI.Library.handleAltitudeScrollEffects({ target: mainContent });
         return;
     }
 
