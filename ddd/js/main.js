@@ -19,101 +19,139 @@ async function main() {
     Ebbinghaus.setUser(user.uid); // Ebbinghaus 모듈에 사용자 ID 전달
     UI.switchView('dashboard');
     setupEventListeners();
+    // 초기 정원 로드
+    await Ebbinghaus.initGarden();
   } else {
-    console.error("Firebase 인증 실패.");
+    console.error("Firebase 인증 실패. 앱을 초기화할 수 없습니다.");
+    UI.showToast("사용자 인증에 실패했습니다. 새로고침 해주세요.", "error");
   }
 }
 
 function setupEventListeners() {
-  document.body.addEventListener('click', async (event) => { // 비동기 함수로 변경
+  document.body.addEventListener('click', async (event) => {
     const target = event.target;
 
-    // --- 사이드바 ---
+    // --- 사이드바 네비게이션 ---
     const navBtn = target.closest('.nav-btn');
     if (navBtn) {
       const viewName = navBtn.dataset.view;
       UI.switchView(viewName);
-      if (viewName === 'garden') await Ebbinghaus.initGarden(); // 비동기 호출로 변경
-      if (viewName === 'journey') await Ebbinghaus.initJourneyMap(); // 비동기 호출로 변경
+      if (viewName === 'garden') await Ebbinghaus.initGarden();
+      if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
       return;
     }
 
-    // --- 메티스 세션 ---
-    if(target.closest('#metis-session-view')) {
-        // ... 기존 코드 ...
-        if (target.closest('.next-step-btn') || target.closest('#finish-reading-btn')) { MetisSession.proceed(); return; }
-        if (target.closest('#finish-session-btn')) { MetisSession.complete(); return; }
-        if (target.closest('#back-to-dashboard-btn')) { UI.switchView('dashboard'); return; } // 뒤로가기 기능 추가
+    // --- 대시보드 ---
+    const dashboard = target.closest('#dashboard');
+    if (dashboard) {
+        if(target.closest('#start-session-btn')) { 
+            UI.switchView('metis-session-view'); 
+            MetisSession.init(); 
+            return; 
+        }
+        if(target.closest('#change-book-btn')) { 
+            BookExplorer.init(); 
+            return; 
+        }
+        if(target.closest('#start-goal-navigator-btn')) { 
+            const title = document.getElementById('main-book-title').textContent;
+            if (title) GoalNavigator.init(title);
+            return; 
+        }
+        const courseBtn = target.closest('.course-btn');
+        if(courseBtn) {
+            document.querySelectorAll('.course-btn').forEach(b => b.classList.remove('active'));
+            courseBtn.classList.add('active');
+        }
+        return;
     }
 
-    // ... 나머지 기존 이벤트 리스너 코드 ...
-    if (target.closest('#dashboard')) {
-        if(target.closest('#start-session-btn')) { UI.switchView('metis-session-view'); MetisSession.init(); return; }
-        if(target.closest('#change-book-btn')) { BookExplorer.init(); return; }
-        if(target.closest('#start-goal-navigator-btn')) { GoalNavigator.init(document.getElementById('main-book-title').textContent); return; }
-        if(target.closest('.course-btn')) {
-            document.querySelectorAll('.course-btn').forEach(b => b.classList.remove('active'));
-            target.closest('.course-btn').classList.add('active');
+    // --- 메티스 세션 ---
+    const sessionView = target.closest('#metis-session-view');
+    if(sessionView) {
+        if (target.closest('.next-step-btn')) { MetisSession.proceed(); return; }
+        if (target.closest('#finish-session-btn')) { MetisSession.complete(); return; }
+        if (target.closest('#back-to-dashboard-btn')) { 
+            UI.showConfirm("세션을 중단하고 대시보드로 돌아가시겠습니까?", () => {
+                 UI.switchView('dashboard');
+            });
+            return; 
         }
     }
+    
+    // --- 지식 정원 & 대시보드 ---
     const plantCard = target.closest('.plant-card');
     if(plantCard) {
         const plantId = plantCard.dataset.id;
         appState.currentPlant = Ebbinghaus.getPlantById(plantId);
         if (!appState.currentPlant) return;
 
-        if (appState.currentPlant.status === 'healthy') {
-            const chartConfig = Ebbinghaus.createChartConfig(appState.currentPlant);
-            UI.Dashboard.show(appState.currentPlant, chartConfig);
-        } else {
-            Ebbinghaus.startReview(plantId);
-        }
+        // 건강 상태와 상관없이 클릭 시 항상 대시보드를 먼저 보여줌
+        const chartConfig = Ebbinghaus.createChartConfig(appState.currentPlant);
+        UI.Dashboard.show(appState.currentPlant, chartConfig);
         return;
     }
-    if (target.closest('#dashboard-modal-overlay') && !target.closest('.modal-content')) { UI.Dashboard.hide(); return; }
-    const simulateBtn = target.closest('#simulate-review-btn');
-    if (simulateBtn) {
-        if(!appState.currentPlant) return;
-        const simulatedStrength = appState.currentPlant.strength + 1;
-        const simulatedData = {
-            label: '시뮬레이션: 오늘 복습 시',
-            data: Ebbinghaus.generateCurveData(new Date(), simulatedStrength),
-            borderColor: 'rgba(66, 133, 244, 0.5)', borderDash: [5, 5], tension: 0.4, pointRadius: 0
-        };
-        UI.Dashboard.updateChart(simulatedData);
-        simulateBtn.disabled = true;
-        simulateBtn.textContent = '✅ 시뮬레이션 완료';
-        return;
+    
+    const dashboardModal = target.closest('#dashboard-modal-overlay');
+    if (dashboardModal) {
+        // 모달 바깥 영역 클릭 시 닫기
+        if (!target.closest('.modal-content')) { 
+            UI.Dashboard.hide(); 
+            return;
+        }
+
+        const simulateBtn = target.closest('#simulate-review-btn');
+        if (simulateBtn) {
+            if(!appState.currentPlant) return;
+            const simulatedStrength = appState.currentPlant.strength + 1;
+            const simulatedData = {
+                label: '시뮬레이션: 오늘 복습 시',
+                data: Ebbinghaus.generateCurveData(new Date(), simulatedStrength),
+                borderColor: 'rgba(66, 133, 244, 0.5)', borderDash: [5, 5], tension: 0.4, pointRadius: 0
+            };
+            UI.Dashboard.updateChart(simulatedData);
+            simulateBtn.disabled = true;
+            simulateBtn.textContent = '✅ 시뮬레이션 완료';
+            return;
+        }
+        
+        // 대시보드 내에서 복습 시작
+        const startReviewBtn = target.closest('#dashboard-start-review-btn');
+        if (startReviewBtn) {
+            if (appState.currentPlant) {
+                UI.Dashboard.hide(); // 대시보드 닫기
+                Ebbinghaus.startReview(appState.currentPlant.id);
+            }
+        }
     }
   });
 
-  // --- 커스텀 이벤트 리스너들 ---
+  // --- 커스텀 이벤트 리스너 ---
   document.addEventListener('bookSelected', (e) => {
-    // ... 기존 코드 ...
     const book = e.detail;
     document.getElementById('main-book-cover').src = book.cover;
     document.getElementById('main-book-title').textContent = book.title;
     document.getElementById('main-book-author').textContent = book.author;
-    UI.showToast(`${book.title}(으)로 메인북이 변경되었습니다!`, 'success');
+    UI.showToast(`'${book.title}'(으)로 메인북 변경!`, 'success');
+    // 책 변경 후 바로 목표 설정 내비게이터 실행
     GoalNavigator.init(book.title);
   });
 
   document.addEventListener('goalSelected', (e) => {
-    // ... 기존 코드 ...
     const { level, text } = e.detail;
     document.querySelector('#main-book-goal').innerHTML = `<strong>🎯 현재 목표 (레벨 ${level})</strong><p>${text}</p>`;
     UI.showToast('새로운 학습 목표가 설정되었습니다.', 'success');
   });
 
-  document.addEventListener('sessionComplete', async (e) => { // 비동기 함수로 변경
+  document.addEventListener('sessionComplete', async (e) => {
     if (e.detail.finished) {
-        await Ebbinghaus.plantSeed(e.detail.data); // 비동기 호출로 변경
-        UI.showToast("세션 완료! 지식 정원에 새 씨앗이 심어졌습니다.", "success");
+        await Ebbinghaus.plantSeed(e.detail.data);
+        UI.switchView('garden');
+        await Ebbinghaus.initGarden();
     }
-    UI.switchView('garden');
-    await Ebbinghaus.initGarden(); // 비동기 호출로 변경
+    // 중단 시에는 아무것도 하지 않고 대시보드에 머무름
   });
 }
 
+// 앱 시작
 main();
-

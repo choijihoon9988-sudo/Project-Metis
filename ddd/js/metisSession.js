@@ -32,7 +32,7 @@ export const MetisSession = {
         currentStepId: 'step-1',
         userInputs: { prediction: '', brainDump: '', aiPrediction: '', gap: '', finalWriting: '' },
         timerInterval: null,
-        timeAllocations: {},
+        readingDuration: 1800, // 기본값 30분 (초 단위)
     },
 
     /**
@@ -42,8 +42,7 @@ export const MetisSession = {
         this.reset();
         const selectedCourse = document.querySelector('.course-btn.active');
         const totalMinutes = selectedCourse ? parseInt(selectedCourse.dataset.duration, 10) : 30;
-
-        this.state.timeAllocations = this.calculateTimeAllocations(totalMinutes);
+        this.state.readingDuration = totalMinutes * 60; // 선택된 시간을 초 단위로 저장
 
         // 대시보드의 현재 목표를 세션 목표로 복사해옵니다.
         document.getElementById('session-goal-display').innerHTML = document.getElementById('main-book-goal').innerHTML;
@@ -57,44 +56,13 @@ export const MetisSession = {
         clearInterval(this.state.timerInterval);
         this.state = JSON.parse(JSON.stringify(this.initialState));
     },
-
-    /**
-     * 총 학습 시간에 맞춰 각 단계별 시간을 배분합니다.
-     * @param {number} totalMinutes - 총 학습 시간 (분)
-     * @returns {object} - 각 단계별 시간 배분 객체
-     */
-    calculateTimeAllocations(totalMinutes) {
-        const allocations = { writing: {} };
-        const presets = {
-            15:  { 'step-1': 1, 'step-3': 3, 'step-4': 2, 'step-6': 2, 'step-7': 7 },
-            30:  { 'step-1': 2, 'step-3': 5, 'step-4': 3, 'step-6': 5, 'step-7': 10 },
-            45:  { 'step-1': 4, 'step-3': 6, 'step-4': 3, 'step-6': 5, 'step-7': 12 },
-            60:  { 'step-1': 5, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 15 },
-            90:  { 'step-1': 7, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 20 },
-            120: { 'step-1': 10, 'step-3': 10, 'step-4': 3, 'step-6': 5, 'step-7': 25 }
-        };
-
-        const preset = presets[totalMinutes] || presets[30];
-        let writingTotal = 0;
-        for (const step in preset) {
-            allocations.writing[step] = preset[step] * 60; // 초 단위로 변환
-            writingTotal += preset[step];
-        }
-
-        // 남은 시간을 독서 시간으로 할당 (뽀모도로 사이클은 단순화)
-        const readingMinutes = totalMinutes - writingTotal;
-        allocations.reading = readingMinutes > 0 ? readingMinutes * 60 : 0;
-
-        return allocations;
-    },
     
     /**
      * 타이머를 시작합니다.
      * @param {number} duration - 타이머 시간 (초)
      * @param {string} elementId - 타이머를 표시할 HTML 요소의 ID
-     * @param {function} onComplete - 타이머 종료 시 실행할 콜백 함수
      */
-    startTimer(duration, elementId, onComplete) {
+    startTimer(duration, elementId) {
         clearInterval(this.state.timerInterval);
         let timeLeft = duration;
         UI.updateTimer(timeLeft, elementId); // UI 업데이트 요청
@@ -104,7 +72,7 @@ export const MetisSession = {
             UI.updateTimer(timeLeft, elementId);
             if (timeLeft <= 0) {
                 clearInterval(this.state.timerInterval);
-                if (onComplete) onComplete();
+                // 시간이 끝나도 자동으로 넘어가지 않음
             }
         }, 1000);
     },
@@ -117,41 +85,48 @@ export const MetisSession = {
         this.state.currentStepId = stepId;
         UI.switchStep(stepId); // UI에 화면 전환 요청
 
-        // 글쓰기 단계인 경우, 할당된 시간으로 타이머 시작
-        if (this.state.timeAllocations.writing[stepId]) {
-            const duration = this.state.timeAllocations.writing[stepId];
-            this.startTimer(duration, `timer-${stepId}`, () => this.proceed());
-        } 
-        // 독서 단계인 경우
-        else if (stepId === 'step-2') {
-            const duration = this.state.timeAllocations.reading;
-            if (duration > 0) {
-                this.startTimer(duration, 'timer', () => this.proceed());
-            } else {
-                this.proceed(); // 독서 시간이 없으면 바로 다음 단계로
-            }
-        }
-        // 비교 분석 단계인 경우 (AI 호출 필요)
-        else if (stepId === 'step-5') {
-            await this.runComparisonAnalysis();
+        const WRITING_DURATION = 300; // 모든 글쓰기 시간은 5분(300초)으로 고정
+
+        switch (stepId) {
+            case 'step-1':
+            case 'step-3':
+            case 'step-4':
+            case 'step-6':
+            case 'step-7':
+                this.startTimer(WRITING_DURATION, `timer-${stepId}`);
+                break;
+            
+            case 'step-2':
+                this.startTimer(this.state.readingDuration, 'timer-step-2');
+                break;
+            
+            case 'step-5':
+                // 타이머 없이 바로 분석 실행
+                await this.runComparisonAnalysis();
+                break;
         }
     },
 
     /**
-     * 다음 단계로 진행합니다. (주로 버튼 클릭 시 호출)
+     * 다음 단계로 진행합니다. (오직 버튼 클릭 시에만 호출)
      */
     proceed() {
         const currentId = this.state.currentStepId;
 
         // 현재 단계의 사용자 입력을 state에 저장
         const inputIdMap = {
-            'step-1': 'prediction', 'step-3': 'brainDump', 'step-4': 'aiPrediction',
-            'step-6': 'gap', 'step-7': 'finalWriting'
+            'step-1': 'prediction', 'step-3': 'braindump', 'step-4': 'ai-prediction',
+            'step-6': 'gap', 'step-7': 'final-writing'
         };
-        const key = inputIdMap[currentId];
+        const key = Object.keys(inputIdMap).find(k => k === currentId);
         if (key) {
-            const inputEl = document.getElementById(`${key}-input`);
-            if (inputEl) this.state.userInputs[key] = inputEl.value;
+            const inputEl = document.getElementById(`${inputIdMap[key]}-input`);
+            if (inputEl) {
+                 const mappedKey = key === 'step-3' ? 'brainDump' : 
+                                   key === 'step-7' ? 'finalWriting' : 
+                                   key === 'step-4' ? 'aiPrediction' : key;
+                this.state.userInputs[mappedKey] = inputEl.value;
+            }
         }
 
         const currentIndex = this.stepSequence.indexOf(currentId);
@@ -159,7 +134,7 @@ export const MetisSession = {
             const nextStepId = this.stepSequence[currentIndex + 1];
             this.handleStepLogic(nextStepId);
         } else {
-            // 마지막 단계이므로 세션 완료 처리
+            // 마지막 단계에서는 '완료' 버튼이 별도로 complete()를 호출하므로 여기서는 처리하지 않음
             this.complete();
         }
     },
@@ -213,4 +188,3 @@ export const MetisSession = {
         }));
     }
 };
-
