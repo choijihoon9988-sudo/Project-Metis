@@ -312,4 +312,4 @@ export const UI = {
             if(this.overlay) this.overlay.style.display = 'none';
         }
     },
-};
+}; // <-- 이 부분이 수정되었습니다.
