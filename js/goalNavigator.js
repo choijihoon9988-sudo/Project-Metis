@@ -1,12 +1,8 @@
 // js/goalNavigator.js (최종 수정본)
 
 import { UI } from "./ui.js";
-// Firebase Functions 대신 Gemini AI 라이브러리를 직접 가져옵니다.
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// 🚨 중요: 이 API 키는 웹사이트에 노출됩니다. 개인적인 테스트 용도로만 사용하세요.
-const GEMINI_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA";
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// 중앙 API 관리 모듈에서 Gemini 모델을 가져옵니다.
+import { geminiModel } from './api.js';
 
 export const GoalNavigator = {
     state: {},
@@ -31,10 +27,6 @@ export const GoalNavigator = {
         UI.showLoader(true, "AI가 챕터를 분석하고 퀘스트를 생성 중입니다...");
 
         try {
-            // 서버 호출 대신 클라이언트에서 직접 Gemini API를 호출합니다.
-            // [오류 수정] 모델 이름을 최신 버전으로 변경
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
             const prompt = `
                 당신은 유능한 학습 설계 전문가입니다. 
                 다음 정보를 바탕으로 사용자를 위한 3가지 레벨의 학습 목표(퀘스트)를 
@@ -61,11 +53,10 @@ export const GoalNavigator = {
                 ]
             `;
             
-            const result = await model.generateContent(prompt);
+            const result = await geminiModel.generateContent(prompt);
             const response = await result.response;
             const text = response.text();
             
-            // AI가 생성한 텍스트를 JSON으로 파싱합니다.
             const quests = JSON.parse(text);
 
             if (!quests || quests.length === 0) {
@@ -104,7 +95,8 @@ export const GoalNavigator = {
             return;
         }
         if (e.target.id === "goal-editor-back-btn") {
-            this.generateQuests(); 
+            // 이전에 생성된 퀘스트를 다시 보여주도록 상태를 활용할 수 있으나, 지금은 단순하게 다시 생성
+            UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests: JSON.parse(localStorage.getItem('lastQuests')) || [] });
             return;
         }
 

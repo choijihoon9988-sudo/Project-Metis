@@ -3,24 +3,39 @@
 // 세션 완료 시 '지식 식물' 데이터를 생성합니다.
 
 import { UI } from './ui.js';
+// 실제 AI 모델을 api.js에서 가져옵니다.
+import { geminiModel } from './api.js';
 
 // 이 모듈은 AI와의 통신을 시뮬레이션합니다.
 const AI = {
-    // 가짜 API 호출을 시뮬레이션하는 함수
-    simulateApi: (data, delay = 800) => new Promise(res => setTimeout(() => res(data), delay)),
-
     // 사용자의 '생각 기록'을 바탕으로 피드백을 생성합니다.
-    getAIFeedback(text) {
+    async getAIFeedback(text) {
         if (!text || text.trim().length < 10) {
-            return this.simulateApi("기록된 내용이 너무 적어 분석하기 어렵습니다. 좀 더 자세히 생각을 기록해주세요.");
+            return "기록된 내용이 너무 적어 분석하기 어렵습니다. 좀 더 자세히 생각을 기록해주세요.";
         }
-        return this.simulateApi("사용자의 기록을 분석한 결과, 핵심 개념은 파악했으나 각 요소 간의 유기적 '연결성'에 대한 설명이 부족합니다. 각 개념이 어떻게 서로 영향을 주는지 설명하면 이해도가 더 깊어질 것입니다.");
+        const prompt = `다음은 사용자가 책의 특정 주제에 대해 학습하고 기록한 내용입니다. 이 내용을 분석하여, 사용자의 이해를 더 깊게 만들어 줄 핵심적인 피드백을 한두 문장으로 제공해주세요. 긍정적인 면을 먼저 언급한 후, 개선점을 부드럽게 제안하는 방식으로 작성해주세요.\n\n[사용자 기록]\n${text}`;
+        
+        try {
+            const result = await geminiModel.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error) {
+            console.error("AI Feedback 생성 오류:", error);
+            return "AI 피드백 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        }
     },
 
     // 현재 목표에 대한 전문가 요약을 생성합니다.
-    getExpertSummary(goalText) {
-        // 실제로는 목표 텍스트를 분석해야 하지만, 지금은 시뮬레이션합니다.
-        return this.simulateApi(" **넛지(Nudge):** 인간은 체계적으로 편향되어 있으며, '선택 설계'를 통해 더 나은 결정을 내리도록 부드럽게 개입할 수 있다. 핵심은 강압이 아닌 유연한 유도에 있다.");
+    async getExpertSummary(goalText) {
+        const prompt = `다음 학습 목표에 대한 전문가 수준의 핵심 요약을 2~3문장으로 제공해주세요. 가장 중요한 개념과 그 의미를 중심으로 설명해주세요.\n\n[학습 목표]\n${goalText}`;
+        try {
+            const result = await geminiModel.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error) {
+            console.error("Expert Summary 생성 오류:", error);
+            return "전문가 요약 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        }
     }
 };
 
@@ -124,7 +139,7 @@ export const MetisSession = {
             if (inputEl) {
                  const mappedKey = key === 'step-3' ? 'brainDump' : 
                                    key === 'step-7' ? 'finalWriting' : 
-                                   key === 'step-4' ? 'aiPrediction' : key;
+                                   key === 'step-4' ? 'aiPrediction' : 'prediction';
                 this.state.userInputs[mappedKey] = inputEl.value;
             }
         }
@@ -134,7 +149,6 @@ export const MetisSession = {
             const nextStepId = this.stepSequence[currentIndex + 1];
             this.handleStepLogic(nextStepId);
         } else {
-            // 마지막 단계에서는 '완료' 버튼이 별도로 complete()를 호출하므로 여기서는 처리하지 않음
             this.complete();
         }
     },
@@ -143,7 +157,7 @@ export const MetisSession = {
      * 5단계 '비교 분석'을 위해 AI 피드백과 전문가 요약을 요청하고 화면에 표시합니다.
      */
     async runComparisonAnalysis() {
-        UI.showLoader(true, "AI가 분석 중입니다..."); // 로딩 화면 표시
+        UI.showLoader(true, "AI가 분석 중입니다...");
         const { brainDump, aiPrediction } = this.state.userInputs;
         const goal = document.querySelector('#session-goal-display p').textContent;
 
@@ -161,7 +175,7 @@ export const MetisSession = {
             expertSummary: summary
         });
 
-        UI.showLoader(false); // 로딩 화면 숨김
+        UI.showLoader(false);
     },
 
     /**
@@ -173,17 +187,15 @@ export const MetisSession = {
 
         if (!finalWriting.trim()) {
             UI.showToast('체화 글쓰기를 작성해야 씨앗을 심을 수 있습니다!', 'error');
-            // 마지막 단계에 머무르도록 ID를 다시 설정
             this.state.currentStepId = 'step-7'; 
             return;
         }
         this.state.userInputs.finalWriting = finalWriting;
 
-        // main.js가 받을 수 있도록 커스텀 이벤트를 발생시킴
         document.dispatchEvent(new CustomEvent('sessionComplete', {
             detail: {
                 finished: true,
-                data: this.state.userInputs // 최종 결과물 전달
+                data: this.state.userInputs
             }
         }));
     }

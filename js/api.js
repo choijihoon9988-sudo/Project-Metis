@@ -1,8 +1,16 @@
 // js/api.js
-// 이 모듈은 외부 API(Google Books API)와의 통신을 담당합니다.
+// 이 모듈은 외부 API(Google Books, Gemini)와의 통신 및 API 키 중앙 관리를 담당합니다.
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA"; 
+// 🚨 중요: 이 API 키들은 웹사이트에 노출됩니다. 개인적인 테스트 용도로만 사용하세요.
+const GOOGLE_BOOKS_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA";
+const GEMINI_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA"; // Gemini API 키를 여기에 입력하세요.
+
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
+
+// Gemini AI 인스턴스를 여기서 생성하여 다른 모듈에서 사용하도록 합니다.
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+export const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 export const GoogleBooksAPI = {
     /**
@@ -11,17 +19,14 @@ export const GoogleBooksAPI = {
      * @returns {Promise<Array<object>>} - 검색된 책 정보 배열
      */
     async searchBooks(query) {
-        // API 키가 비어있는 경우에만 경고를 표시하고 임시 데이터를 사용합니다.
-        if (!API_KEY) {
+        if (!GOOGLE_BOOKS_API_KEY) {
             console.warn("Google Books API 키가 설정되지 않았습니다. /js/api.js 파일을 확인해주세요. 임시 데이터를 사용합니다.");
             return this.getDummyBooks(query);
         }
 
         try {
-            const response = await fetch(`${GOOGLE_BOOKS_API_URL}?q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=12&lang=ko`);
+            const response = await fetch(`${GOOGLE_BOOKS_API_URL}?q=${encodeURIComponent(query)}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=12&lang=ko`);
             if (!response.ok) {
-                // API 키 자체에 문제가 있거나(403), API 사용 설정이 안된 경우(403),
-                // 혹은 다른 네트워크 문제(404 등)가 있을 때 이곳에서 에러를 잡습니다.
                 throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
@@ -34,7 +39,6 @@ export const GoogleBooksAPI = {
             }));
         } catch (error) {
             console.error("Google Books API 호출 중 오류 발생:", error);
-            // 사용자에게도 오류가 발생했음을 알려주는 것이 좋습니다.
             UI.showToast("책 검색 중 오류가 발생했습니다. API 키와 설정을 확인해주세요.", "error");
             return [];
         }
@@ -61,4 +65,3 @@ export const GoogleBooksAPI = {
         );
     }
 };
-
