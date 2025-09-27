@@ -12,7 +12,6 @@ git commit -m "자동 커밋"
 git push
 
 # 4. Firebase Hosting 배포 (업로드)
-# Git 푸시가 완료된 후, Firebase 프로젝트를 Hosting에 배포합니다.
-# 이 명령은 Firebase CLI가 시스템에 설치되어 있고,
-# 해당 프로젝트가 'firebase init'을 통해 설정 및 로그인(firebase login)된 상태여야 작동합니다.
-firebase deploy
+# Git 푸시가 완료된 후, Firebase 프로젝트를 Hosting에만 배포합니다.
+# '--only hosting' 옵션으로 Functions 배포 관련 오류를 회피합니다.
+firebase deploy --only hosting
