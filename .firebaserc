@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "project-metis-c8528"
-  }
+    "default": "project-metis-c8528",
+    "test": "metis-project-test"
+  },
+  "targets": {},
+  "etags": {}
 }

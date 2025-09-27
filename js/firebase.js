@@ -1,19 +1,16 @@
 // Firebase SDK 스크립트를 import 합니다.
-// dd.html 파일에서 이미 CDN을 통해 전역으로 로드했으므로, 여기서는 타입 힌트만을 위해 import 구문을 사용합니다.
-// 실제 브라우저 환경에서는 dd.html의 <script> 태그를 통해 Firebase 라이브러리가 로드됩니다.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// --- 1단계: Firebase 구성 ---
-// Firebase 콘솔에서 복사한 당신의 웹 앱 구성 객체
+// --- 1단계: Firebase 구성 (새로운 프로젝트 정보로 교체됨) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyC3PHEzQiJP00mBnalnfiAceevq1UKYBmk",
-  authDomain: "project-metis-c8528.firebaseapp.com",
-  projectId: "project-metis-c8528",
-  storageBucket: "project-metis-c8528.appspot.com",
-  messagingSenderId: "571247226285",
-  appId: "1:571247226285:web:38abfbe005bc2e6a084524"
+  apiKey: "AIzaSyAGv3Zy6RpjhQ-fkxXxisXWuPYB24xQ94A",
+  authDomain: "metis-project-test.firebaseapp.com",
+  projectId: "metis-project-test",
+  storageBucket: "metis-project-test.appspot.com", // .appspot.com 으로 끝나야 합니다.
+  messagingSenderId: "44158366329",
+  appId: "1:44158366329:web:8b731e680819478f3a9aa8"
 };
 
 // --- 2단계: Firebase 앱 초기화 및 서비스 내보내기 ---
@@ -52,5 +49,3 @@ export const ensureUserIsAuthenticated = () => {
     });
   });
 };
-
-// 이 모듈은 Firebase 앱 초기화, 인증 및 Firestore 인스턴스를 설정하고,
