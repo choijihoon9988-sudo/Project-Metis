@@ -241,24 +241,24 @@
                      <div id="step-1" class="step active card">
                         <div class="step-header">
                             <h4>[1/7] 학습 예측 (Prediction)</h4>
-                            <div class="step-timer" id="timer-step-1">05:00</div>
+                            <div class="step-timer" id="timer-step-1">00:00</div>
                         </div>
-                        <p>5분 안에, 위 목표와 관련하여 책에서 어떤 내용을 다룰 것 같습니까? 핵심 내용을 예측해보세요.</p>
+                        <p>제한 시간 안에, 위 목표와 관련하여 책에서 어떤 내용을 다룰 것 같습니까? 핵심 내용을 예측해보세요.</p>
                         <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고, 사람들의 비합리적 선택을 유도하는 사례를 보여줄 것 같다."></textarea>
                         <button class="btn btn-primary next-step-btn">예측 완료, 집중 독서 시작</button>
                     </div>
                     <!-- Step 2: Reading -->
                      <div id="step-2" class="step card">
                          <h4>[2/7] 집중 독서 (Focused Reading)</h4>
-                         <p>이제 25분간 목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p>
-                         <div id="timer">25:00</div>
+                         <p>목표에만 집중하여 책을 읽습니다. 몰입을 위해 방해 요소를 제거하세요.</p>
+                         <div id="timer">00:00</div>
                          <button class="btn btn-primary" id="finish-reading-btn">독서 완료</button>
                      </div>
                     <!-- Break Step -->
                     <div id="step-break" class="step card">
-                        <h4>☕️ 5분 휴식 (Active Break)</h4>
+                        <h4>☕️ 휴식 (Active Break)</h4>
                         <p>잠시 휴식을 취하며 뇌를 정리합니다. 아래 질문에 대해 가볍게 생각해보세요.</p>
-                        <div id="timer-break">05:00</div>
+                        <div id="timer-break">00:00</div>
                         <div class="card">
                             <h5>중간 예측 점검</h5>
                             <p>지금까지 읽은 내용을 바탕으로, 처음의 예측을 수정하거나 보완하고 싶은 부분이 있나요?</p>
@@ -269,9 +269,9 @@
                      <div id="step-3" class="step card">
                         <div class="step-header">
                             <h4>[3/7] 생각 기록 (Brain Dump)</h4>
-                            <div class="step-timer" id="timer-step-3">05:00</div>
+                            <div class="step-timer" id="timer-step-3">00:00</div>
                         </div>
-                        <p>5분 안에, 방금 읽은 내용과 그에 대한 당신의 생각을 자유롭게 기록하세요.</p>
+                        <p>제한 시간 안에, 방금 읽은 내용과 그에 대한 당신의 생각을 자유롭게 기록하세요.</p>
                         <textarea id="braindump-input" placeholder="정리되지 않아도 괜찮습니다. 떠오르는 모든 것을 기록하세요."></textarea>
                         <button class="btn btn-primary next-step-btn">기록 완료</button>
                     </div>
@@ -279,9 +279,9 @@
                      <div id="step-4" class="step card">
                         <div class="step-header">
                             <h4>[4/7] AI 피드백 예측 (Metacognition)</h4>
-                            <div class="step-timer" id="timer-step-4">05:00</div>
+                            <div class="step-timer" id="timer-step-4">00:00</div>
                         </div>
-                        <p>5분 안에, AI가 당신의 기록에 대해 어떤 피드백을 줄 것 같습니까? 당신이 놓친 부분은 무엇일까요?</p>
+                        <p>제한 시간 안에, AI가 당신의 기록에 대해 어떤 피드백을 줄 것 같습니까? 당신이 놓친 부분은 무엇일까요?</p>
                         <textarea id="ai-prediction-input" placeholder="예: 개념 설명은 잘했지만, 각 요소가 어떻게 상호작용하는지에 대한 설명이 부족하다고 지적할 것 같다."></textarea>
                         <button class="btn btn-primary next-step-btn">예측 완료</button>
                     </div>
@@ -303,9 +303,9 @@
                      <div id="step-6" class="step card">
                         <div class="step-header">
                             <h4>[6/7] 글쓰기를 위한 핵심 질문 추출</h4>
-                            <div class="step-timer" id="timer-step-6">05:00</div>
+                            <div class="step-timer" id="timer-step-6">00:00</div>
                         </div>
-                        <p>5분 안에, 당신의 생각과 AI의 분석 사이에서 발견한 '격차(Gap)'를 해소할 핵심 질문 하나를 뽑아보세요.</p>
+                        <p>제한 시간 안에, 당신의 생각과 AI의 분석 사이에서 발견한 '격차(Gap)'를 해소할 핵심 질문 하나를 뽑아보세요.</p>
                         <textarea id="gap-input" placeholder="예: 나는 개념의 나열에 그쳤지만, AI는 '개념 간의 연결성 부족'을 지적했다. 그렇다면, 각 개념들은 어떻게 유기적으로 연결되는가?"></textarea>
                         <button class="btn btn-primary next-step-btn">질문 추출 완료</button>
                     </div>
@@ -313,9 +313,9 @@
                      <div id="step-7" class="step card">
                         <div class="step-header">
                              <h4>[7/7] 완벽한 체화를 위한 글쓰기</h4>
-                             <div class="step-timer" id="timer-step-7">05:00</div>
+                             <div class="step-timer" id="timer-step-7">00:00</div>
                         </div>
-                         <p>5분 안에, 방금 추출한 질문에 대한 답을 스스로 설명하는 한 편의 글을 완성하세요.</p>
+                         <p>제한 시간 안에, 방금 추출한 질문에 대한 답을 스스로 설명하는 한 편의 글을 완성하세요.</p>
                          <textarea id="final-writing-input" class="final-writing" placeholder="6단계에서 뽑아낸 질문을 바탕으로, 오늘 배운 내용을 다른 사람에게 설명하듯 자유롭게 글을 작성해보세요."></textarea>
                          <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 정원에 씨앗 심기</button>
                      </div>
@@ -459,39 +459,26 @@
         };
 
         // =================================================================================
-        // MetisSession Module: Handles the 7-step learning cycle
+        // MetisSession Module: Handles the 7-step learning cycle with dynamic timers
         // =================================================================================
         const MetisSession = {
-            state: {}, 
-            writingSteps: ['step-1', 'step-3', 'step-4', 'step-6', 'step-7'],
+            state: {},
             stepSequence: ['step-1', 'step-2', 'step-3', 'step-4', 'step-5', 'step-6', 'step-7'],
-
+            
             initialState: { 
                 currentStepId: 'step-1', 
                 userInputs: { prediction: '', brainDump: '', aiPrediction: '', gap: '', finalWriting: '' }, 
                 timerInterval: null, 
-                sourceBook: '', 
-                initialGoal: '',
-                totalDuration: 30,
-                focusDuration: 25 * 60,
-                breakDuration: 5 * 60,
-                writingDuration: 5 * 60,
-                timeLeft: 0,
-                cyclesTotal: 1,
+                timeAllocations: {},
                 cyclesCompleted: 0,
-                currentPhase: 'writing', // writing, focus, break
             },
             
             init() { 
                 this.reset();
-                this.state.sourceBook = document.querySelector('#main-book-slot h4').textContent; 
-                this.state.initialGoal = document.querySelector('#main-book-goal p').textContent; 
-                
                 const selectedCourse = document.querySelector('.course-btn.active');
-                this.state.totalDuration = selectedCourse ? parseInt(selectedCourse.dataset.duration, 10) : 30;
+                const totalMinutes = selectedCourse ? parseInt(selectedCourse.dataset.duration, 10) : 30;
                 
-                this.state.cyclesTotal = Math.floor(this.state.totalDuration / 30) * 2 - (this.state.totalDuration % 30 === 0 ? 1 : 0);
-                if (this.state.totalDuration < 30) this.state.cyclesTotal = 1;
+                this.state.timeAllocations = this.calculateTimeAllocations(totalMinutes);
                 
                 document.getElementById('session-goal-display').innerHTML = document.getElementById('main-book-goal').innerHTML; 
                 this.handleStepLogic(this.state.currentStepId);
@@ -502,15 +489,59 @@
                 this.state = JSON.parse(JSON.stringify(this.initialState)); 
             },
 
+            calculateTimeAllocations(totalMinutes) {
+                const allocations = {
+                    focusSessions: [],
+                    breakSessions: [],
+                    writing: {}
+                };
+
+                let remainingMinutes = totalMinutes;
+                
+                // 1. Allocate full Pomodoro cycles (25+5)
+                const fullCycles = Math.floor(remainingMinutes / 30);
+                for (let i = 0; i < fullCycles; i++) {
+                    allocations.focusSessions.push(25);
+                    allocations.breakSessions.push(5);
+                }
+                remainingMinutes -= fullCycles * 30;
+
+                // 2. Allocate remaining time
+                // Ratio: 5 (Reading) to 3 (Writing)
+                const writingTotal = Math.floor(remainingMinutes * (3 / 8));
+                const readingTotal = remainingMinutes - writingTotal;
+
+                if (readingTotal > 0) {
+                    allocations.focusSessions.push(readingTotal);
+                }
+
+                // Distribute writing time across 5 steps
+                const writingPerStep = Math.floor(writingTotal / 5);
+                let writingRemainder = writingTotal % 5;
+                
+                this.stepSequence.forEach(stepId => {
+                    if(stepId.startsWith('step-') && this.stepSequence.indexOf(stepId) !== 4) { // Exclude step-5
+                        let time = writingPerStep;
+                        if(writingRemainder > 0) {
+                            time++;
+                            writingRemainder--;
+                        }
+                        allocations.writing[stepId] = time * 60; // to seconds
+                    }
+                });
+
+                return allocations;
+            },
+
             startTimer(duration, elementId, onComplete) {
                 if (this.state.timerInterval) clearInterval(this.state.timerInterval);
-                this.state.timeLeft = duration;
-                UI.updateTimer(this.state.timeLeft, elementId);
+                let timeLeft = duration;
+                UI.updateTimer(timeLeft, elementId);
 
                 this.state.timerInterval = setInterval(() => {
-                    this.state.timeLeft--;
-                    UI.updateTimer(this.state.timeLeft, elementId);
-                    if (this.state.timeLeft <= 0) {
+                    timeLeft--;
+                    UI.updateTimer(timeLeft, elementId);
+                    if (timeLeft <= 0) {
                         clearInterval(this.state.timerInterval);
                         onComplete();
                     }
@@ -521,47 +552,59 @@
                 this.state.currentStepId = stepId;
                 UI.switchStep(stepId);
                 clearInterval(this.state.timerInterval);
-                
-                if (this.writingSteps.includes(stepId)) {
-                    this.state.currentPhase = 'writing';
+
+                if (this.state.timeAllocations.writing[stepId]) {
+                    const duration = this.state.timeAllocations.writing[stepId];
                     const timerId = `timer-${stepId}`;
-                    this.startTimer(this.state.writingDuration, timerId, () => this.proceed());
+                    this.startTimer(duration, timerId, () => this.proceed());
                 } else if (stepId === 'step-2') {
-                    this.state.currentPhase = 'focus';
                     UI.updateProgress(this.generateProgressHTML());
-                    this.startTimer(this.state.focusDuration, 'timer', () => this.handleFocusEnd());
+                    const duration = (this.state.timeAllocations.focusSessions[this.state.cyclesCompleted] || 0) * 60;
+                    this.startTimer(duration, 'timer', () => this.handleFocusEnd());
                 } else if (stepId === 'step-break') {
-                    this.state.currentPhase = 'break';
-                    this.startTimer(this.state.breakDuration, 'timer-break', () => this.handleBreakEnd());
+                    const duration = (this.state.timeAllocations.breakSessions[this.state.cyclesCompleted - 1] || 0) * 60;
+                    this.startTimer(duration, 'timer-break', () => this.handleBreakEnd());
                 }
             },
 
             proceed() {
                 const currentId = this.state.currentStepId;
                 
-                // Save input if it's a writing step
-                if (this.writingSteps.includes(currentId)) {
-                    const inputId = `${currentId.split('-')[1]}-input`;
-                    const inputEl = document.getElementById(inputId);
-                    if(inputEl) {
-                        const key = inputId.replace('-input', '').replace('prediction', 'prediction').replace('braindump', 'brainDump').replace('aiPrediction', 'aiPrediction').replace('gap', 'gap').replace('finalWriting', 'finalWriting');
-                         if(this.state.userInputs.hasOwnProperty(key)) {
-                             this.state.userInputs[key] = inputEl.value;
-                         }
-                    }
+                const inputIdMap = {
+                    'step-1': 'prediction', 'step-3': 'brainDump', 'step-4': 'aiPrediction',
+                    'step-6': 'gap', 'step-7': 'finalWriting'
+                };
+                const key = inputIdMap[currentId];
+                if (key) {
+                    const inputEl = document.getElementById(`${key}-input`);
+                    if(inputEl) this.state.userInputs[key] = inputEl.value;
                 }
 
                 const currentIndex = this.stepSequence.indexOf(currentId);
-                if (currentIndex < this.stepSequence.length - 1) {
-                    const nextStepId = this.stepSequence[currentIndex + 1];
-                    this.handleStepLogic(nextStepId);
+                let nextStepId;
+
+                if(currentId === 'step-5') {
+                    this.completeSessionFlow();
+                    return;
+                } else if (currentIndex < this.stepSequence.length - 1) {
+                    nextStepId = this.stepSequence[currentIndex + 1];
+                } else {
+                    this.complete();
+                    return;
                 }
+                 
+                if(nextStepId) this.handleStepLogic(nextStepId);
             },
 
-            async handleFocusEnd() {
+            handleFocusEnd() {
                 this.state.cyclesCompleted++;
-                if (this.state.cyclesCompleted < this.state.cyclesTotal) {
-                    this.handleStepLogic('step-break');
+                if (this.state.cyclesCompleted < this.state.timeAllocations.focusSessions.length) {
+                    // Check if there's a break session available
+                    if(this.state.cyclesCompleted <= this.state.timeAllocations.breakSessions.length) {
+                        this.handleStepLogic('step-break');
+                    } else { // No more breaks, just another focus session
+                        this.handleStepLogic('step-2');
+                    }
                 } else {
                     UI.showToast("모든 집중 세션 완료! 생각을 기록하세요.", "success");
                     this.handleStepLogic('step-3');
@@ -574,12 +617,13 @@
             },
 
             generateProgressHTML(){
+                const totalCycles = this.state.timeAllocations.focusSessions.length;
                 let html = '';
-                for(let i = 0; i < this.state.cyclesTotal; i++){
+                for(let i = 0; i < totalCycles; i++){
                     html += (i < this.state.cyclesCompleted) ? '✅' : '🍅';
-                    if(i < this.state.cyclesTotal - 1) html += ' ☕️ ';
+                    if(i < totalCycles - 1) html += ' ☕️ ';
                 }
-                return `Cycle ${this.state.cyclesCompleted + 1} / ${this.state.cyclesTotal} <br> ${html}`;
+                return `Cycle ${this.state.cyclesCompleted + 1} / ${totalCycles} <br> ${html}`;
             },
             
             async completeSessionFlow() {
