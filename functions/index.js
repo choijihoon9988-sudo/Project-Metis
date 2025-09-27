@@ -1,18 +1,21 @@
-// functions/index.js (최종 디버깅용 코드)
+// functions/index.js (최종 수정본)
 
 const { onCall } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const { GoogleAuth } = require("google-auth-library");
 const { VertexAI } = require("@google-cloud/vertexai");
 
-setGlobalOptions({ region: "asia-northeast3" });
+// 1. 함수 실행 지역을 'us-central1'으로 변경
+setGlobalOptions({ region: "us-central1" });
 
 const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
+
+// 2. Vertex AI 호출 지역을 'us-central1'으로 변경
 const vertexAI = new VertexAI({
   project: process.env.GCLOUD_PROJECT,
-  location: "asia-northeast3",
+  location: "us-central1",
   auth: auth,
 });
 
@@ -34,29 +37,20 @@ exports.generateQuestsForChapter = onCall(async (request) => {
   try {
     // --- 1단계: 정보 요약 요청 ---
     const summaryPrompt = `'${bookTitle}'라는 책의 '${chapterTitle}' 챕터(또는 소주제)의 핵심 내용을 3~5문장으로 요약해줘.`;
-    console.log("1단계 요약 프롬프트 생성 완료:", summaryPrompt);
-
-    let summaryResult;
-    try {
-      summaryResult = await model.generateContent(summaryPrompt);
-      // AI가 보낸 응답 객체 전체를 그대로 출력 (가장 중요한 로그)
-      console.log("Vertex AI 1단계 응답 (원본):", JSON.stringify(summaryResult, null, 2));
-    } catch (aiError) {
-      console.error("Vertex AI 1단계 API 호출 자체에서 에러 발생:", aiError);
-      throw new Error("AI 모델 호출에 실패했습니다.");
-    }
-    
+    const summaryResult = await model.generateContent(summaryPrompt);
     const summaryResponse = await summaryResult.response;
     const chapterSummary = summaryResponse.text();
 
     if (!chapterSummary || chapterSummary.trim() === "") {
-      console.error("1단계 요약 내용은 비어있음:", chapterSummary);
+      console.error("1단계 요약 생성 실패:", chapterSummary);
       throw new Error("챕터 내용을 요약하는데 실패했습니다.");
     }
-    console.log("성공적으로 추출된 1단계 요약 텍스트:", chapterSummary);
+    console.log("생성된 요약:", chapterSummary);
 
     // --- 2단계: 요약 기반 퀘스트 생성 요청 ---
-    const questPrompt = `너는 사용자의 학습 목표 설정을 돕는 전문 가이드야. 아래 '---'로 구분된 챕터 요약 내용을 바탕으로, 3가지 레벨의 학습 퀘스트를 생성해줘.
+    const questPrompt = `
+      너는 사용자의 학습 목표 설정을 돕는 전문 가이드야.
+      아래 '---'로 구분된 챕터 요약 내용을 바탕으로, 3가지 레벨의 학습 퀘스트를 생성해줘.
 
       - **레벨 1 (개념 분석):** 핵심 개념을 정의하거나 설명하는 질문.
       - **레벨 2 (실용 적용):** 개념을 실생활이나 개인적인 경험에 적용해보는 질문.
@@ -72,22 +66,30 @@ exports.generateQuestsForChapter = onCall(async (request) => {
       
       ---
       ${chapterSummary}
-      ---`;
-    console.log("2단계 퀘스트 프롬프트 생성 완료");
+      ---
+    `;
 
     const questResult = await model.generateContent(questPrompt);
     const questResponse = await questResult.response;
     const questText = questResponse.text();
-    console.log("2단계 퀘스트 생성 AI 응답 (파싱 전):", questText);
 
-    const cleanedJson = questText.replace(/^```json\s*|```\s*$/g, "").trim();
-    const quests = JSON.parse(cleanedJson);
-    
-    console.log("최종 생성된 퀘스트:", quests);
+    let quests = [];
+    try {
+      const cleanedJson = questText.replace(/^```json\s*|```\s*$/g, "").trim();
+      quests = JSON.parse(cleanedJson);
+    } catch (parseError) {
+      console.error("AI 응답 JSON 파싱 실패:", parseError);
+      console.error("파싱 전 원본 AI 응답:", questText);
+      return { quests: [] };
+    }
+
     return { quests };
 
   } catch (error) {
-    console.error("함수 실행 중 최종 에러 발생:", error);
-    throw new onCall.HttpsError("unknown", `AI 퀘스트 생성 중 최종 오류 발생: ${error.message}`);
+    console.error("서버 함수 실행 중 오류 발생:", error.message);
+    throw new onCall.HttpsError(
+        "unknown",
+        `AI 퀘스트 생성 중 오류 발생: ${error.message}`,
+    );
   }
 });
