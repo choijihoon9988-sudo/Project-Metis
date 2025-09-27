@@ -10,18 +10,17 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "main": "index.js",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.0.1"
+    "@google/generative-ai": "^0.11.3",
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.1"
   },
   "devDependencies": {
-    "eslint": "^8.15.0",
-    "eslint-config-google": "^0.14.0",
-    "firebase-functions-test": "^3.1.0"
+    "eslint": "^8.57.0",
+    "eslint-config-google": "^0.14.0"
   },
   "private": true
 }
