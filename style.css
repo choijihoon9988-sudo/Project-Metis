@@ -600,6 +600,9 @@ textarea {
 	background-color: transparent;
 	padding: 0; /* Remove padding to allow background to fill edges */
     overflow: hidden; /* Hide overflowing stars */
+    display: flex; /* Use flexbox to align grid at the bottom */
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 /* '지식의 고도' 동적 배경 */
@@ -611,15 +614,26 @@ textarea {
     height: 100%;
     z-index: 0;
 	border-radius: var(--border-radius);
-    background-size: 100% 200%; /* Make gradient taller for parallax */
-    background-position: center 100%; /* Start at the bottom (ground) */
+    background-size: 100% 200%; /* Make gradient taller for parallax effect */
+    background-position: center 0%; /* Start at the top (space) */
+    background-image: linear-gradient(to bottom, 
+        /* Space */
+        #000000 0%, 
+        #191970 15%,
+        /* Night */
+        #483D8B 25%,
+        #FF6347 35%,
+        /* Sunset */
+        #FF7F50 45%,
+        #4682B4 60%,
+        /* Sky */
+        #87CEEB 80%,
+        #A2BE22 90%,
+        /* Ground */
+        #558042 95%,
+        #6E4C2F 100%
+    );
 }
-
-.altitude-ground { background: linear-gradient(to top, #6E4C2F 0%, #906B3F 2%, #558042 3%, #A2BE22 5%, #87CEEB 7%); }
-.altitude-sky { background: linear-gradient(to top, #A2BE22 0%, #87CEEB 10%, #4682B4 80%); }
-.altitude-sunset { background: linear-gradient(to top, #4682B4, #FF7F50, #FF6347); }
-.altitude-night { background: linear-gradient(to top, #FF6347, #483D8B, #191970); }
-.altitude-space { background: linear-gradient(to top, #191970, #000000); }
 
 /* 별 애니메이션 */
 @function multiple-box-shadow ($n) {

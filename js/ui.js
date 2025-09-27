@@ -281,19 +281,14 @@ export const UI = {
                 <div class="library-carousel">
                     ${Object.entries(shelves).map(([shelfKey, shelf]) => {
                         const bookCount = shelf.books.length;
-                        let altitudeClass = '';
                         let starsHtml = '';
-                        if (shelfKey === 'finished') {
-                            if (bookCount >= 100)      { altitudeClass = 'altitude-space'; starsHtml = '<div class="stars"></div><div class="stars2"></div><div class="stars3"></div>'; }
-                            else if (bookCount >= 70) altitudeClass = 'altitude-night';
-                            else if (bookCount >= 30) altitudeClass = 'altitude-sunset';
-                            else if (bookCount >= 10)  altitudeClass = 'altitude-sky';
-                            else                      altitudeClass = 'altitude-ground';
+                        if (shelfKey === 'finished' && bookCount >= 70) { // 70권 이상부터 별 표시
+                             starsHtml = '<div class="stars"></div><div class="stars2"></div><div class="stars3"></div>';
                         }
                         
                         return `
                         <div class="library-shelf" data-shelf="${shelfKey}">
-                             ${shelfKey === 'finished' ? `<div class="altitude-background ${altitudeClass}"></div>${starsHtml}` : ''}
+                             ${shelfKey === 'finished' ? `<div class="altitude-background"></div>${starsHtml}` : ''}
                              ${shelfKey === 'finished' ? this.renderMilestones(bookCount) : ''}
                             <div class="book-grid">
                                 ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
@@ -304,6 +299,25 @@ export const UI = {
                 </div>
             `;
             
+            // '다 읽은 책' 선반 동적 높이 설정
+            const finishedShelf = container.querySelector('.library-shelf[data-shelf="finished"]');
+            if (finishedShelf) {
+                const bookCount = shelves.finished.books.length;
+                const maxBooks = 100;
+                const clampedBookCount = Math.min(bookCount, maxBooks);
+                
+                // 3 viewport height를 최대로 설정
+                const altitudeHeight = window.innerHeight * 3;
+                finishedShelf.style.minHeight = `${altitudeHeight}px`;
+
+                const grid = finishedShelf.querySelector('.book-grid');
+                if (grid) {
+                    // 책 권수에 따라 그리드의 상단 마진을 조절하여 '땅'에서 시작하는 느낌을 줌
+                    const gridMarginTop = altitudeHeight * (1 - (clampedBookCount / maxBooks));
+                    grid.style.marginTop = `${gridMarginTop}px`;
+                }
+            }
+
             // Stats & Challenge
             const statsContainer = document.getElementById('library-stats');
             const finishedThisMonth = books.filter(b => {
@@ -362,24 +376,23 @@ export const UI = {
             const clientHeight = mainContent.clientHeight;
         
             if (scrollHeight <= clientHeight) {
-                background.style.backgroundPosition = 'center 0%'; // 스크롤 없으면 맨 위(우주)
-                milestones.forEach(m => m.classList.add('visible')); // 모든 이정표 표시
+                // 스크롤이 없으면 (책이 적으면) 항상 땅(100%)을 보여줌
+                background.style.backgroundPosition = 'center 100%';
+                milestones.forEach(m => m.classList.remove('visible'));
                 return;
             }
         
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
         
-            // 배경 위치 계산 수정:
-            // 스크롤 0%(최상단, 우주) => background-position-y: 0%
-            // 스크롤 100%(최하단, 땅) => background-position-y: 100%
+            // 배경 위치 계산: 스크롤 0% (최상단) -> 배경 0% (우주), 스크롤 100% (최하단) -> 배경 100% (땅)
             const backgroundYPosition = scrollPercentage;
             background.style.backgroundPosition = `center ${backgroundYPosition}%`;
 
             // 이정표 등장 로직 수정
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.triggerPercent);
-                // (100 - 스크롤%) 값이 (100 - 이정표 위치)% 보다 작거나 같을 때, 즉 스크롤이 이정표 위치를 지났을 때
+                // 스크롤이 이정표의 위치(top %)를 지났을 때 보이도록 함
                 milestone.classList.toggle('visible', (100 - scrollPercentage) <= (100 - triggerPercent + 5));
             });
         },
