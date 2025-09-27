@@ -53,3 +53,4 @@ export const ensureUserIsAuthenticated = () => {
   });
 };
 
+// 이 모듈은 Firebase 앱 초기화, 인증 및 Firestore 인스턴스를 설정하고,
