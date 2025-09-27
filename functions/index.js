@@ -1,16 +1,16 @@
 // functions/index.js
 
-// 1. 최신 라이브러리에서 필요한 함수들을 가져옵니다.
+// 1. 함수를 가져오는 방식 변경 (최신 v2 스타일)
 const {onCall} = require("firebase-functions/v2/https");
 const {setGlobalOptions} = require("firebase-functions/v2");
 const axios = require("axios");
 const {GoogleAuth} = require("google-auth-library");
 const {VertexAI} = require("@google-cloud/vertexai");
 
-// 2. 모든 함수가 서울 리전에서 실행되도록 전역 설정을 합니다.
+// 2. 함수 전체의 기본 지역을 '서울'로 설정
 setGlobalOptions({region: "asia-northeast3"});
 
-// 3. Gemini AI 설정을 초기화합니다.
+// 3. Gemini AI 설정 초기화
 const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
@@ -19,15 +19,21 @@ const vertexAI = new VertexAI({
   location: "asia-northeast3",
   auth: auth,
 });
-const model = vertexAI.getGenerativeModel({model: "gemini-1.0-pro"});
 
+const model = vertexAI.getGenerativeModel({
+  model: "gemini-1.0-pro",
+});
+
+// Google Books API 키 (이 키는 보안상 서버 환경 변수로 설정하는 것이 더 안전해)
 const GOOGLE_BOOKS_API_KEY = "AIzaSyCULah5vm81WCnhcZuhumLO2cJ-82OJXJA";
 
-// 4. 최신 방식(onCall)으로 함수를 정의합니다.
+// 4. 함수를 내보내는 방식 변경 (최신 v2 스타일)
 exports.getBookDetails = onCall(async (request) => {
+  // v2에서는 request.data 로 데이터에 접근
   const bookTitle = request.data.bookTitle;
   if (!bookTitle) {
-    throw new functions.https.HttpsError(
+    // v2에서는 에러를 던지는 방식이 다름
+    throw new onCall.HttpsError(
         "invalid-argument",
         "책 제목(bookTitle)이 필요합니다.",
     );
@@ -39,9 +45,13 @@ exports.getBookDetails = onCall(async (request) => {
 
   try {
     const response = await axios.get(apiUrl);
-    const book = response.data.items && response.data.items.length > 0 ?
-      response.data.items[0].volumeInfo :
-      null;
+
+    if (!response.data.items || response.data.items.length === 0) {
+      console.log(`'${bookTitle}'에 대한 검색 결과가 없습니다.`);
+      return { toc: [] };
+    }
+    
+    const book = response.data.items[0].volumeInfo;
 
     if (book && book.description) {
       const prompt = `
@@ -61,15 +71,25 @@ exports.getBookDetails = onCall(async (request) => {
       const result = await model.generateContent(prompt);
       const aiResponse = await result.response;
       const text = aiResponse.text();
-      const cleanedJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-      const toc = JSON.parse(cleanedJson);
-      return {toc: toc};
+      
+      let toc = [];
+      try {
+        const cleanedJson = text.replace(/^```json\s*|```\s*$/g, "").trim();
+        toc = JSON.parse(cleanedJson);
+      } catch (parseError) {
+        console.error("AI 응답 JSON 파싱 실패:", parseError);
+        console.error("파싱 전 원본 AI 응답:", text);
+        return { toc: [] };
+      }
+      
+      return { toc: toc };
     } else {
-      return {toc: []};
+      console.log(`'${bookTitle}'의 책 정보에 'description' 필드가 없습니다.`);
+      return { toc: [] };
     }
   } catch (error) {
-    console.error("서버 함수 실행 중 오류 발생:", error);
-    throw new functions.https.HttpsError(
+    console.error("서버 함수 실행 중 심각한 오류 발생:", error.message);
+    throw new onCall.HttpsError(
         "unknown",
         `목차 정보 분석 중 AI 또는 API 오류 발생: ${error.message}`,
     );
