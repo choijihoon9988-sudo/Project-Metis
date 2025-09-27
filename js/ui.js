@@ -22,7 +22,7 @@ export const UI = {
             }
         }
     },
-    
+
     updateTimer(timeLeft, elementId) {
         const min = Math.floor(timeLeft / 60);
         const sec = timeLeft % 60;
@@ -31,7 +31,7 @@ export const UI = {
             timerEl.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
         }
     },
-    
+
     updateProgress(progressHTML) {
         const progressEl = document.getElementById('session-progress');
         if(progressEl) progressEl.innerHTML = progressHTML;
@@ -49,14 +49,25 @@ export const UI = {
         t.className = `toast ${type}`;
         t.textContent = message;
         document.body.appendChild(t);
-        setTimeout(() => { t.remove(); }, 3000);
+        
+        // Fading in
+        setTimeout(() => {
+            t.style.bottom = '20px';
+            t.style.opacity = '1';
+        }, 10);
+        
+        // Fading out
+        setTimeout(() => {
+            t.style.opacity = '0';
+             setTimeout(() => { t.remove(); }, 500);
+        }, 3000);
     },
-    
+
     showConfirm(message, onConfirm) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.style.display = 'flex';
-        
+
         const modal = document.createElement('div');
         modal.className = 'modal-content';
         modal.innerHTML = `
@@ -66,7 +77,7 @@ export const UI = {
                 <button id="confirm-ok" class="btn btn-primary">확인</button>
             </div>
         `;
-        
+
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
 
@@ -101,7 +112,7 @@ export const UI = {
             el.className = `plant-card ${plant.status}`;
             el.dataset.id = plant.id;
 
-            const reviewText = plant.daysUntilReview <= 0 
+            const reviewText = plant.daysUntilReview <= 0
                 ? (plant.daysUntilReview === 0 ? '오늘 복습!' : `${-plant.daysUntilReview}일 지남!`)
                 : `복습까지 ${plant.daysUntilReview}일`;
 
@@ -130,7 +141,6 @@ export const UI = {
                             </div>`;
                     break;
                 case 'results':
-                    // API 응답에 맞춰 data attribute를 추가합니다.
                     html = (data.results.length > 0 ? data.results.map(book => `
                         <div class="book-result-card" data-title="${book.title}" data-author="${book.author || ''}">
                             <img src="${book.cover}" alt="${book.title}">
@@ -165,17 +175,13 @@ export const UI = {
         render(step, data) {
             let html = '';
             switch (step) {
-                case 'toc':
-                    html = `<div class="modal-header"><h3>탐험 지도: ${data.bookTitle}</h3><p>오늘 학습할 영역(챕터)을 선택하세요.</p></div>
-                            <div class="modal-body" id="toc-container">
-                                ${data.toc.length > 0 ? data.toc.map(part => `
-                                    <div class="toc-item">
-                                        <div class="toc-title"><span>${part.part}</span><span>▼</span></div>
-                                        <div class="toc-chapters" style="display: none;">
-                                            ${part.chapters.map(ch => `<div class="toc-chapter">${ch}</div>`).join('')}
-                                        </div>
-                                    </div>
-                                `).join('') : '<p style="text-align:center;">이 책의 목차 정보를 불러올 수 없습니다.</p>'}
+                case 'chapterInput':
+                    html = `<div class="modal-header"><h3>탐험 지도: ${data.bookTitle}</h3><p>오늘 학습할 챕터(또는 소주제)의 제목을 알려주세요.</p></div>
+                            <div class="modal-body">
+                                <input type="text" id="chapter-input" placeholder="예: 기준점 설정의 함정">
+                            </div>
+                            <div class="modal-controls">
+                              <button id="generate-quests-btn" class="btn btn-primary">AI 퀘스트 생성</button>
                             </div>`;
                     break;
                 case 'quests':
@@ -227,6 +233,9 @@ export const UI = {
                         <p>지금 복습하면 미래의 기억 곡선이 어떻게 변할까요?</p>
                         <button id="simulate-review-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px;">오늘 복습 시뮬레이션</button>
                     </div>
+                </div>
+                <div class="modal-controls">
+                    <button id="dashboard-start-review-btn" class="btn btn-primary">이 지식 복습하기</button>
                 </div>`;
             
             const chartCanvas = this.content.querySelector('#memoryCurveChart');
@@ -304,4 +313,3 @@ export const UI = {
         }
     },
 };
-
