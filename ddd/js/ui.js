@@ -1,12 +1,5 @@
 // js/ui.js
-// --- UI Module ---
-// 이 모듈은 화면에 표시되는 모든 것을 그리고 조작하는 역할을 전담합니다.
-
 export const UI = {
-    /**
-     * 지정된 이름의 뷰(view)를 활성화하고, 해당 뷰에 맞는 네비게이션 버튼을 활성 상태로 만듭니다.
-     * @param {string} viewName - 활성화할 뷰의 ID
-     */
     switchView(viewName) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         const viewToShow = document.getElementById(viewName);
@@ -18,10 +11,6 @@ export const UI = {
         });
     },
 
-    /**
-     * 메티스 세션의 특정 단계(step) 화면을 보여줍니다.
-     * @param {string} stepId - 보여줄 단계의 ID (e.g., 'step-1')
-     */
     switchStep(stepId) {
         document.querySelectorAll('#metis-session-view .step').forEach(s => s.classList.remove('active'));
         const stepToShow = document.getElementById(stepId);
@@ -33,12 +22,7 @@ export const UI = {
             }
         }
     },
-
-    /**
-     * 타이머 UI를 업데이트합니다.
-     * @param {number} timeLeft - 남은 시간 (초)
-     * @param {string} elementId - 타이머를 표시할 HTML 요소의 ID
-     */
+    
     updateTimer(timeLeft, elementId) {
         const min = Math.floor(timeLeft / 60);
         const sec = timeLeft % 60;
@@ -48,38 +32,52 @@ export const UI = {
         }
     },
     
-    /**
-     * 로딩 오버레이를 표시하거나 숨깁니다.
-     * @param {boolean} show - 표시 여부
-     * @param {string} text - 로딩 화면에 표시할 텍스트
-     */
+    updateProgress(progressHTML) {
+        const progressEl = document.getElementById('session-progress');
+        if(progressEl) progressEl.innerHTML = progressHTML;
+    },
+
     showLoader(show, text = "AI가 분석 중입니다...") {
          const loader = document.getElementById('loader');
          loader.querySelector('.loader-text').textContent = text;
          loader.style.display = show ? 'flex' : 'none';
     },
 
-    /**
-     * 화면에 짧은 메시지(토스트)를 표시했다가 사라지게 합니다.
-     * @param {string} message - 표시할 메시지
-     * @param {string} [type='success'] - 메시지 유형 ('success' 또는 'error')
-     */
     showToast(message, type = 'success') {
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
+        document.querySelectorAll('.toast').forEach(t => t.remove());
         const t = document.createElement('div');
         t.className = `toast ${type}`;
         t.textContent = message;
         document.body.appendChild(t);
         setTimeout(() => { t.remove(); }, 3000);
     },
+    
+    showConfirm(message, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.display = 'flex';
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal-content';
+        modal.innerHTML = `
+            <div class="modal-body"><p>${message}</p></div>
+            <div class="modal-controls">
+                <button id="confirm-cancel" class="btn">취소</button>
+                <button id="confirm-ok" class="btn btn-primary">확인</button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
 
-    /**
-     * 5단계 '비교 분석' 화면의 내용을 채웁니다.
-     * @param {object} data - 화면에 표시할 데이터
-     */
+        const close = () => overlay.remove();
+        overlay.querySelector('#confirm-cancel').addEventListener('click', close);
+        overlay.querySelector('#confirm-ok').addEventListener('click', () => {
+            onConfirm();
+            close();
+        });
+    },
+
     renderComparison(data) {
         document.getElementById('reveal-my-thoughts').textContent = data.myThoughts || " ";
         document.getElementById('reveal-ai-feedback').textContent = data.aiFeedback || " ";
@@ -87,10 +85,6 @@ export const UI = {
         document.getElementById('reveal-expert-summary').textContent = data.expertSummary || " ";
     },
 
-    /**
-     * 지식 정원 화면을 렌더링합니다.
-     * @param {Array<object>} plants - 화면에 표시할 '지식 식물' 데이터 배열
-     */
     renderGarden(plants) {
         const container = document.getElementById('garden-container');
         if (!container) return;
@@ -120,10 +114,7 @@ export const UI = {
         });
     },
 
-    // --- 모달 렌더링 객체들 ---
-
     BookExplorer: {
-        // ... 기존 BookExplorer 코드 ...
         overlay: document.getElementById('book-explorer-modal-overlay'),
         content: document.getElementById('book-explorer-modal'),
         show() { this.overlay.style.display = 'flex'; },
@@ -139,8 +130,9 @@ export const UI = {
                             </div>`;
                     break;
                 case 'results':
+                    // API 응답에 맞춰 data attribute를 추가합니다.
                     html = (data.results.length > 0 ? data.results.map(book => `
-                        <div class="book-result-card" data-title="${book.title}">
+                        <div class="book-result-card" data-title="${book.title}" data-author="${book.author || ''}">
                             <img src="${book.cover}" alt="${book.title}">
                         </div>`).join('') : '<p style="text-align:center; color: var(--text-light-color);">검색 결과가 없습니다.</p>');
                     break;
@@ -166,7 +158,6 @@ export const UI = {
     },
 
     GoalNavigator: {
-        // ... 기존 GoalNavigator 코드 ...
         overlay: document.getElementById('goal-navigator-modal-overlay'),
         content: document.getElementById('goal-navigator-modal'),
         show() { this.overlay.style.display = 'flex'; },
@@ -214,7 +205,6 @@ export const UI = {
         }
     },
 
-    // --- 신규 추가 ---
     Dashboard: {
         overlay: document.getElementById('dashboard-modal-overlay'),
         content: document.getElementById('dashboard-modal-content'),
@@ -255,7 +245,6 @@ export const UI = {
         }
     },
 
-    // --- 신규 추가 ---
     Challenge: {
         overlay: document.getElementById('challenge-modal-overlay'),
         content: document.getElementById('challenge-modal'),
@@ -301,15 +290,16 @@ export const UI = {
                     selectedConfidence = target.closest('.btn').dataset.confidence;
                     this.content.querySelector('#challenge-submit-btn').disabled = false;
                 } else if (target.id === 'challenge-cancel-btn' || target.id === 'challenge-submit-btn'){
+                    this.hide();
                     if (target.id === 'challenge-submit-btn' && selectedConfidence) {
                         onComplete(selectedConfidence, document.getElementById('challenge-answer').value);
                     }
-                    this.hide(e.currentTarget); // Pass the element to remove the listener from
+                    this.content.removeEventListener('click', clickHandler);
                 }
             };
             this.content.addEventListener('click', clickHandler);
         },
-        hide(listenerTarget) { 
+        hide() { 
             if(this.overlay) this.overlay.style.display = 'none';
         }
     },

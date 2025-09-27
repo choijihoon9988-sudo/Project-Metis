@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -129,6 +130,11 @@
         .plant-source { font-size: 14px; color: var(--text-light-color); margin-bottom: 12px; }
         .plant-status { font-size: 14px; font-weight: 500; }
         #journey-map-container { position: relative; width: 100%; height: 75vh; background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); overflow: hidden; }
+        .journey-node { position: absolute; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 14px; padding: 5px; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s; user-select: none; }
+        .journey-node:hover { transform: scale(1.1); z-index: 20 !important; }
+        .journey-node.book { width: 100px; height: 100px; background-color: var(--primary-dark); z-index: 10; font-weight: 700; }
+        .journey-node.plant { width: 70px; height: 70px; font-size: 11px; z-index: 5; }
+        #journey-map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInView { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -209,6 +215,7 @@
                     <p>당신의 지식들이 어떻게 연결되어 있는지 탐험하세요.</p>
                 </header>
                 <div id="journey-map-container">
+                    <svg id="journey-map-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></svg>
                     <p class="empty-message">아직 탐험한 지식이 없습니다. 여정을 시작해보세요!</p>
                 </div>
             </div>
@@ -330,7 +337,10 @@
         <div id="dashboard-modal-content" class="modal-content"></div>
     </div>
     
-    <!-- 이 부분을 수정합니다. -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
     <script src="./js/main.js" type="module"></script>
 </body>
 </html>
+

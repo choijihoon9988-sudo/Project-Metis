@@ -1,12 +1,17 @@
 // js/ebbinghaus.js
-// 이 모듈은 '지식 정원'의 모든 데이터를 관리하고, 망각곡선 이론에 따라 핵심 로직을 담당합니다.
-
 import { UI } from './ui.js';
-
-const STORAGE_KEY = 'metisPlants';
+// Firebase의 Firestore 기능을 사용하기 위해 필요한 함수들을 가져옵니다.
+import { db } from './firebase.js';
+import { collection, doc, getDocs, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 export const Ebbinghaus = {
     plants: [],
+    userId: null, // 현재 사용자의 고유 ID를 저장할 변수
+
+    // 사용자 ID를 받아와서 모듈 내에 저장합니다.
+    setUser(userId) {
+        this.userId = userId;
+    },
 
     getReviewInterval(strength) {
         if (strength <= 1) return 1;
@@ -15,16 +20,32 @@ export const Ebbinghaus = {
         return Math.round(this.getReviewInterval(strength - 1) * 1.8);
     },
 
-    load() {
-        this.plants = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    // Firestore에서 데이터를 비동기적으로 불러옵니다.
+    async load() {
+        if (!this.userId) return;
+        const plantsCol = collection(db, 'users', this.userId, 'plants');
+        const plantSnapshot = await getDocs(plantsCol);
+        this.plants = plantSnapshot.docs.map(doc => doc.data());
         this.plants.forEach(p => this.updatePlantState(p));
     },
 
-    save() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.plants));
+    // Firestore에 데이터를 비동기적으로 저장합니다.
+    async savePlant(plantData) {
+        if (!this.userId) return;
+        // 각 plant의 id를 Firestore 문서의 id로 사용합니다.
+        const plantRef = doc(db, 'users', this.userId, 'plants', String(plantData.id));
+        await setDoc(plantRef, plantData);
+    },
+    
+    // Firestore의 특정 식물 데이터를 업데이트합니다.
+    async updatePlant(plantData) {
+        if (!this.userId) return;
+        const plantRef = doc(db, 'users', this.userId, 'plants', String(plantData.id));
+        await updateDoc(plantRef, plantData);
     },
 
     updatePlantState(plant) {
+        // ... (기존 updatePlantState 로직은 동일)
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
@@ -47,7 +68,7 @@ export const Ebbinghaus = {
         else plant.memoryStage = '장기 기억';
     },
 
-    plantSeed(sessionData) {
+    async plantSeed(sessionData) {
         const goal = document.querySelector('#main-book-goal p').textContent;
         const sourceBook = document.getElementById('main-book-title').textContent;
         const { gap, finalWriting } = sessionData;
@@ -62,20 +83,20 @@ export const Ebbinghaus = {
             reviews: [{ date: new Date().toISOString() }]
         };
 
-        this.plants.push(newPlant);
-        this.save();
+        await this.savePlant(newPlant); // Firestore에 새로운 식물 저장
     },
 
-    initGarden() {
-        this.load();
+    async initGarden() {
+        await this.load(); // Firestore에서 데이터를 불러올 때까지 기다립니다.
         UI.renderGarden(this.plants);
     },
 
     getPlantById(id) {
-        return this.plants.find(p => p.id == id);
+        // Firestore에서 불러온 데이터는 id가 숫자일 수 있으므로 문자열로 비교합니다.
+        return this.plants.find(p => String(p.id) === String(id));
     },
     
-    startReview(plantId) {
+    async startReview(plantId) {
         const plant = this.getPlantById(plantId);
         if(!plant) return;
         
@@ -85,18 +106,21 @@ export const Ebbinghaus = {
         
         const challenge = { type: challengeType, question: plant.question, sourceBook: plant.sourceBook };
         
-        UI.Challenge.show(challenge, (confidence, answer) => {
+        UI.Challenge.show(challenge, async (confidence, answer) => {
             plant.reviews.push({ date: new Date().toISOString(), confidence, answer });
 
             if (confidence === 'confident') plant.strength += 1;
             else if (confidence === 'guess') plant.strength = Math.max(1, plant.strength - 1);
             
-            this.save();
-            this.initGarden();
+            this.updatePlantState(plant); // 상태 업데이트 후
+            await this.updatePlant(plant); // Firestore에 업데이트된 정보 저장
+            
+            await this.initGarden(); // 정원 다시 그리기
             UI.showToast('복습 완료! 지식의 힘이 강해졌습니다.', 'success');
         });
     },
 
+    // ... (generateCurveData와 createChartConfig 함수는 기존과 동일)
     generateCurveData(startDate, strength) {
         const data = [];
         const decayRate = 0.3 / Math.log(strength + 1.5);
@@ -142,17 +166,12 @@ export const Ebbinghaus = {
         };
     },
 
-    // --- 신규 추가 ---
-    /**
-     * 지적 여정 맵을 초기화하고 렌더링을 요청합니다.
-     */
-    initJourneyMap() {
-        this.load();
+    async initJourneyMap() {
+        await this.load();
         const container = document.getElementById('journey-map-container');
         const svg = document.getElementById('journey-map-svg');
         if (!container || !svg) return;
 
-        // 기존 맵 요소들 초기화
         container.querySelectorAll('.journey-node').forEach(node => node.remove());
         svg.innerHTML = '';
 
@@ -162,7 +181,6 @@ export const Ebbinghaus = {
         }
         container.querySelector('.empty-message').style.display = 'none';
 
-        // 책(Book) 노드 생성
         const books = [...new Set(this.plants.map(p => p.sourceBook))];
         const nodes = [];
         const cWidth = container.clientWidth;
@@ -185,25 +203,23 @@ export const Ebbinghaus = {
             nodes.push({ id: bookTitle, x, y, el: nodeEl, type: 'book' });
         });
 
-        // 지식(Plant) 노드와 연결선 생성
         this.plants.forEach(plant => {
             const parentBookNode = nodes.find(n => n.id === plant.sourceBook);
             if (!parentBookNode) return;
 
             const pAngle = Math.random() * 2 * Math.PI;
-            const pRadius = 80 + Math.random() * 40; // 책 주변에 랜덤하게 배치
+            const pRadius = 80 + Math.random() * 40;
             const x = parentBookNode.x + pRadius * Math.cos(pAngle);
             const y = parentBookNode.y + pRadius * Math.sin(pAngle);
 
             const nodeEl = document.createElement('div');
             nodeEl.className = 'journey-node plant';
             nodeEl.textContent = plant.title.substring(0, 15) + '...';
-            nodeEl.title = plant.title; // 마우스 올렸을 때 전체 제목 표시
+            nodeEl.title = plant.title;
             nodeEl.style.left = `${x - 35}px`;
             nodeEl.style.top = `${y - 35}px`;
             container.appendChild(nodeEl);
             
-            // SVG로 연결선 그리기
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', parentBookNode.x);
             line.setAttribute('y1', parentBookNode.y);
