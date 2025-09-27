@@ -53,11 +53,13 @@ export const GoalNavigator = {
                 ]
             `;
             
+            // 수정: API 호출 전에 모델 확인 로그 추가 (디버깅용)
+            console.log("Gemini 모델 초기화 확인:", geminiModel);
             const result = await geminiModel.generateContent(prompt);
             const response = await result.response;
-            let text = response.text();
+            let text = response.text().trim();  // 수정: trim() 추가로 공백 제거
             
-            // AI 응답에 포함될 수 있는 마크다운 ```json ... ``` 제거
+            // AI 응답에 포함될 수 있는 마크다운 ```json
             if (text.startsWith("```json")) {
                 text = text.slice(7, -3).trim();
             }
@@ -72,8 +74,9 @@ export const GoalNavigator = {
             UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests });
 
         } catch (error) {
-            console.error("AI 퀘스트 생성 실패:", error);
-            UI.showToast("퀘스트 생성에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해주세요.", "error");
+            // 수정: 에러 핸들링 강화 - 콘솔에 상세 로그 출력
+            console.error("AI 퀘스트 생성 실패 상세:", error.message, error.stack);
+            UI.showToast("퀘스트 생성에 실패했습니다. 모델 이름('-latest' 제거 확인)이나 API 키를 확인하거나 잠시 후 다시 시도해주세요.", "error");
             UI.GoalNavigator.render("chapterInput", { bookTitle: this.state.book.title });
         } finally {
             UI.showLoader(false);
