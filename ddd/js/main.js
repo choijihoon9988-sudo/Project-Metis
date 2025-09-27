@@ -32,7 +32,13 @@ function setupEventListeners() {
     if (navBtn) {
       const viewName = navBtn.dataset.view;
       UI.switchView(viewName);
-      if (viewName === 'garden') Ebbinghaus.initGarden();
+      if (viewName === 'garden') {
+          Ebbinghaus.initGarden();
+      }
+      // --- 여기가 핵심 변경 사항입니다! ---
+      if (viewName === 'journey') {
+          Ebbinghaus.initJourneyMap();
+      }
       return;
     }
 
@@ -53,14 +59,13 @@ function setupEventListeners() {
         if (target.closest('#finish-session-btn')) { MetisSession.complete(); return; }
     }
 
-    // --- 지식 정원 (신규 추가) ---
+    // --- 지식 정원 ---
     const plantCard = target.closest('.plant-card');
     if(plantCard) {
         const plantId = plantCard.dataset.id;
         appState.currentPlant = Ebbinghaus.getPlantById(plantId);
         if (!appState.currentPlant) return;
 
-        // 상태에 따라 다른 행동
         if (appState.currentPlant.status === 'healthy') {
             const chartConfig = Ebbinghaus.createChartConfig(appState.currentPlant);
             UI.Dashboard.show(appState.currentPlant, chartConfig);
@@ -70,7 +75,7 @@ function setupEventListeners() {
         return;
     }
     
-    // --- 대시보드 모달 (신규 추가) ---
+    // --- 대시보드 모달 ---
     if (target.closest('#dashboard-modal-overlay') && !target.closest('.modal-content')) { UI.Dashboard.hide(); return; }
     const simulateBtn = target.closest('#simulate-review-btn');
     if (simulateBtn) {

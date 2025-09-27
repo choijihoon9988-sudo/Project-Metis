@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chart.js 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -66,14 +67,9 @@
         .ai-assistant-slot .book-title-input { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
         
         .course-selection { margin-top: 16px; }
-        .course-selection h5 { margin-bottom: 8px; color: var(--text-light-color); display: flex; align-items: center; gap: 8px;}
-        .course-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .course-btn { flex-grow: 1; }
-        .tooltip-icon { cursor: pointer; font-style: normal; display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; border-radius: 50%; background-color: var(--border-color); color: var(--text-light-color); font-weight: 700;}
-        #course-tooltip { position: absolute; background-color: var(--text-color); color: white; padding: 12px; border-radius: var(--border-radius); z-index: 10; width: 300px; font-size: 14px; line-height: 1.5; box-shadow: var(--shadow); display: none; }
-        #course-tooltip h6 { font-size: 15px; margin-bottom: 8px; border-bottom: 1px solid #777; padding-bottom: 4px;}
-        #course-tooltip p { font-size: 13px; margin-bottom: 6px;}
-
+        .course-selection h5 { margin-bottom: 8px; color: var(--text-light-color); }
+        .course-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        
         /* 지식 정원 & 기억 곡선 대시보드 스타일 */
         .garden-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
         .plant-card { background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); border-left: 5px solid; padding: 16px; transition: all 0.2s; cursor: pointer; }
@@ -179,7 +175,7 @@
                             </div>
                         </div>
                         <div class="course-selection">
-                            <h5>학습 코스 선택 <i class="tooltip-icon" id="course-tooltip-icon">?</i></h5>
+                            <h5>학습 코스 선택</h5>
                             <div class="course-buttons">
                                 <button class="course-btn btn" data-duration="15">15분</button>
                                 <button class="course-btn btn active" data-duration="30">30분</button>
@@ -316,16 +312,6 @@
         </main>
     </div>
 
-    <div id="course-tooltip">
-        <h6>언제 어떤 코스를 선택할까요?</h6>
-        <p><strong>15분:</strong> 자투리 시간, 핵심 개념 1개만 빠르게 확인할 때</p>
-        <p><strong>30분:</strong> 출퇴근길, 집중해서 1~2개 소주제를 학습할 때 (기본)</p>
-        <p><strong>45분:</strong> 뽀모도로 1 사이클(25분 독서 + 5분 휴식)을 온전히 확보하고 싶을 때</p>
-        <p><strong>60분:</strong> 주말 오전, 책의 한 챕터를 깊이 있게 파고들 때</p>
-        <p><strong>90분:</strong> 중요한 책의 특정 파트를 끝내고 싶을 때</p>
-        <p><strong>120분:</strong> 완전한 몰입으로 책의 핵심 논리를 완벽히 체화하고 싶을 때</p>
-    </div>
-
     <div id="loader" class="loader-overlay"><div class="loader"></div><div class="loader-text">AI가 당신의 생각을 분석 중입니다...</div></div>
     <div id="challenge-modal-overlay" class="modal-overlay"><div id="challenge-modal" class="modal-content"></div></div>
     <div id="goal-navigator-modal-overlay" class="modal-overlay"><div id="goal-navigator-modal" class="modal-content"><div id="goal-navigator-content"></div></div></div>
@@ -459,11 +445,19 @@
         };
 
         // =================================================================================
-        // MetisSession Module: Handles the 7-step learning cycle with dynamic timers
+        // MetisSession Module: Handles the 7-step learning cycle with fixed presets
         // =================================================================================
         const MetisSession = {
             state: {},
             stepSequence: ['step-1', 'step-2', 'step-3', 'step-4', 'step-5', 'step-6', 'step-7'],
+            COURSE_PRESETS: {
+                15:  { focus: [5],  break: [],    writing: 2 * 60 },
+                30:  { focus: [15], break: [],    writing: 3 * 60 },
+                45:  { focus: [25], break: [5],   writing: 3 * 60 },
+                60:  { focus: [25, 15], break: [5], writing: 3 * 60 },
+                90:  { focus: [25, 25], break: [5, 5], writing: 4 * 60 },
+                120: { focus: [25, 25, 25], break: [5, 5], writing: 5 * 60 },
+            },
             
             initialState: { 
                 currentStepId: 'step-1', 
@@ -478,7 +472,7 @@
                 const selectedCourse = document.querySelector('.course-btn.active');
                 const totalMinutes = selectedCourse ? parseInt(selectedCourse.dataset.duration, 10) : 30;
                 
-                this.state.timeAllocations = this.calculateTimeAllocations(totalMinutes);
+                this.state.timeAllocations = this.COURSE_PRESETS[totalMinutes];
                 
                 document.getElementById('session-goal-display').innerHTML = document.getElementById('main-book-goal').innerHTML; 
                 this.handleStepLogic(this.state.currentStepId);
@@ -487,54 +481,6 @@
             reset() { 
                 clearInterval(this.state.timerInterval); 
                 this.state = JSON.parse(JSON.stringify(this.initialState)); 
-            },
-
-            calculateTimeAllocations(totalMinutes) {
-                const allocations = {
-                    focusSessions: [],
-                    breakSessions: [],
-                    writing: {}
-                };
-                
-                const timePresets = {
-                    15:  { 'step-1': 1, 'step-3': 3, 'step-4': 2, 'step-6': 2, 'step-7': 7 },
-                    30:  { 'step-1': 2, 'step-3': 5, 'step-4': 3, 'step-6': 5, 'step-7': 10 },
-                    45:  { 'step-1': 4, 'step-3': 6, 'step-4': 3, 'step-6': 5, 'step-7': 12 },
-                    60:  { 'step-1': 5, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 15 },
-                    90:  { 'step-1': 7, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 20 },
-                    120: { 'step-1': 10, 'step-3': 10, 'step-4': 3, 'step-6': 5, 'step-7': 25 }
-                };
-
-                const preset = timePresets[totalMinutes] || timePresets[30];
-                let writingTotal = 0;
-                for (const step in preset) {
-                    allocations.writing[step] = preset[step] * 60; // to seconds
-                    writingTotal += preset[step];
-                }
-
-                let remainingMinutes = totalMinutes - writingTotal;
-
-                if (remainingMinutes > 0) {
-                    const fullCycles = Math.floor(remainingMinutes / 30);
-                    for (let i = 0; i < fullCycles; i++) {
-                        allocations.focusSessions.push(25);
-                        allocations.breakSessions.push(5);
-                    }
-                    remainingMinutes -= fullCycles * 30;
-                }
-
-                if (remainingMinutes > 0) {
-                    allocations.focusSessions.push(remainingMinutes);
-                }
-                
-                // If there's no reading time calculated, it means all time is for writing.
-                // In a 15 min course, this might be the case. Add a small reading time.
-                if(allocations.focusSessions.length === 0 && totalMinutes < 30) {
-                    allocations.focusSessions.push(totalMinutes - writingTotal);
-                }
-
-
-                return allocations;
             },
 
             startTimer(duration, elementId, onComplete) {
@@ -556,22 +502,22 @@
                 this.state.currentStepId = stepId;
                 UI.switchStep(stepId);
                 clearInterval(this.state.timerInterval);
+                
+                const writingTime = this.state.timeAllocations.writing;
 
-                if (this.state.timeAllocations.writing[stepId] > 0) {
-                    const duration = this.state.timeAllocations.writing[stepId];
+                if (writingTime && stepId !== 'step-2' && stepId !== 'step-break' && stepId !== 'step-5') {
                     const timerId = `timer-${stepId}`;
-                    this.startTimer(duration, timerId, () => this.proceed());
+                    this.startTimer(writingTime, timerId, () => this.proceed());
                 } else if (stepId === 'step-2') {
                     UI.updateProgress(this.generateProgressHTML());
-                    const duration = (this.state.timeAllocations.focusSessions[this.state.cyclesCompleted] || 0) * 60;
+                    const duration = (this.state.timeAllocations.focus[this.state.cyclesCompleted] || 0) * 60;
                     if(duration > 0) {
                         this.startTimer(duration, 'timer', () => this.handleFocusEnd());
                     } else {
-                        // If no reading time, but it's a short session, go directly to braindump
                         this.handleFocusEnd();
                     }
                 } else if (stepId === 'step-break') {
-                    const duration = (this.state.timeAllocations.breakSessions[this.state.cyclesCompleted - 1] || 0) * 60;
+                    const duration = (this.state.timeAllocations.break[this.state.cyclesCompleted - 1] || 0) * 60;
                     const question = await this.getDynamicBreakQuestion(this.state.userInputs.prediction, this.state.userInputs.brainDump);
                     const questionCard = document.getElementById('break-question-card');
                     questionCard.querySelector('h5').textContent = question.title;
@@ -580,10 +526,10 @@
                     if(duration > 0) {
                         this.startTimer(duration, 'timer-break', () => this.handleBreakEnd());
                     } else {
-                         this.handleBreakEnd(); // Skip if no time
+                         this.handleBreakEnd();
                     }
                 } else {
-                     this.proceed(); // For steps with no timer like step-5
+                     this.proceed();
                 }
             },
 
@@ -596,16 +542,14 @@
                 };
                 const key = inputIdMap[currentId];
                 if (key) {
-                    const inputEl = document.getElementById(`${key}-input`);
+                    const inputEl = document.getElementById(`${key.replace('finalWriting', 'final-writing')}-input`);
                     if(inputEl) this.state.userInputs[key] = inputEl.value;
                 }
 
                 const currentIndex = this.stepSequence.indexOf(currentId);
                 let nextStepId;
 
-                if(currentId === 'step-2') { // After reading, go to brain dump
-                     nextStepId = 'step-3';
-                } else if(currentId === 'step-5') {
+                if (currentId === 'step-5') {
                     this.completeSessionFlow();
                     return;
                 } else if (currentIndex < this.stepSequence.length - 1) {
@@ -619,8 +563,8 @@
 
             handleFocusEnd() {
                 this.state.cyclesCompleted++;
-                if (this.state.cyclesCompleted < this.state.timeAllocations.focusSessions.length) {
-                    if(this.state.cyclesCompleted <= this.state.timeAllocations.breakSessions.length) {
+                if (this.state.cyclesCompleted < this.state.timeAllocations.focus.length) {
+                    if(this.state.cyclesCompleted <= this.state.timeAllocations.break.length) {
                         this.handleStepLogic('step-break');
                     } else { 
                         this.handleStepLogic('step-2');
@@ -637,12 +581,12 @@
             },
 
             generateProgressHTML(){
-                const totalCycles = this.state.timeAllocations.focusSessions.length;
+                const totalCycles = this.state.timeAllocations.focus.length;
                 if (totalCycles === 0) return '';
                 let html = '';
                 for(let i = 0; i < totalCycles; i++){
                     html += (i < this.state.cyclesCompleted) ? '✅' : '🍅';
-                    if(i < this.state.timeAllocations.breakSessions.length) html += ' ☕️ ';
+                    if(i < this.state.timeAllocations.break.length) html += ' ☕️ ';
                 }
                 return `Cycle ${this.state.cyclesCompleted + 1} / ${totalCycles} <br> ${html}`;
             },
@@ -682,7 +626,7 @@
                     { title: "실생활 연결하기", body: "방금 읽은 내용을 당신의 일상이나 업무에 어떻게 적용해볼 수 있을까요?" }
                 ];
 
-                if (brainDumpText && brainDumpText.trim().includes('어렵다') || brainDumpText.trim().includes('모르겠다')) {
+                if (brainDumpText && (brainDumpText.includes('어렵다') || brainDumpText.includes('모르겠다'))) {
                      return this.simulateApi({ title: "관점 전환하기", body: `기록을 보니 특정 부분에 어려움을 느끼신 것 같군요. 그 개념을 어린 아이에게 설명한다고 상상해보면 어떨까요?` });
                 } else if (predictionText && predictionText.trim().length > 10) {
                      return this.simulateApi({ title: "중간 예측 점검", body: `당신의 초기 예측이었던 "${predictionText.substring(0, 30)}..."(은)는 현재까지 얼마나 유효한가요? 수정하거나 보완하고 싶은 부분이 있나요?` });
@@ -700,13 +644,7 @@
             getReviewInterval(strength) { if (strength <= 1) return 1; if (strength === 2) return 3; if (strength === 3) return 7; return Math.round(this.getReviewInterval(strength - 1) * 2.1); },
             load() { this.plants = JSON.parse(localStorage.getItem('knowledgePlants')) || []; this.plants.forEach(p => this.updatePlantState(p)); },
             updatePlantState(plant) { const now = new Date(); now.setHours(0, 0, 0, 0); const lastReviewed = new Date(plant.reviews[plant.reviews.length - 1].date); const interval = this.getReviewInterval(plant.strength); const nextReviewDate = new Date(lastReviewed); nextReviewDate.setDate(lastReviewed.getDate() + interval); nextReviewDate.setHours(0,0,0,0); plant.nextReviewDate = nextReviewDate; const diffDays = Math.ceil((nextReviewDate - now) / (1000 * 60 * 60 * 24)); plant.daysUntilReview = Math.max(0, diffDays); if (diffDays <= 0) plant.status = 'urgent'; else if (diffDays <= 3) plant.status = 'needs-care'; else plant.status = 'healthy'; if (plant.strength <= 2) plant.memoryStage = '단기 기억'; else if (plant.strength <= 4) plant.memoryStage = '장기 기억 전환 중'; else plant.memoryStage = '장기 기억'; },
-            plantSeed(sessionData) { 
-                const mainBookGoal = document.getElementById('main-book-goal').querySelector('p').textContent;
-                const sourceBook = document.querySelector('.book-details h4').textContent;
-                const { finalWriting, gap } = sessionData.userInputs; 
-                const newPlant = { id: Date.now(), title: mainBookGoal, sourceBook, question: `[핵심 질문] ${gap}\n\n위 질문에 대해 당신이 체화한 지식을 설명하세요.`, answer: finalWriting, strength: 1, reviews: [{ date: new Date().toISOString() }] }; 
-                if (!this.plants.some(p => p.question.includes(gap))) { this.plants.push(newPlant); localStorage.setItem('knowledgePlants', JSON.stringify(this.plants)); UI.showToast("지식 정원에 새로운 씨앗을 심었습니다!", "success"); } else UI.showToast("이미 동일한 질문의 씨앗이 존재합니다.", "error"); 
-            },
+            plantSeed(sessionData) { const { initialGoal, sourceBook, finalWriting, gap } = sessionData.userInputs; const newPlant = { id: Date.now(), title: initialGoal.substring(0, 40) + '...', sourceBook, question: `[핵심 질문] ${gap}\n\n위 질문에 대해 당신이 체화한 지식을 설명하세요.`, answer: finalWriting, strength: 1, reviews: [{ date: new Date().toISOString() }] }; if (!this.plants.some(p => p.question.includes(gap))) { this.plants.push(newPlant); localStorage.setItem('knowledgePlants', JSON.stringify(this.plants)); UI.showToast("지식 정원에 새로운 씨앗을 심었습니다!", "success"); } else UI.showToast("이미 동일한 질문의 씨앗이 존재합니다.", "error"); },
             initGarden() { this.load(); UI.renderGarden(this.plants); },
             getPlantById(id) { return this.plants.find(p => p.id == id); },
             startReview(plantId){
@@ -865,19 +803,6 @@
                 }
             });
 
-            // Tooltip logic
-            const tooltipIcon = document.getElementById('course-tooltip-icon');
-            const tooltip = document.getElementById('course-tooltip');
-            tooltipIcon.addEventListener('mouseover', () => {
-                const rect = tooltipIcon.getBoundingClientRect();
-                tooltip.style.left = `${rect.left}px`;
-                tooltip.style.top = `${rect.bottom + 10}px`;
-                tooltip.style.display = 'block';
-            });
-            tooltipIcon.addEventListener('mouseout', () => {
-                tooltip.style.display = 'none';
-            });
-
             document.addEventListener('sessionComplete', (e) => {
                 if (e.detail.finished) {
                     Ebbinghaus.plantSeed(e.detail.data);
@@ -899,3 +824,7 @@
     </script>
 </body>
 </html>
+" of the document.
+Change it to this: "
+코딩이 잘못된 거 같은데, 내가 원하는 건 이게 아니야. 시간 비율을 계산하지 말고 내가 설정한 시간 그대로 나오게 해줘. 15분, 30분, 45분, 60분, 90분, 120분 이렇게 시간 패키지 만들어서 내가 15분 누르면 15분 동안 책 읽게 해줘. 15분 동안 책 읽다가 내가 임의로 버튼 누르면 5분 글쓰기 타이머로 넘어가게 하고. 또 내가 5분 글쓰기 하다가 버튼 누르면 다음으로 넘어가게 하고. 이렇게 모든 섹션에서 내가 버튼을 누르기 전까지는 시간이 안 흐르고 다음으로 안 넘어가게 해줘. 무조건 내가 버튼을 눌러야만 다음으로 넘어가게 하고, 대신 각 섹션마다 타이머는 내가 설정한 시간으로 흐르게 해줘. 15분 설정하면 15분 타이머가 흐르고, 내가 그 안에 책을 다 읽었으면 버튼 눌러서 다음으로 넘어가게 해달라는 거야. 그리고 각 섹션마다 글쓰기 시간은 5분으로 고정해줘.
+
