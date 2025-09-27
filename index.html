@@ -66,10 +66,14 @@
         .ai-assistant-slot .book-title-input { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
         
         .course-selection { margin-top: 16px; }
-        .course-selection h5 { margin-bottom: 8px; color: var(--text-light-color); }
+        .course-selection h5 { margin-bottom: 8px; color: var(--text-light-color); display: flex; align-items: center; gap: 8px;}
         .course-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
         .course-btn { flex-grow: 1; }
-        
+        .tooltip-icon { cursor: pointer; font-style: normal; display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; border-radius: 50%; background-color: var(--border-color); color: var(--text-light-color); font-weight: 700;}
+        #course-tooltip { position: absolute; background-color: var(--text-color); color: white; padding: 12px; border-radius: var(--border-radius); z-index: 10; width: 300px; font-size: 14px; line-height: 1.5; box-shadow: var(--shadow); display: none; }
+        #course-tooltip h6 { font-size: 15px; margin-bottom: 8px; border-bottom: 1px solid #777; padding-bottom: 4px;}
+        #course-tooltip p { font-size: 13px; margin-bottom: 6px;}
+
         /* 지식 정원 & 기억 곡선 대시보드 스타일 */
         .garden-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
         .plant-card { background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); border-left: 5px solid; padding: 16px; transition: all 0.2s; cursor: pointer; }
@@ -175,12 +179,14 @@
                             </div>
                         </div>
                         <div class="course-selection">
-                            <h5>학습 코스 선택</h5>
+                            <h5>학습 코스 선택 <i class="tooltip-icon" id="course-tooltip-icon">?</i></h5>
                             <div class="course-buttons">
-                                <button class="course-btn btn active" data-duration="30">30분 코스</button>
-                                <button class="course-btn btn" data-duration="60">60분 코스</button>
-                                <button class="course-btn btn" data-duration="90">90분 코스</button>
-                                <button class="course-btn btn" data-duration="120">120분 코스</button>
+                                <button class="course-btn btn" data-duration="15">15분</button>
+                                <button class="course-btn btn active" data-duration="30">30분</button>
+                                <button class="course-btn btn" data-duration="45">45분</button>
+                                <button class="course-btn btn" data-duration="60">60분</button>
+                                <button class="course-btn btn" data-duration="90">90분</button>
+                                <button class="course-btn btn" data-duration="120">120분</button>
                             </div>
                         </div>
                         <button id="start-session-btn" class="btn btn-primary" style="margin-top: 16px;">새로운 지식 탐험하기 (메티스 세션)</button>
@@ -308,6 +314,16 @@
                  </div>
             </div>
         </main>
+    </div>
+
+    <div id="course-tooltip">
+        <h6>언제 어떤 코스를 선택할까요?</h6>
+        <p><strong>15분:</strong> 자투리 시간, 핵심 개념 1개만 빠르게 확인할 때</p>
+        <p><strong>30분:</strong> 출퇴근길, 집중해서 1~2개 소주제를 학습할 때 (기본)</p>
+        <p><strong>45분:</strong> 뽀모도로 1 사이클(25분 독서 + 5분 휴식)을 온전히 확보하고 싶을 때</p>
+        <p><strong>60분:</strong> 주말 오전, 책의 한 챕터를 깊이 있게 파고들 때</p>
+        <p><strong>90분:</strong> 중요한 책의 특정 파트를 끝내고 싶을 때</p>
+        <p><strong>120분:</strong> 완전한 몰입으로 책의 핵심 논리를 완벽히 체화하고 싶을 때</p>
     </div>
 
     <div id="loader" class="loader-overlay"><div class="loader"></div><div class="loader-text">AI가 당신의 생각을 분석 중입니다...</div></div>
@@ -479,23 +495,25 @@
                     breakSessions: [],
                     writing: {}
                 };
-
-                const MIN_WRITING_PER_STEP = 2; // 최소 글쓰기 시간 (분)
-                const NUM_WRITING_STEPS = 5;
-                const FIXED_TOTAL_WRITING_MINS = MIN_WRITING_PER_STEP * NUM_WRITING_STEPS;
-
-                let remainingMinutes = totalMinutes;
-
-                // 1. Allocate fixed writing time
-                remainingMinutes -= FIXED_TOTAL_WRITING_MINS;
                 
-                this.stepSequence.forEach(stepId => {
-                    if(stepId.startsWith('step-') && this.stepSequence.indexOf(stepId) !== 4) { // Exclude step-5 (no timer)
-                        allocations.writing[stepId] = MIN_WRITING_PER_STEP * 60; // to seconds
-                    }
-                });
+                const timePresets = {
+                    15:  { 'step-1': 1, 'step-3': 3, 'step-4': 2, 'step-6': 2, 'step-7': 7 },
+                    30:  { 'step-1': 2, 'step-3': 5, 'step-4': 3, 'step-6': 5, 'step-7': 10 },
+                    45:  { 'step-1': 4, 'step-3': 6, 'step-4': 3, 'step-6': 5, 'step-7': 12 },
+                    60:  { 'step-1': 5, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 15 },
+                    90:  { 'step-1': 7, 'step-3': 7, 'step-4': 3, 'step-6': 5, 'step-7': 20 },
+                    120: { 'step-1': 10, 'step-3': 10, 'step-4': 3, 'step-6': 5, 'step-7': 25 }
+                };
 
-                // 2. Allocate Pomodoro cycles from the rest
+                const preset = timePresets[totalMinutes] || timePresets[30];
+                let writingTotal = 0;
+                for (const step in preset) {
+                    allocations.writing[step] = preset[step] * 60; // to seconds
+                    writingTotal += preset[step];
+                }
+
+                let remainingMinutes = totalMinutes - writingTotal;
+
                 if (remainingMinutes > 0) {
                     const fullCycles = Math.floor(remainingMinutes / 30);
                     for (let i = 0; i < fullCycles; i++) {
@@ -505,11 +523,16 @@
                     remainingMinutes -= fullCycles * 30;
                 }
 
-
-                // 3. Allocate leftover to a final focus session
                 if (remainingMinutes > 0) {
                     allocations.focusSessions.push(remainingMinutes);
                 }
+                
+                // If there's no reading time calculated, it means all time is for writing.
+                // In a 15 min course, this might be the case. Add a small reading time.
+                if(allocations.focusSessions.length === 0 && totalMinutes < 30) {
+                    allocations.focusSessions.push(totalMinutes - writingTotal);
+                }
+
 
                 return allocations;
             },
@@ -544,7 +567,8 @@
                     if(duration > 0) {
                         this.startTimer(duration, 'timer', () => this.handleFocusEnd());
                     } else {
-                        this.handleFocusEnd(); // Skip if no time
+                        // If no reading time, but it's a short session, go directly to braindump
+                        this.handleFocusEnd();
                     }
                 } else if (stepId === 'step-break') {
                     const duration = (this.state.timeAllocations.breakSessions[this.state.cyclesCompleted - 1] || 0) * 60;
@@ -590,8 +614,6 @@
                  
                 if(nextStepId) {
                     this.handleStepLogic(nextStepId);
-                } else {
-                    // This case should ideally not be reached as complete() is called by button
                 }
             },
 
@@ -678,7 +700,13 @@
             getReviewInterval(strength) { if (strength <= 1) return 1; if (strength === 2) return 3; if (strength === 3) return 7; return Math.round(this.getReviewInterval(strength - 1) * 2.1); },
             load() { this.plants = JSON.parse(localStorage.getItem('knowledgePlants')) || []; this.plants.forEach(p => this.updatePlantState(p)); },
             updatePlantState(plant) { const now = new Date(); now.setHours(0, 0, 0, 0); const lastReviewed = new Date(plant.reviews[plant.reviews.length - 1].date); const interval = this.getReviewInterval(plant.strength); const nextReviewDate = new Date(lastReviewed); nextReviewDate.setDate(lastReviewed.getDate() + interval); nextReviewDate.setHours(0,0,0,0); plant.nextReviewDate = nextReviewDate; const diffDays = Math.ceil((nextReviewDate - now) / (1000 * 60 * 60 * 24)); plant.daysUntilReview = Math.max(0, diffDays); if (diffDays <= 0) plant.status = 'urgent'; else if (diffDays <= 3) plant.status = 'needs-care'; else plant.status = 'healthy'; if (plant.strength <= 2) plant.memoryStage = '단기 기억'; else if (plant.strength <= 4) plant.memoryStage = '장기 기억 전환 중'; else plant.memoryStage = '장기 기억'; },
-            plantSeed(sessionData) { const { initialGoal, sourceBook, finalWriting, gap } = sessionData.userInputs; const newPlant = { id: Date.now(), title: initialGoal.substring(0, 40) + '...', sourceBook, question: `[핵심 질문] ${gap}\n\n위 질문에 대해 당신이 체화한 지식을 설명하세요.`, answer: finalWriting, strength: 1, reviews: [{ date: new Date().toISOString() }] }; if (!this.plants.some(p => p.question.includes(gap))) { this.plants.push(newPlant); localStorage.setItem('knowledgePlants', JSON.stringify(this.plants)); UI.showToast("지식 정원에 새로운 씨앗을 심었습니다!", "success"); } else UI.showToast("이미 동일한 질문의 씨앗이 존재합니다.", "error"); },
+            plantSeed(sessionData) { 
+                const mainBookGoal = document.getElementById('main-book-goal').querySelector('p').textContent;
+                const sourceBook = document.querySelector('.book-details h4').textContent;
+                const { finalWriting, gap } = sessionData.userInputs; 
+                const newPlant = { id: Date.now(), title: mainBookGoal, sourceBook, question: `[핵심 질문] ${gap}\n\n위 질문에 대해 당신이 체화한 지식을 설명하세요.`, answer: finalWriting, strength: 1, reviews: [{ date: new Date().toISOString() }] }; 
+                if (!this.plants.some(p => p.question.includes(gap))) { this.plants.push(newPlant); localStorage.setItem('knowledgePlants', JSON.stringify(this.plants)); UI.showToast("지식 정원에 새로운 씨앗을 심었습니다!", "success"); } else UI.showToast("이미 동일한 질문의 씨앗이 존재합니다.", "error"); 
+            },
             initGarden() { this.load(); UI.renderGarden(this.plants); },
             getPlantById(id) { return this.plants.find(p => p.id == id); },
             startReview(plantId){
@@ -835,6 +863,19 @@
                     simulateBtn.textContent = '✅ 시뮬레이션 완료';
                     return;
                 }
+            });
+
+            // Tooltip logic
+            const tooltipIcon = document.getElementById('course-tooltip-icon');
+            const tooltip = document.getElementById('course-tooltip');
+            tooltipIcon.addEventListener('mouseover', () => {
+                const rect = tooltipIcon.getBoundingClientRect();
+                tooltip.style.left = `${rect.left}px`;
+                tooltip.style.top = `${rect.bottom + 10}px`;
+                tooltip.style.display = 'block';
+            });
+            tooltipIcon.addEventListener('mouseout', () => {
+                tooltip.style.display = 'none';
             });
 
             document.addEventListener('sessionComplete', (e) => {
