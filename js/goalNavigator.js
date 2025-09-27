@@ -1,27 +1,8 @@
 // js/goalNavigator.js
-// 'AI 목표 내비게이터'의 3단계 상호작용 로직을 관리합니다.
 
-import { UI } from './ui.js';
-
-// 가상 목차 및 퀘스트 데이터
-const DUMMY_TOC = {
-    "넛지 (Nudge)": [
-        { part: "1부: 인간은 왜 실수를 반복하는가?", chapters: ["기준점 설정의 함정", "손실 회피 편향"] },
-        { part: "2부: 더 나은 선택을 이끄는 힘, 넛지", chapters: ["디폴트", "피드백과 오류 예상"] }
-    ],
-    "사피엔스": [
-        { part: "1부: 인지 혁명", chapters: ["허구의 탄생", "수다쟁이 유인원"] },
-        { part: "4부: 과학 혁명", chapters: ["무지의 발견", "자본주의 교리"] }
-    ],
-     "클린 코드": [
-        { part: "1부: 클린 코드", chapters: ["의미 있는 이름", "함수"] },
-        { part: "2부: 클린 코드 실천", chapters: ["클래스", "오류 처리"] }
-    ],
-    "역행자": [ // '역행자' 목차 추가
-        { part: "1부: 자의식 해체", chapters: ["탐색", "인정", "전환"] },
-        { part: "2부: 정체성 만들기", chapters: ["뇌 자동화", "역행자의 지식"] }
-    ]
-};
+import { UI } from "./ui.js";
+import { functions } from "./firebase.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
 const DUMMY_QUESTS = {
     "기준점 설정의 함정": [
@@ -41,73 +22,77 @@ const DUMMY_QUESTS = {
     ]
 };
 
-
 export const GoalNavigator = {
     state: {},
 
-    init(book) { // book 객체 전체를 받도록 수정
+    init(book) {
         this.state = { book, selectedChapter: null, selectedQuest: null };
-        const content = document.getElementById('goal-navigator-modal');
-        content.removeEventListener('click', this.handleEvents.bind(this));
-        content.addEventListener('click', this.handleEvents.bind(this));
-
+        const content = document.getElementById("goal-navigator-modal");
+        content.removeEventListener("click", this.handleEvents.bind(this));
+        content.addEventListener("click", this.handleEvents.bind(this));
         this.renderTOC();
         UI.GoalNavigator.show();
     },
 
-    // 목차 렌더링 로직 수정
     async renderTOC() {
-        // Google Books API는 공식적인 목차 정보를 제공하지 않으므로,
-        // 미리 정의된 DUMMY_TOC를 우선적으로 사용합니다.
-        const toc = DUMMY_TOC[this.state.book.title] || DUMMY_TOC[this.state.book.title.split(':')[0].trim()] || [];
+        UI.showLoader(true, "AI가 목차를 분석 중입니다...");
 
-        UI.GoalNavigator.render('toc', { bookTitle: this.state.book.title, toc });
+        try {
+            // 서버의 getBookDetails 함수를 호출합니다. (이제 서울 리전에서 더 빠르게 응답합니다.)
+            const getBookDetails = httpsCallable(functions, "getBookDetails");
+            const result = await getBookDetails({ bookTitle: this.state.book.title });
+
+            const toc = result.data.toc || [];
+            UI.GoalNavigator.render("toc", { bookTitle: this.state.book.title, toc });
+        } catch (error) {
+            console.error("서버 함수 호출 중 오류 발생:", error);
+            UI.showToast("AI 목차 분석에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+            UI.GoalNavigator.render("toc", { bookTitle: this.state.book.title, toc: [] });
+        } finally {
+            UI.showLoader(false);
+        }
     },
 
     handleEvents(e) {
-        // 토글(아코디언) 기능
-        const tocTitle = e.target.closest('.toc-title');
+        const tocTitle = e.target.closest(".toc-title");
         if (tocTitle) {
             const chapters = tocTitle.nextElementSibling;
-            const isOpening = chapters.style.display !== 'block';
-            chapters.style.display = isOpening ? 'block' : 'none';
-            tocTitle.querySelector('span:last-child').textContent = isOpening ? '▲' : '▼';
+            const isOpening = chapters.style.display !== "block";
+            chapters.style.display = isOpening ? "block" : "none";
+            tocTitle.querySelector("span:last-child").textContent = isOpening ? "▲" : "▼";
             return;
         }
 
-        // 챕터 선택
-        const chapter = e.target.closest('.toc-chapter');
+        const chapter = e.target.closest(".toc-chapter");
         if (chapter) {
             this.state.selectedChapter = chapter.textContent;
+            // DUMMY_QUESTS에 목차에 없는 챕터가 있더라도 에러가 나지 않도록 기본값 []을 설정합니다.
             const quests = DUMMY_QUESTS[this.state.selectedChapter] || [];
-            UI.GoalNavigator.render('quests', { chapter: this.state.selectedChapter, quests });
+            UI.GoalNavigator.render("quests", { chapter: this.state.selectedChapter, quests });
             return;
         }
 
-        // 퀘스트 선택
-        const questCard = e.target.closest('.quest-card');
+        const questCard = e.target.closest(".quest-card");
         if (questCard) {
             this.state.selectedQuest = { level: questCard.dataset.level, text: questCard.dataset.text };
-            UI.GoalNavigator.render('editor', this.state.selectedQuest);
+            UI.GoalNavigator.render("editor", this.state.selectedQuest);
             return;
         }
 
-        // 뒤로가기 버튼들
-        if (e.target.id === 'goal-quests-back-btn') {
+        if (e.target.id === "goal-quests-back-btn") {
             this.renderTOC();
             return;
         }
-        if (e.target.id === 'goal-editor-back-btn') {
+        if (e.target.id === "goal-editor-back-btn") {
             const quests = DUMMY_QUESTS[this.state.selectedChapter] || [];
-            UI.GoalNavigator.render('quests', { chapter: this.state.selectedChapter, quests });
+            UI.GoalNavigator.render("quests", { chapter: this.state.selectedChapter, quests });
             return;
         }
 
-        // 최종 목표 확정
-        if (e.target.id === 'architect-confirm-goal') {
-            this.state.selectedQuest.text = document.getElementById('architect-goal-editor').value;
-            document.dispatchEvent(new CustomEvent('goalSelected', { detail: this.state.selectedQuest }));
+        if (e.target.id === "architect-confirm-goal") {
+            this.state.selectedQuest.text = document.getElementById("architect-goal-editor").value;
+            document.dispatchEvent(new CustomEvent("goalSelected", { detail: this.state.selectedQuest }));
             UI.GoalNavigator.hide();
         }
-    }
+    },
 };
