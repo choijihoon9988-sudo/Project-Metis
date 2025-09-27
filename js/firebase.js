@@ -4,7 +4,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-// 아래 한 줄을 추가해주세요.
 import { getFunctions } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
 // --- 1단계: Firebase 구성 ---
@@ -18,12 +17,12 @@ const firebaseConfig = {
 };
 
 // --- 2단계: Firebase 앱 초기화 및 서비스 내보내기 ---
-const app = initializeApp(firebaseConfig);
+// const app을 export const app으로 수정하여 다른 모듈에서 불러올 수 있게 합니다.
+export const app = initializeApp(firebaseConfig);
 
 // 다른 모듈에서 사용할 수 있도록 서비스들을 export 합니다.
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-// 아래 한 줄을 추가해주세요.
 export const functions = getFunctions(app, 'asia-northeast3'); // 서울 리전 명시
 
 
