@@ -627,7 +627,6 @@ textarea {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 32px;
-    max-height: 520px; /* 2줄 높이 + 여백 */
     overflow-y: auto;
     padding: 16px;
 }
@@ -640,8 +639,9 @@ textarea {
 
 .library-book img {
     width: 100%;
-    height: 180px; /* 책 높이 수정 */
-    object-fit: cover;
+    aspect-ratio: 2 / 3; /* 책 표지 비율 (너비/높이) 유지 */
+    object-fit: cover; /* 컨테이너에 맞게 이미지를 자릅니다. */
+    background-color: var(--border-color); /* 이미지가 로드되지 않을 때의 배경색 */
     border-radius: var(--border-radius);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
