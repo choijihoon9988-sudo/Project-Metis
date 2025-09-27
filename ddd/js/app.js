@@ -489,7 +489,10 @@ const MetisSession = {
         const currentId = this.state.currentStepId;
         const inputIdMap = {'step-1': 'prediction', 'step-3': 'brainDump', 'step-4': 'aiPrediction', 'step-6': 'gap', 'step-7': 'finalWriting'};
         const key = inputIdMap[currentId];
-        if (key) this.state.userInputs[key] = document.getElementById(`${key}-input`).value;
+        if (key) {
+            const inputEl = document.getElementById(`${key}-input`);
+            if(inputEl) this.state.userInputs[key] = inputEl.value;
+        }
         
         const currentIndex = this.stepSequence.indexOf(currentId);
         
@@ -596,7 +599,7 @@ const Ebbinghaus = {
             id: Date.now(),
             title: goal,
             sourceBook: sourceBook,
-            question: `[핵심 질문] ${gap}\n\n당신이 체화한 지식:`,
+            question: `[핵심 질문] ${gap || '정의된 질문 없음'}\n\n당신이 체화한 지식:`,
             answer: finalWriting,
             strength: 1,
             reviews: [{ date: new Date().toISOString() }]
@@ -736,7 +739,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Dashboard Modal Controls
-        if (target.closest('#dashboard-modal-overlay') && !target.closest('#dashboard-modal-content')) { UI.Dashboard.hide(); return; }
+        if (target.closest('#dashboard-modal-overlay') && !target.closest('.modal-content')) { 
+            UI.Dashboard.hide(); 
+            return;
+        }
         const simulateBtn = target.closest('#simulate-review-btn');
         if (simulateBtn) {
             if(!currentPlant) return;
@@ -751,7 +757,6 @@ document.addEventListener('DOMContentLoaded', () => {
             simulateBtn.textContent = '✅ 시뮬레이션 완료';
             return;
         }
-
     });
 
     const tooltipIcon = document.getElementById('course-tooltip-icon');
@@ -787,6 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Initial Load
     UI.switchView('dashboard');
+    Ebbinghaus.initGarden();
 });
-
