@@ -334,8 +334,6 @@ export const UI = {
             `;
         },
         renderMilestones(bookCount) {
-            // Milestone definitions: { count: trigger book count, text: message, position: top % }
-            // 'position'은 스크롤 맨 아래(땅)가 100%, 맨 위(우주)가 0%
             const MILESTONES = [
                 { count: 10, text: '🕊️ 63빌딩 높이에 도달했습니다!', position: 90 },
                 { count: 30, text: '✈️ 에베레스트 산보다 높이 있습니다!', position: 70 },
@@ -346,9 +344,7 @@ export const UI = {
             let milestonesHTML = '';
             MILESTONES.forEach(m => {
                 if (bookCount >= m.count) {
-                    // data-trigger-percent: 이정표가 나타나기 시작하는 스크롤 % (아래로 갈수록 숫자가 커짐)
-                    const triggerPercent = 100 - m.position;
-                    milestonesHTML += `<div class="knowledge-milestone" style="top: ${m.position}%;" data-trigger-percent="${triggerPercent}">${m.text}</div>`;
+                    milestonesHTML += `<div class="knowledge-milestone" style="top: ${m.position}%;" data-trigger-percent="${m.position}">${m.text}</div>`;
                 }
             });
             return milestonesHTML;
@@ -366,25 +362,25 @@ export const UI = {
             const clientHeight = mainContent.clientHeight;
         
             if (scrollHeight <= clientHeight) {
-                background.style.backgroundPosition = 'center 100%'; // 스크롤 없으면 맨 아래(땅)
-                milestones.forEach(m => m.classList.remove('visible')); // 이정표 숨김
+                background.style.backgroundPosition = 'center 0%'; // 스크롤 없으면 맨 위(우주)
+                milestones.forEach(m => m.classList.add('visible')); // 모든 이정표 표시
                 return;
             }
         
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
         
-            // Parallax Effect: 배경은 스크롤의 절반 속도로 움직임
-            // 스크롤 0%(최상단) => background-position-y: 50%
-            // 스크롤 100%(최하단) => background-position-y: 100%
-            const backgroundYPosition = 50 + (scrollPercentage / 2);
+            // 배경 위치 계산 수정:
+            // 스크롤 0%(최상단, 우주) => background-position-y: 0%
+            // 스크롤 100%(최하단, 땅) => background-position-y: 100%
+            const backgroundYPosition = scrollPercentage;
             background.style.backgroundPosition = `center ${backgroundYPosition}%`;
 
-            // Dynamic Milestones
+            // 이정표 등장 로직 수정
             milestones.forEach(milestone => {
-                const trigger = parseFloat(milestone.dataset.triggerPercent);
-                // 스크롤이 트리거 지점을 지났을 때 'visible' 클래스 추가
-                milestone.classList.toggle('visible', scrollPercentage >= trigger);
+                const triggerPercent = parseFloat(milestone.dataset.triggerPercent);
+                // (100 - 스크롤%) 값이 (100 - 이정표 위치)% 보다 작거나 같을 때, 즉 스크롤이 이정표 위치를 지났을 때
+                milestone.classList.toggle('visible', (100 - scrollPercentage) <= (100 - triggerPercent + 5));
             });
         },
         renderBookDetail(book, skills, recommendation) {
