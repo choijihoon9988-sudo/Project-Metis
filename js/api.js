@@ -4,16 +4,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // 🚨 중요: 이 API 키들은 웹사이트에 노출됩니다. 개인적인 테스트 용도로만 사용하세요.
 const GOOGLE_BOOKS_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA";
-// ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-// 이 부분을 실제 발급받은 Gemini API 키로 교체하세요!
-const GEMINI_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA"; 
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+const GEMINI_API_KEY = "AIzaSyAf6ORBoBpWBMEMWM0xyh31YGR-5jWwTqA"; // 여기에 실제 키를 넣으셨을테니 그대로 두시면 됩니다.
 
 const GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes";
 
 // Gemini AI 인스턴스를 여기서 생성하여 다른 모듈에서 사용하도록 합니다.
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-export const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+// ▼▼▼ 여기 모델 이름에서 '-latest'만 제거했습니다! ▼▼▼
+export const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const GoogleBooksAPI = {
     /**
