@@ -55,14 +55,20 @@ export const GoalNavigator = {
             
             const result = await geminiModel.generateContent(prompt);
             const response = await result.response;
-            const text = response.text();
+            let text = response.text();
             
+            // AI 응답에 포함될 수 있는 마크다운 ```json ... ``` 제거
+            if (text.startsWith("```json")) {
+                text = text.slice(7, -3).trim();
+            }
+
             const quests = JSON.parse(text);
 
             if (!quests || quests.length === 0) {
                  throw new Error("AI가 퀘스트를 생성하지 못했습니다.");
             }
             
+            localStorage.setItem('lastQuests', JSON.stringify(quests)); // '뒤로가기'를 위해 결과 저장
             UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests });
 
         } catch (error) {
@@ -95,8 +101,8 @@ export const GoalNavigator = {
             return;
         }
         if (e.target.id === "goal-editor-back-btn") {
-            // 이전에 생성된 퀘스트를 다시 보여주도록 상태를 활용할 수 있으나, 지금은 단순하게 다시 생성
-            UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests: JSON.parse(localStorage.getItem('lastQuests')) || [] });
+            const lastQuests = JSON.parse(localStorage.getItem('lastQuests')) || [];
+            UI.GoalNavigator.render("quests", { chapter: this.state.chapterTitle, quests: lastQuests });
             return;
         }
 

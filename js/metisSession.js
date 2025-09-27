@@ -6,7 +6,7 @@ import { UI } from './ui.js';
 // 실제 AI 모델을 api.js에서 가져옵니다.
 import { geminiModel } from './api.js';
 
-// 이 모듈은 AI와의 통신을 시뮬레이션합니다.
+// 이 모듈은 AI와의 통신을 담당합니다.
 const AI = {
     // 사용자의 '생각 기록'을 바탕으로 피드백을 생성합니다.
     async getAIFeedback(text) {
