@@ -496,39 +496,31 @@
                     writing: {}
                 };
 
-                const MIN_WRITING_PER_STEP = 1; // 최소 글쓰기 시간 (분)
+                const MIN_WRITING_PER_STEP = 2; // 최소 글쓰기 시간 (분)
                 const NUM_WRITING_STEPS = 5;
-                const MIN_TOTAL_WRITING_MINS = MIN_WRITING_PER_STEP * NUM_WRITING_STEPS;
+                const FIXED_TOTAL_WRITING_MINS = MIN_WRITING_PER_STEP * NUM_WRITING_STEPS;
 
                 let remainingMinutes = totalMinutes;
 
-                // 1. Secure minimum writing time
-                const totalWritingTime = Math.max(MIN_TOTAL_WRITING_MINS, Math.floor(totalMinutes / 3));
-                remainingMinutes -= totalWritingTime;
+                // 1. Allocate fixed writing time
+                remainingMinutes -= FIXED_TOTAL_WRITING_MINS;
                 
-                // Distribute writing time
-                const writingPerStep = Math.floor(totalWritingTime / NUM_WRITING_STEPS);
-                let writingRemainder = totalWritingTime % NUM_WRITING_STEPS;
-
                 this.stepSequence.forEach(stepId => {
-                    if(stepId.startsWith('step-') && this.stepSequence.indexOf(stepId) !== 4) { // Exclude step-5
-                        let time = writingPerStep;
-                        if(writingRemainder > 0) {
-                            time++;
-                            writingRemainder--;
-                        }
-                        allocations.writing[stepId] = time * 60; // to seconds
+                    if(stepId.startsWith('step-') && this.stepSequence.indexOf(stepId) !== 4) { // Exclude step-5 (no timer)
+                        allocations.writing[stepId] = MIN_WRITING_PER_STEP * 60; // to seconds
                     }
                 });
 
-
                 // 2. Allocate Pomodoro cycles from the rest
-                const fullCycles = Math.floor(remainingMinutes / 30);
-                for (let i = 0; i < fullCycles; i++) {
-                    allocations.focusSessions.push(25);
-                    allocations.breakSessions.push(5);
+                if (remainingMinutes > 0) {
+                    const fullCycles = Math.floor(remainingMinutes / 30);
+                    for (let i = 0; i < fullCycles; i++) {
+                        allocations.focusSessions.push(25);
+                        allocations.breakSessions.push(5);
+                    }
+                    remainingMinutes -= fullCycles * 30;
                 }
-                remainingMinutes -= fullCycles * 30;
+
 
                 // 3. Allocate leftover to a final focus session
                 if (remainingMinutes > 0) {
@@ -572,7 +564,7 @@
                     }
                 } else if (stepId === 'step-break') {
                     const duration = (this.state.timeAllocations.breakSessions[this.state.cyclesCompleted - 1] || 0) * 60;
-                    const question = await this.getDynamicBreakQuestion(this.state.userInputs.prediction);
+                    const question = await this.getDynamicBreakQuestion(this.state.userInputs.prediction, this.state.userInputs.brainDump);
                     const questionCard = document.getElementById('break-question-card');
                     questionCard.querySelector('h5').textContent = question.title;
                     questionCard.querySelector('p').textContent = question.body;
@@ -603,7 +595,9 @@
                 const currentIndex = this.stepSequence.indexOf(currentId);
                 let nextStepId;
 
-                if(currentId === 'step-5') {
+                if(currentId === 'step-2') { // After reading, go to brain dump
+                     nextStepId = 'step-3';
+                } else if(currentId === 'step-5') {
                     this.completeSessionFlow();
                     return;
                 } else if (currentIndex < this.stepSequence.length - 1) {
@@ -613,7 +607,7 @@
                 if(nextStepId) {
                     this.handleStepLogic(nextStepId);
                 } else {
-                    this.complete(); // Should be called from button click
+                    // This case should ideally not be reached as complete() is called by button
                 }
             },
 
@@ -661,7 +655,10 @@
 
             complete() { 
                 clearInterval(this.state.timerInterval);
-                this.state.userInputs.finalWriting = document.getElementById('final-writing-input').value; 
+                const finalWritingEl = document.getElementById('final-writing-input');
+                if (finalWritingEl) {
+                    this.state.userInputs.finalWriting = finalWritingEl.value;
+                }
                 if (!this.state.userInputs.finalWriting.trim()) { 
                     UI.showToast('체화 글쓰기를 작성해야 캡슐을 봉인할 수 있습니다.', 'error'); return; 
                 } 
@@ -671,7 +668,7 @@
             simulateApi: (data, delay = 1000) => new Promise(res => setTimeout(() => res(data), delay)),
             getAIFeedback(text) { return this.simulateApi(`사용자의 기록을 분석한 결과, 핵심 개념은 파악했으나 각 요소 간의 유기적 '연결성'에 대한 설명이 부족합니다.`); },
             getExpertSummary() { return this.simulateApi(`**넛지(Nudge):** 인간은 체계적으로 편향되어 있으며, '선택 설계'를 통해 더 나은 결정을 내리도록 부드럽게 개입할 수 있다.`); },
-            getDynamicBreakQuestion(predictionText) {
+            getDynamicBreakQuestion(predictionText, brainDumpText) {
                 const genericQuestions = [
                     { title: "핵심 개념 시각화", body: "지금까지 읽은 내용의 핵심 개념을 머릿속에 하나의 이미지나 다이어그램으로 그려본다면 어떤 모습일까요?" },
                     { title: "저자에게 질문하기", body: "만약 저자에게 딱 한 가지 질문을 할 수 있다면, 무엇을 물어보고 싶나요?" },
@@ -679,7 +676,9 @@
                     { title: "실생활 연결하기", body: "방금 읽은 내용을 당신의 일상이나 업무에 어떻게 적용해볼 수 있을까요?" }
                 ];
 
-                if (predictionText && predictionText.trim().length > 10) {
+                if (brainDumpText && brainDumpText.trim().includes('어렵다') || brainDumpText.trim().includes('모르겠다')) {
+                     return this.simulateApi({ title: "관점 전환하기", body: `기록을 보니 특정 부분에 어려움을 느끼신 것 같군요. 그 개념을 어린 아이에게 설명한다고 상상해보면 어떨까요?` });
+                } else if (predictionText && predictionText.trim().length > 10) {
                      return this.simulateApi({ title: "중간 예측 점검", body: `당신의 초기 예측이었던 "${predictionText.substring(0, 30)}..."(은)는 현재까지 얼마나 유효한가요? 수정하거나 보완하고 싶은 부분이 있나요?` });
                 } else {
                     return this.simulateApi(genericQuestions[Math.floor(Math.random() * genericQuestions.length)]);
