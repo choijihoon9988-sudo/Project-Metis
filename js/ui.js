@@ -94,6 +94,7 @@ export const UI = {
         const modal = document.createElement('div');
         modal.className = 'modal-content';
         modal.innerHTML = `
+            <button class="modal-close-btn">&times;</button>
             <div class="modal-body"><p>${message}</p></div>
             <div class="modal-controls">
                 <button id="confirm-cancel" class="btn">취소</button>
@@ -105,6 +106,7 @@ export const UI = {
         document.body.appendChild(overlay);
 
         const close = () => overlay.remove();
+        overlay.querySelector('.modal-close-btn').addEventListener('click', close);
         overlay.querySelector('#confirm-cancel').addEventListener('click', close);
         overlay.querySelector('#confirm-ok').addEventListener('click', () => {
             onConfirm();
@@ -165,9 +167,10 @@ export const UI = {
         hide() { this.overlay.style.display = 'none'; },
         render(step, data) {
             let html = '';
+            const closeBtn = '<button class="modal-close-btn">&times;</button>';
             switch (step) {
                 case 'search':
-                    html = `<div class="modal-header"><h3>AI 도서 탐색기</h3><p>어떤 책을 탐험하시겠어요?</p></div>
+                    html = `${closeBtn}<div class="modal-header"><h3>AI 도서 탐색기</h3><p>어떤 책을 탐험하시겠어요?</p></div>
                             <div class="modal-body">
                               <input type="text" id="book-search-input" placeholder="책 제목을 입력하세요...">
                               <div id="book-search-results"></div>
@@ -180,7 +183,7 @@ export const UI = {
                         </div>`).join('') : '<p style="text-align:center; color: var(--text-light-color);">검색 결과가 없습니다.</p>');
                     break;
                 case 'confirmation':
-                    html = `<div id="book-explorer-confirmation" class="modal-body" style="text-align: center;">
+                    html = `${closeBtn}<div id="book-explorer-confirmation" class="modal-body" style="text-align: center;">
                                 <img src="${data.cover}" alt="${data.title}" style="max-width: 180px; margin: 16px auto; border-radius: var(--border-radius); box-shadow: var(--shadow-md);">
                                 <h4>${data.title}</h4>
                                 <p>${data.author}</p>
@@ -207,9 +210,10 @@ export const UI = {
         hide() { this.overlay.style.display = 'none'; },
         render(step, data) {
             let html = '';
+            const closeBtn = '<button class="modal-close-btn">&times;</button>';
             switch (step) {
                 case 'chapterInput':
-                    html = `<div class="modal-header"><h3>탐험 지도: ${data.bookTitle}</h3><p>오늘 학습할 챕터(또는 소주제)의 제목을 알려주세요.</p></div>
+                    html = `${closeBtn}<div class="modal-header"><h3>탐험 지도: ${data.bookTitle}</h3><p>오늘 학습할 챕터(또는 소주제)의 제목을 알려주세요.</p></div>
                             <div class="modal-body">
                                 <input type="text" id="chapter-input" placeholder="예: 기준점 설정의 함정">
                             </div>
@@ -218,7 +222,7 @@ export const UI = {
                             </div>`;
                     break;
                 case 'quests':
-                    html = `<div class="modal-header"><h3>학습 퀘스트 제안</h3><p><strong>${data.chapter}</strong> 챕터에 대한 퀘스트입니다. 마음에 드는 퀘스트를 선택하세요.</p></div>
+                    html = `${closeBtn}<div class="modal-header"><h3>학습 퀘스트 제안</h3><p><strong>${data.chapter}</strong> 챕터에 대한 퀘스트입니다. 마음에 드는 퀘스트를 선택하세요.</p></div>
                             <div class="modal-body quest-selection-grid">
                                 ${data.quests.length > 0 ? data.quests.map(q => `
                                     <div class="quest-card" data-level="${q.level}" data-text="${q.text}">
@@ -232,7 +236,7 @@ export const UI = {
                             </div>`;
                     break;
                 case 'editor':
-                     html = `<div class="modal-header"><h3>퀘스트 확정</h3><p>AI 제안 퀘스트를 수정하여 확정하세요.</p></div>
+                     html = `${closeBtn}<div class="modal-header"><h3>퀘스트 확정</h3><p>AI 제안 퀘스트를 수정하여 확정하세요.</p></div>
                              <div class="modal-body"><textarea id="architect-goal-editor">${data.text}</textarea></div>
                              <div class="modal-controls">
                                 <button id="goal-editor-back-btn" class="btn">퀘스트 다시 선택</button>
@@ -250,6 +254,7 @@ export const UI = {
         chart: null,
         show(plant, chartConfig) {
             this.content.innerHTML = `
+                <button class="modal-close-btn">&times;</button>
                 <div class="modal-header">
                     <h3>"${plant.title}" 기억 곡선</h3>
                     <p>출처: ${plant.sourceBook}</p>
@@ -349,20 +354,24 @@ export const UI = {
         render(refinement) {
             const content = document.getElementById('clipping-review-content');
             const header = document.getElementById('clipping-review-header');
+            const finishBtn = document.getElementById('finish-review-btn');
             let instruction = '';
 
             switch(refinement.stage) {
                 case 1:
-                    instruction = '<h4>1일차 리뷰: 핵심 선별</h4><p>어제 수집한 지식 조각 중, 정말 중요하다고 생각하는 문장에만 하이라이트를 칠해주세요. 마우스로 드래그하면 하이라이트됩니다.</p>';
+                    instruction = '<h4>1일차 리뷰: 핵심 선별</h4><p>어제 수집한 지식 조각 중, 정말 중요하다고 생각하는 문장에만 하이라이트를 칠해주세요. 클릭하면 하이라이트됩니다.</p>';
                     header.textContent = "2단계: 핵심 선별";
+                    finishBtn.textContent = '저장 후 닫기';
                     break;
                 case 2:
                     instruction = '<h4>7일차 리뷰: 생각 연결</h4><p>일주일 전 하이라이트한 내용입니다. 왜 이 부분이 중요하다고 생각했는지, 어떻게 적용할 수 있을지 옆의 아이콘을 눌러 당신의 생각을 기록하세요.</p>';
                      header.textContent = "3단계: 생각 연결";
+                     finishBtn.textContent = '저장 후 닫기';
                     break;
                 case 3:
                     instruction = '<h4>30일차 리뷰: 최종 체화</h4><p>한 달간 정제한 지식의 정수입니다. 이 중 영구적으로 간직할 지식을 선택하여 당신의 정원에 씨앗으로 심어주세요.</p>';
                      header.textContent = "4단계: 정원에 심기";
+                     finishBtn.textContent = '선택한 지식 정원에 심기';
                     break;
             }
             
@@ -372,32 +381,33 @@ export const UI = {
         renderClippingItem(clip, stage) {
             const isHighlighted = clip.highlighted;
             let controls = '';
+            let itemHtml = `<p class="clipping-text">${clip.text}</p>`;
 
             switch(stage) {
                 case 1:
-                    controls = `<button class="btn ${isHighlighted ? 'active' : ''}" data-action="toggle-highlight" data-clip-id="${clip.id}">${isHighlighted ? '하이라이트 해제' : '하이라이트'}</button>`;
+                    // 전체 아이템을 클릭 가능하게 만듭니다.
                     break;
                 case 2:
                     if(isHighlighted) {
                         controls = `<button class="btn" data-action="add-note" data-clip-id="${clip.id}">생각 추가하기</button>`;
+                    } else {
+                        return ''; // 하이라이트 안된건 2단계에서 표시 안함
                     }
                     break;
                 case 3:
                      if(isHighlighted && clip.note) {
-                        controls = `<input type="checkbox" class="plant-seed-checkbox" data-clip-id="${clip.id}" style="width: 20px; height: 20px;">`;
+                        controls = `<input type="checkbox" class="plant-seed-checkbox" data-clip-id="${clip.id}" style="width: 20px; height: 20px; margin-left: auto;">`;
+                    } else {
+                        return ''; // 노트 없는건 3단계에서 표시 안함
                     }
                     break;
             }
 
             return `
-                <div class="clipping-item ${isHighlighted ? 'highlighted' : ''}" data-clip-id="${clip.id}">
-                    <p class="clipping-text">${clip.text}</p>
-                    ${clip.note ? `<div style="padding: 10px; margin-top: 10px; background: #e8f0fe; border-radius: 4px;"><p><strong>내 생각:</strong> ${clip.note}</p></div>` : ''}
+                <div class="clipping-item ${isHighlighted ? 'highlighted' : ''}" data-action="toggle-highlight" data-clip-id="${clip.id}" data-stage="${stage}">
+                    ${itemHtml}
+                    ${clip.note ? `<div class="clipping-note"><p><strong>내 생각:</strong> ${clip.note}</p></div>` : ''}
                     <div class="clipping-controls">${controls}</div>
-                    <div class="note-input">
-                        <textarea placeholder="생각을 기록하세요..."></textarea>
-                        <button class="btn btn-primary" data-action="save-note" data-clip-id="${clip.id}">저장</button>
-                    </div>
                 </div>
             `;
         }
@@ -420,6 +430,7 @@ export const UI = {
                     break;
             }
             this.content.innerHTML = `
+                <button class="modal-close-btn">&times;</button>
                 <div class="modal-body">
                     ${challengeHTML}
                     <div class="challenge-prompt" style="padding: 16px; background-color: var(--background-color); border-radius: var(--border-radius); margin: 16px 0;">${challenge.question.replace(/\n/g, '<br>')}</div>
@@ -447,7 +458,7 @@ export const UI = {
                     target.closest('.btn').classList.add('active');
                     selectedConfidence = target.closest('.btn').dataset.confidence;
                     this.content.querySelector('#challenge-submit-btn').disabled = false;
-                } else if (target.id === 'challenge-cancel-btn' || target.id === 'challenge-submit-btn'){
+                } else if (target.id === 'challenge-cancel-btn' || target.id === 'challenge-submit-btn' || target.classList.contains('modal-close-btn')){
                     this.hide();
                     if (target.id === 'challenge-submit-btn' && selectedConfidence) {
                         onComplete(selectedConfidence, document.getElementById('challenge-answer').value);
@@ -462,4 +473,3 @@ export const UI = {
         }
     },
 };
-

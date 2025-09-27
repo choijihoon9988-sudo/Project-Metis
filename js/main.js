@@ -133,10 +133,24 @@ function setupEventListeners() {
         }
         return;
     }
-     if (target.id === 'back-to-dashboard-from-review') {
+     if (target.id === 'back-to-dashboard-from-review' || target.id === 'finish-review-btn') {
         UI.switchView('dashboard');
+        // TODO: finalize 로직은 finish-review-btn 클릭 시에만 실행되도록 수정 필요
         return;
     }
+
+    // --- 지식 정제소 리뷰 페이지 내부 동작 ---
+    const clippingItem = target.closest('.clipping-item');
+    if (clippingItem) {
+        const { clipId, stage, action } = clippingItem.dataset;
+        if (action === 'toggle-highlight' && stage === '1') {
+            const clip = appState.currentRefinement.clippings.find(c => c.id == clipId);
+            clip.highlighted = !clip.highlighted;
+            await Refinement.update(appState.currentRefinement.id, appState.currentRefinement.clippings);
+            clippingItem.classList.toggle('highlighted');
+        }
+    }
+
 
     // --- 지식 정원 & 대시보드 모달 ---
     const plantCard = target.closest('.plant-card');
@@ -151,11 +165,13 @@ function setupEventListeners() {
     }
     
     // --- 모달 관련 버튼 ---
-    if (!target.closest('.modal-content') && target.closest('.modal-overlay')) {
+    if (target.closest('.modal-close-btn') || !target.closest('.modal-content') && target.closest('.modal-overlay')) {
         UI.Dashboard.hide();
         UI.Challenge.hide();
         UI.BookExplorer.hide();
         UI.GoalNavigator.hide();
+        // 모든 모달 오버레이를 닫도록 일반화
+        document.querySelectorAll('.modal-overlay').forEach(overlay => overlay.style.display = 'none');
         return;
     }
     if (target.closest('#simulate-review-btn')) {
@@ -207,4 +223,3 @@ function setupEventListeners() {
 }
 
 main();
-
