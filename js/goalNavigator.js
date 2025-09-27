@@ -22,51 +22,75 @@ const getSolverGoal = (bookTitle, problem) => {
 };
 
 // --- Event Handlers & Logic ---
-function attachEventListeners() {
-    const modeButtons = document.querySelectorAll('.mode-select-btn');
-    modeButtons.forEach(btn => {
-        btn.onclick = () => handleModeSelection(btn.dataset.mode);
-    });
 
-    const goalCards = document.querySelectorAll('.goal-card');
-    goalCards.forEach(card => {
-        card.onclick = () => {
-            state.selectedGoal = { level: card.dataset.level, text: card.dataset.text };
-            renderStep('architect', state.selectedGoal);
-        };
-    });
-    
-    const solverSubmitBtn = document.getElementById('solver-submit-problem');
-    if(solverSubmitBtn) {
-        solverSubmitBtn.onclick = () => {
-            const problem = document.getElementById('solver-problem-input').value;
-            if (!problem.trim()) {
-                alert('해결하고 싶은 문제를 입력해주세요.');
-                return;
-            }
-            state.selectedGoal = getSolverGoal(state.bookTitle, problem);
-            renderStep('architect', state.selectedGoal);
-        };
+/**
+ * 모달 내부에서 발생하는 모든 클릭 이벤트를 위임받아 처리하는 단일 핸들러.
+ * @param {Event} event - 발생한 클릭 이벤트 객체
+ */
+function handleModalClick(event) {
+    const target = event.target;
+
+    // 1. 모드 선택 버튼('.mode-select-btn') 클릭 처리
+    const modeButton = target.closest('.mode-select-btn');
+    if (modeButton) {
+        handleModeSelection(modeButton.dataset.mode);
+        return;
     }
 
-    const architectConfirmBtn = document.getElementById('architect-confirm-goal');
-    if (architectConfirmBtn) {
-        architectConfirmBtn.onclick = () => {
-            const finalText = document.getElementById('architect-goal-editor').value;
-            state.selectedGoal.text = finalText;
-            
-            // main.js에 목표가 선택되었음을 알리는 커스텀 이벤트 발생
-            const event = new CustomEvent('goalSelected', { detail: state.selectedGoal });
-            document.dispatchEvent(event);
+    // 2. 목표 카드('.goal-card') 클릭 처리
+    const goalCard = target.closest('.goal-card');
+    if (goalCard) {
+        state.selectedGoal = { level: goalCard.dataset.level, text: goalCard.dataset.text };
+        renderStep('architect', state.selectedGoal);
+        return;
+    }
 
-            hideGoalNavigator();
-        };
+    // 3. 해결사 모드 문제 제출 버튼('#solver-submit-problem') 클릭 처리
+    const solverSubmitBtn = target.closest('#solver-submit-problem');
+    if (solverSubmitBtn) {
+        const problemInput = document.getElementById('solver-problem-input');
+        const problem = problemInput ? problemInput.value : '';
+        
+        if (!problem.trim()) {
+            const problemContainer = document.querySelector('.solver-chat');
+            if (problemContainer) {
+                let errorMsg = problemContainer.querySelector('.error-message');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.className = 'error-message';
+                    errorMsg.style.color = 'red';
+                    problemContainer.appendChild(errorMsg);
+                }
+                errorMsg.textContent = '해결하고 싶은 문제를 입력해주세요.';
+                problemInput.focus();
+            }
+            return;
+        }
+        
+        state.selectedGoal = getSolverGoal(state.bookTitle, problem);
+        renderStep('architect', state.selectedGoal);
+        return;
+    }
+
+    // 4. 최종 목표 확정 버튼('#architect-confirm-goal') 클릭 처리
+    const architectConfirmBtn = target.closest('#architect-confirm-goal');
+    if (architectConfirmBtn) {
+        const editor = document.getElementById('architect-goal-editor');
+        const finalText = editor ? editor.value : '';
+        state.selectedGoal.text = finalText;
+        
+        // main.js에 목표가 선택되었음을 알리는 커스텀 이벤트 발생
+        const goalEvent = new CustomEvent('goalSelected', { detail: state.selectedGoal });
+        document.dispatchEvent(goalEvent);
+
+        hideGoalNavigator();
+        return;
     }
 }
 
 function renderStep(stepName, data = {}) {
+    // UI를 렌더링하고, 이벤트 처리는 상위의 handleModalClick에 위임한다.
     renderGoalNavigatorStep(stepName, data);
-    attachEventListeners();
 }
 
 function handleModeSelection(mode) {
@@ -79,9 +103,18 @@ function handleModeSelection(mode) {
 }
 
 export function initializeGoalNavigator() {
-    const bookTitle = document.getElementById('book-title-for-goal').value;
+    const bookTitleEl = document.getElementById('book-title-for-goal');
+    const bookTitle = bookTitleEl ? bookTitleEl.value : '';
+
     if (!bookTitle.trim()) {
-        alert('목표를 설정할 책 제목을 입력해주세요.');
+        // alert() 대신 입력창에 시각적 피드백 제공
+        bookTitleEl.style.borderColor = 'red';
+        bookTitleEl.placeholder = '목표를 설정할 책 제목을 먼저 입력해주세요!';
+        bookTitleEl.focus();
+        setTimeout(() => {
+            bookTitleEl.style.borderColor = ''; // 3초 후 스타일 초기화
+            bookTitleEl.placeholder = '책 제목을 입력하세요';
+        }, 3000);
         return;
     }
 
@@ -91,6 +124,12 @@ export function initializeGoalNavigator() {
         selectedGoal: null,
     };
     
+    // 모달 컨텐츠 영역에 이벤트 리스너를 단 한 번만 설정
+    const modalContent = document.getElementById('goal-navigator-content');
+    modalContent.removeEventListener('click', handleModalClick); // 중복 방지를 위해 기존 리스너 제거
+    modalContent.addEventListener('click', handleModalClick);
+    
     renderStep('modeSelection', { bookTitle });
     showGoalNavigator();
 }
+
