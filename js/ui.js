@@ -1,5 +1,11 @@
 // js/ui.js
+// 이 모듈은 애플리케이션의 모든 DOM 조작 및 UI 렌더링을 담당합니다.
+
 export const UI = {
+    /**
+     * 지정된 이름의 뷰(view)를 활성화하고 다른 뷰는 비활성화합니다.
+     * @param {string} viewName - 활성화할 뷰의 ID ('dashboard', 'garden' 등)
+     */
     switchView(viewName) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         const viewToShow = document.getElementById(viewName);
@@ -11,6 +17,10 @@ export const UI = {
         });
     },
 
+    /**
+     * 메티스 세션 내의 특정 단계(step)를 활성화합니다.
+     * @param {string} stepId - 활성화할 단계의 ID ('step-1', 'step-2' 등)
+     */
     switchStep(stepId) {
         document.querySelectorAll('#metis-session-view .step').forEach(s => s.classList.remove('active'));
         const stepToShow = document.getElementById(stepId);
@@ -23,6 +33,11 @@ export const UI = {
         }
     },
 
+    /**
+     * 타이머 UI를 업데이트합니다.
+     * @param {number} timeLeft - 남은 시간 (초)
+     * @param {string} elementId - 시간을 표시할 요소의 ID
+     */
     updateTimer(timeLeft, elementId) {
         const min = Math.floor(timeLeft / 60);
         const sec = timeLeft % 60;
@@ -32,12 +47,22 @@ export const UI = {
         }
     },
 
+    /**
+     * 로딩 오버레이를 표시하거나 숨깁니다.
+     * @param {boolean} show - 표시 여부
+     * @param {string} text - 로딩 텍스트
+     */
     showLoader(show, text = "AI가 분석 중입니다...") {
          const loader = document.getElementById('loader');
          loader.querySelector('.loader-text').textContent = text;
          loader.style.display = show ? 'flex' : 'none';
     },
 
+    /**
+     * 화면 하단에 토스트 메시지를 표시합니다.
+     * @param {string} message - 표시할 메시지
+     * @param {string} type - 'success' 또는 'error'
+     */
     showToast(message, type = 'success') {
         document.querySelectorAll('.toast').forEach(t => t.remove());
         const t = document.createElement('div');
@@ -56,6 +81,11 @@ export const UI = {
         }, 3000);
     },
 
+    /**
+     * 사용자 확인 모달을 표시합니다.
+     * @param {string} message - 표시할 메시지
+     * @param {function} onConfirm - '확인' 버튼 클릭 시 실행될 콜백 함수
+     */
     showConfirm(message, onConfirm) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
@@ -82,6 +112,10 @@ export const UI = {
         });
     },
 
+    /**
+     * '비교 분석' 단계의 내용을 렌더링합니다.
+     * @param {object} data - { myThoughts, aiFeedback, myPrediction, expertSummary }
+     */
     renderComparison(data) {
         document.getElementById('reveal-my-thoughts').textContent = data.myThoughts || " ";
         document.getElementById('reveal-ai-feedback').textContent = data.aiFeedback || " ";
@@ -89,6 +123,10 @@ export const UI = {
         document.getElementById('reveal-expert-summary').textContent = data.expertSummary || " ";
     },
 
+    /**
+     * '지식 정원'의 모든 식물 카드를 렌더링합니다.
+     * @param {Array<object>} plants - 식물 데이터 배열
+     */
     renderGarden(plants) {
         const container = document.getElementById('garden-container');
         if (!container) return;
@@ -118,6 +156,8 @@ export const UI = {
         });
     },
 
+    // --- 모달 UI 컴포넌트 ---
+
     BookExplorer: {
         overlay: document.getElementById('book-explorer-modal-overlay'),
         content: document.getElementById('book-explorer-modal'),
@@ -140,8 +180,8 @@ export const UI = {
                         </div>`).join('') : '<p style="text-align:center; color: var(--text-light-color);">검색 결과가 없습니다.</p>');
                     break;
                 case 'confirmation':
-                    html = `<div id="book-explorer-confirmation" class="modal-body">
-                                <img src="${data.cover}" alt="${data.title}">
+                    html = `<div id="book-explorer-confirmation" class="modal-body" style="text-align: center;">
+                                <img src="${data.cover}" alt="${data.title}" style="max-width: 180px; margin: 16px auto; border-radius: var(--border-radius); box-shadow: var(--shadow-md);">
                                 <h4>${data.title}</h4>
                                 <p>${data.author}</p>
                             </div>
@@ -192,7 +232,7 @@ export const UI = {
                             </div>`;
                     break;
                 case 'editor':
-                     html = `<div class="modal-header"><h3>✅ 퀘스트 확정</h3><p>AI 제안 퀘스트를 수정하여 확정하세요.</p></div>
+                     html = `<div class="modal-header"><h3>퀘스트 확정</h3><p>AI 제안 퀘스트를 수정하여 확정하세요.</p></div>
                              <div class="modal-body"><textarea id="architect-goal-editor">${data.text}</textarea></div>
                              <div class="modal-controls">
                                 <button id="goal-editor-back-btn" class="btn">퀘스트 다시 선택</button>
@@ -244,6 +284,11 @@ export const UI = {
             if(existingSimIndex > -1) this.chart.data.datasets.splice(existingSimIndex, 1);
             this.chart.data.datasets.push(newData);
             this.chart.update();
+            const simulateBtn = document.getElementById('simulate-review-btn');
+            if(simulateBtn) {
+                simulateBtn.disabled = true;
+                simulateBtn.textContent = '시뮬레이션 완료';
+            }
         },
         renderRefinements(refinements) {
             const container = document.getElementById('refinement-list');
@@ -334,7 +379,7 @@ export const UI = {
                     break;
                 case 2:
                     if(isHighlighted) {
-                        controls = `<button class="btn" data-action="add-note" data-clip-id="${clip.id}">✏️ 생각 추가하기</button>`;
+                        controls = `<button class="btn" data-action="add-note" data-clip-id="${clip.id}">생각 추가하기</button>`;
                     }
                     break;
                 case 3:
@@ -377,14 +422,14 @@ export const UI = {
             this.content.innerHTML = `
                 <div class="modal-body">
                     ${challengeHTML}
-                    <div class="challenge-prompt" style="padding: 16px; background-color: #f8f9fa; border-radius: 8px; margin: 16px 0;">${challenge.question.replace(/\n/g, '<br>')}</div>
+                    <div class="challenge-prompt" style="padding: 16px; background-color: var(--background-color); border-radius: var(--border-radius); margin: 16px 0;">${challenge.question.replace(/\n/g, '<br>')}</div>
                     <textarea id="challenge-answer" placeholder="당신의 언어로 자유롭게 설명해보세요..."></textarea>
                     <div class="confidence-rating">
                         <p>이번 답변에 얼마나 확신했나요?</p>
                         <div class="confidence-buttons" style="display: flex; gap: 8px;">
-                            <button class="btn" data-confidence="confident" style="flex:1;">✅ 확신함</button>
-                            <button class="btn" data-confidence="unsure" style="flex:1;">🤔 긴가민가함</button>
-                            <button class="btn" data-confidence="guess" style="flex:1;">❓ 거의 추측함</button>
+                            <button class="btn" data-confidence="confident" style="flex:1;">확신함</button>
+                            <button class="btn" data-confidence="unsure" style="flex:1;">긴가민가함</button>
+                            <button class="btn" data-confidence="guess" style="flex:1;">추측함</button>
                         </div>
                     </div>
                 </div>

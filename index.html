@@ -20,152 +20,208 @@
     
     <style>
         :root {
-            --primary-color: #4285F4;
-            --primary-dark: #3367D6;
-            --background-color: #f0f4f9;
+            --primary-color: #2c3e50;
+            --primary-dark: #233140;
+            --accent-color: #3498db;
+            --accent-dark: #2980b9;
+            --background-color: #f4f6f8;
             --surface-color: #ffffff;
-            --text-color: #3c4043;
-            --text-light-color: #5f6368;
-            --border-color: #dadce0;
+            --text-color: #34495e;
+            --text-light-color: #7f8c8d;
+            --border-color: #e0e6ed;
             --font-family: 'Noto Sans KR', sans-serif;
-            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15);
+            
+            --color-healthy: #2ecc71;
+            --color-needs-care: #f1c40f;
+            --color-urgent: #e74c3c;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --border-radius: 8px;
-            --color-healthy: #34A853;
-            --color-needs-care: #FBBC04;
-            --color-urgent: #EA4335;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font-family); background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
+        body { 
+            font-family: var(--font-family); 
+            background-color: var(--background-color); 
+            color: var(--text-color); 
+            line-height: 1.6; 
+            font-size: 16px;
+        }
         .app-container { display: flex; height: 100vh; }
-        .sidebar { width: 240px; background-color: var(--surface-color); padding: 24px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .sidebar h1 { font-size: 24px; color: var(--primary-color); margin-bottom: 32px; }
+        .sidebar { 
+            width: 240px; 
+            background-color: var(--surface-color); 
+            padding: 24px; 
+            border-right: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .sidebar h1 { 
+            font-size: 22px; 
+            font-weight: 700;
+            color: var(--primary-color); 
+            margin-bottom: 32px; 
+        }
         .sidebar nav { display: flex; flex-direction: column; gap: 8px; }
-        .nav-btn { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--border-radius); border: none; background-color: transparent; cursor: pointer; text-align: left; font-size: 16px; font-weight: 500; color: var(--text-light-color); transition: background-color 0.2s, color 0.2s; }
-        .nav-btn .icon { font-size: 20px; }
+        .nav-btn { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 16px; 
+            border-radius: var(--border-radius); 
+            border: none; 
+            background-color: transparent; 
+            cursor: pointer; 
+            text-align: left; 
+            font-size: 16px; 
+            font-weight: 500; 
+            color: var(--text-light-color); 
+            transition: background-color 0.2s, color 0.2s; 
+        }
         .nav-btn:hover { background-color: var(--background-color); }
-        .nav-btn.active { background-color: #E8F0FE; color: var(--primary-dark); }
-        .main-content { flex: 1; overflow-y: auto; padding: 32px; }
+        .nav-btn.active { 
+            background-color: var(--primary-color); 
+            color: white; 
+        }
+        .main-content { flex: 1; overflow-y: auto; padding: 48px; }
         .view { display: none; }
         .view.active { display: block; animation: fadeInView 0.5s; }
-        .view-header { margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; }
-        .view-header h2 { font-size: 28px; margin-bottom: 4px; }
-        .view-header p { color: var(--text-light-color); font-size: 16px; }
-        .card { background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); padding: 24px; margin-bottom: 24px; }
-        .btn { padding: 10px 20px; font-size: 16px; border-radius: var(--border-radius); border: 1px solid var(--border-color); background-color: var(--surface-color); cursor: pointer; font-weight: 500; transition: all 0.2s; }
-        .btn:hover { background-color: #f1f3f4; }
-        .btn.active { background-color: #E8F0FE; color: var(--primary-dark); border-color: var(--primary-color); }
-        .btn-primary { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
-        .btn-primary:hover { background-color: var(--primary-dark); border-color: var(--primary-dark); }
-        .btn-secondary { background-color: transparent; color: var(--text-light-color); border: none; }
-        .btn-secondary:hover { background-color: #f1f3f4; color: var(--text-color); }
-        textarea, input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-family: var(--font-family); font-size: 16px; margin-bottom: 16px; }
-        textarea:focus, input[type="text"]:focus { outline: 2px solid var(--primary-color); border-color: var(--primary-color); }
-        textarea { min-height: 120px; resize: vertical; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-        .main-book-slot { grid-column: 1 / 2; grid-row: 1 / 3; }
-        .book-info { display: flex; gap: 20px; margin-bottom: 16px; }
-        .book-cover { width: 150px; height: auto; object-fit: cover; border-radius: var(--border-radius); box-shadow: var(--shadow); flex-shrink: 0; }
-        .book-details { display: flex; flex-direction: column; }
-        .book-details h4 { font-size: 20px; }
-        .book-details .goal { margin-top: 16px; }
-        .main-book-slot .btn-primary { width: 100%; padding: 16px; font-size: 18px; margin-top: 16px; }
-        .sub-book-shelf-container { grid-column: 2 / 3; }
-        .sub-book-shelf { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; }
-        .sub-book-cover { height: 120px; border-radius: 4px; box-shadow: var(--shadow); }
-        .course-selection { margin-top: 16px; }
-        .course-selection h5 { margin-bottom: 8px; color: var(--text-light-color); display: flex; align-items: center; gap: 8px;}
-        .course-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-        .course-btn { flex-grow: 1; }
-        .tooltip-icon { cursor: pointer; font-style: normal; display: inline-block; width: 20px; height: 20px; text-align: center; line-height: 20px; border-radius: 50%; background-color: var(--border-color); color: var(--text-light-color); font-weight: 700;}
-        #course-tooltip { position: absolute; background-color: var(--text-color); color: white; padding: 12px; border-radius: var(--border-radius); z-index: 10; width: 300px; font-size: 14px; line-height: 1.5; box-shadow: var(--shadow); display: none; pointer-events: none; }
-        #course-tooltip h6 { font-size: 15px; margin-bottom: 8px; border-bottom: 1px solid #777; padding-bottom: 4px;}
-        #course-tooltip p { font-size: 13px; margin-bottom: 6px;}
+        .view-header { margin-bottom: 32px; }
+        .view-header h2 { font-size: 32px; margin-bottom: 8px; font-weight: 700; }
+        .view-header p { color: var(--text-light-color); font-size: 18px; }
+        
+        .card { 
+            background-color: var(--surface-color); 
+            border-radius: var(--border-radius); 
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 24px; 
+            margin-bottom: 24px; 
+        }
+        
+        .btn { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            font-weight: 500;
+            border-radius: var(--border-radius); 
+            border: 1px solid var(--border-color); 
+            background-color: var(--surface-color); 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .btn:hover { 
+            background-color: #f8f9fa;
+            border-color: #ced4da;
+            transform: translateY(-2px);
+        }
+        .btn.active {
+             background-color: var(--primary-color);
+             color: white;
+             border-color: var(--primary-color);
+        }
+
+        .btn-primary { 
+            background-color: var(--accent-color); 
+            color: white; 
+            border-color: var(--accent-color); 
+        }
+        .btn-primary:hover { 
+            background-color: var(--accent-dark); 
+            border-color: var(--accent-dark); 
+        }
+
+        textarea, input[type="text"] { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--border-radius); 
+            font-family: var(--font-family); 
+            font-size: 16px; 
+            margin-bottom: 16px; 
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        textarea:focus, input[type="text"]:focus { 
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        textarea { min-height: 150px; resize: vertical; }
+
+        /* Dashboard Specifics */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
+        .dashboard-main { grid-column: 1 / 2; }
+        .main-book-slot { margin-bottom: 32px; }
+        .book-info { display: flex; gap: 24px; margin-bottom: 24px; }
+        .book-cover { width: 150px; height: 225px; object-fit: cover; border-radius: var(--border-radius); box-shadow: var(--shadow-md); flex-shrink: 0; }
+        .book-details h4 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .book-details p { font-size: 16px; color: var(--text-light-color); }
+        .book-details .goal { margin-top: 16px; background-color: var(--background-color); padding: 16px; border-radius: var(--border-radius); }
+        .book-details .goal strong { color: var(--primary-color); font-weight: 700; }
+        #start-session-btn { width: 100%; padding: 16px; font-size: 18px; margin-top: 16px; }
+
+        
+        .dashboard-sidebar { grid-column: 2 / 3; }
+        
+        .sub-book-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .sub-book-cover { width: 100%; height: 130px; object-fit: cover; border-radius: 4px; box-shadow: var(--shadow-sm); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .sub-book-cover:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        
+        .course-selection h5 { font-size: 18px; font-weight: 500; margin-bottom: 12px; }
+        .course-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
         /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
-        .modal-content { background: var(--surface-color); padding: 32px; border-radius: var(--border-radius); width: 90%; max-width: 700px; max-height: 90vh; display: flex; flex-direction: column; animation: fadeIn 0.3s; }
-        .modal-body { overflow-y: auto; }
-        .modal-header { text-align: center; margin-bottom: 24px; flex-shrink: 0; }
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: none; justify-content: center; align-items: center; 
+            z-index: 1000; animation: fadeIn 0.3s; 
+        }
+        .modal-content { 
+            background: var(--surface-color); 
+            padding: 32px; 
+            border-radius: var(--border-radius); 
+            width: 90%; max-width: 700px; max-height: 90vh; 
+            display: flex; flex-direction: column; 
+            animation: fadeIn 0.3s; 
+            box-shadow: var(--shadow-lg);
+        }
         .modal-header h3 { font-size: 24px; margin-bottom: 8px; }
-        .modal-controls { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0;}
+        .modal-controls { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; }
 
-        /* Book Explorer Modal */
-        #book-search-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; margin-top: 24px; }
-        .book-result-card { cursor: pointer; text-align: center; }
-        .book-result-card img { width: 100%; height: auto; border-radius: 4px; box-shadow: var(--shadow); transition: transform 0.2s; }
-        .book-result-card:hover img { transform: scale(1.05); }
-        #book-explorer-confirmation { text-align: center; }
-        #book-explorer-confirmation img { max-width: 180px; margin: 16px auto; border-radius: var(--border-radius); box-shadow: var(--shadow); }
-
-        /* Goal Navigator Modal */
-        .quest-selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 24px; }
-        .quest-card { border: 2px solid var(--border-color); padding: 16px; border-radius: var(--border-radius); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; }
-        .quest-card:hover { border-color: var(--primary-color); background-color: #f8f9fa; }
-        .quest-card h5 { color: var(--primary-dark); }
-        
         /* Metis Session */
         #metis-session-view { max-width: 800px; margin: 0 auto; }
-        .goal-display { background-color: var(--background-color); border-left: 4px solid var(--primary-color); padding: 16px; margin-bottom: 24px; }
+        .goal-display { background-color: var(--surface-color); border-left: 4px solid var(--accent-color); padding: 20px; margin-bottom: 32px; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
         .step { display: none; }
         .step.active { display: block; animation: fadeInView 0.5s; }
         .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;}
         .step h4 { font-size: 22px; margin: 0; }
         .step-timer { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
         .timer-display { font-size: 48px; font-weight: 700; text-align: center; color: var(--primary-dark); margin: 24px 0; }
-        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .comparison-col h5 { margin-bottom: 8px; color: var(--text-light-color); }
-        .comparison-content { background-color: #f8f9fa; border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 16px; min-height: 150px; overflow-y: auto; }
-        #prediction-options { display: none; margin-top: 16px; } /* 심화 예측 버튼 */
-        
-        /* 지식 정제소 UI 스타일 */
-        #refinement-section { margin-top: 24px; }
-        .refinement-card { 
-            display: flex; align-items: center; gap: 16px; 
-            padding: 16px; border: 1px solid var(--border-color);
-            border-radius: var(--border-radius); background-color: var(--surface-color);
-            margin-bottom: 12px;
-        }
-        .refinement-card img { width: 40px; height: 60px; object-fit: cover; border-radius: 4px; }
-        .refinement-info p { margin: 0; font-weight: 500; }
-        .refinement-info .status { font-size: 14px; color: var(--text-light-color); }
-        .refinement-card .btn { margin-left: auto; }
-        
-        /* 클리핑 리뷰 뷰 스타일 */
-        #clipping-review-view .clipping-item {
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-        }
-        .clipping-item.highlighted { background-color: #fffbe6; border-color: #ffe58f; }
-        .clipping-text::selection { background: #ffe58f; }
-        .clipping-controls { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
-        .note-input { display: none; margin-top: 10px; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+        .comparison-col h5 { font-size: 16px; font-weight: 500; color: var(--text-light-color); margin-bottom: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
+        .comparison-content { padding-top: 8px; min-height: 150px; background-color: var(--background-color); padding: 16px; border-radius: var(--border-radius); }
+        #prediction-options { display: none; margin-top: 16px; }
 
-        /* Other UI Styles */
-        .loader-overlay { display: none; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000; }
-        .loader { border: 6px solid rgba(255,255,255,0.3); border-top: 6px solid var(--primary-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        .loader-text { color: white; margin-top: 16px; font-size: 16px; }
-        .empty-message { text-align: center; color: var(--text-light-color); grid-column: 1 / -1; padding: 40px; }
-        .garden-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
-        .plant-card { background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); border-left: 5px solid; padding: 16px; transition: all 0.2s; cursor: pointer; }
-        .plant-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+        /* Garden */
+        .garden-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        .plant-card { background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); border-left: 5px solid; padding: 20px; transition: all 0.2s; cursor: pointer; }
+        .plant-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
         .plant-card.healthy { border-left-color: var(--color-healthy); }
         .plant-card.needs-care { border-left-color: var(--color-needs-care); }
         .plant-card.urgent { border-left-color: var(--color-urgent); }
-        .plant-title { font-weight: 700; margin-bottom: 8px; }
-        .plant-source { font-size: 14px; color: var(--text-light-color); margin-bottom: 12px; }
-        .plant-status { font-size: 14px; font-weight: 500; }
-        #journey-map-container { position: relative; width: 100%; height: 75vh; background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); overflow: hidden; }
-        .journey-node { position: absolute; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; font-size: 14px; padding: 5px; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s; user-select: none; }
-        .journey-node:hover { transform: scale(1.1); z-index: 20 !important; }
-        .journey-node.book { width: 100px; height: 100px; background-color: var(--primary-dark); z-index: 10; font-weight: 700; }
-        .journey-node.plant { width: 70px; height: 70px; font-size: 11px; z-index: 5; }
-        #journey-map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: white; padding: 12px 24px; border-radius: var(--border-radius); z-index: 2000; opacity: 0; transition: bottom 0.5s ease, opacity 0.5s ease; }
-        .toast.success { background-color: var(--color-healthy); }
-        .toast.error { background-color: var(--color-urgent); }
+        .plant-title { font-weight: 700; font-size: 18px; margin-bottom: 8px; }
+        .plant-source { font-size: 14px; color: var(--text-light-color); margin-bottom: 16px; }
+        .plant-status { font-size: 14px; font-weight: 500; text-align: right; }
 
+        /* Journey Map */
+        #journey-map-container { position: relative; width: 100%; height: 75vh; background-color: var(--surface-color); border-radius: var(--border-radius); border: 1px solid var(--border-color); overflow: hidden; }
+
+        /* Other UI Styles */
+        .loader-overlay { display: none; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255,255,255,0.8); justify-content: center; align-items: center; z-index: 2000; }
+        .loader { border: 4px solid var(--border-color); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        .loader-text { color: var(--text-color); margin-top: 16px; font-size: 16px; }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInView { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -176,9 +232,9 @@
         <aside class="sidebar">
             <h1>Project Metis</h1>
             <nav>
-                <button class="nav-btn active" data-view="dashboard">🏠 대시보드</button>
-                <button class="nav-btn" data-view="garden">🌿 지식 정원</button>
-                <button class="nav-btn" data-view="journey">🗺️ 지적 여정 맵</button>
+                <button class="nav-btn active" data-view="dashboard">대시보드</button>
+                <button class="nav-btn" data-view="garden">지식 정원</button>
+                <button class="nav-btn" data-view="journey">지적 여정 맵</button>
             </nav>
         </aside>
 
@@ -189,32 +245,36 @@
                     <p>메인북을 중심으로 새로운 지식을 탐험하고, 당신의 자산으로 만드세요.</p>
                 </header>
 
-                <div id="refinement-section" class="card">
-                    <h3>💎 지식 정제소</h3>
-                    <div id="refinement-list">
-                        <p class="empty-message">정제 중인 지식이 없습니다.</p>
-                    </div>
-                </div>
-
                 <div class="dashboard-grid">
-                    <div id="main-book-slot" class="main-book-slot card">
-                        <div class="book-info">
-                            <img id="main-book-cover" src="https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1593003033l/54495910.jpg" alt="Nudge book cover" class="book-cover">
-                            <div class="book-details">
-                                <h4 id="main-book-title">넛지 (Nudge)</h4>
-                                <p id="main-book-author">리처드 H. 탈러, 캐스 R. 선스타인</p>
-                                <div id="main-book-goal" class="goal">
-                                    <strong>🎯 현재 목표 (레벨 2)</strong>
-                                    <p>선택 설계의 3요소(디폴트, 피드백, 오류 예상)를 설명하고, 실생활 사례 1가지씩 찾아보기.</p>
+                    <div class="dashboard-main">
+                        <div id="main-book-slot" class="main-book-slot card">
+                            <div class="book-info">
+                                <img id="main-book-cover" src="https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1593003033l/54495910.jpg" alt="Book cover" class="book-cover">
+                                <div class="book-details">
+                                    <h4 id="main-book-title">넛지 (Nudge)</h4>
+                                    <p id="main-book-author">리처드 H. 탈러, 캐스 R. 선스타인</p>
+                                    <div id="main-book-goal" class="goal">
+                                        <strong>현재 목표 (레벨 2)</strong>
+                                        <p>선택 설계의 3요소(디폴트, 피드백, 오류 예상)를 설명하고, 실생활 사례 1가지씩 찾아보기.</p>
+                                    </div>
                                 </div>
                             </div>
+                            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                               <button id="change-book-btn" class="btn" style="flex-grow: 1;">책 변경하기</button>
+                               <button id="start-goal-navigator-btn" class="btn" style="flex-grow: 1;">목표 재설정</button>
+                            </div>
+                            <button id="start-session-btn" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 18px;">메티스 세션 시작하기</button>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                           <button id="change-book-btn" class="btn" style="flex-grow: 1;">📘 책 변경하기</button>
-                           <button id="start-goal-navigator-btn" class="btn" style="flex-grow: 1;">🎯 목표 재설정</button>
+                        <div id="refinement-section" class="card">
+                            <h3>지식 정제소</h3>
+                            <div id="refinement-list">
+                                <p class="empty-message">정제 중인 지식이 없습니다.</p>
+                            </div>
                         </div>
-                        <div class="course-selection">
-                            <h5>학습 코스 선택 <i class="tooltip-icon" id="course-tooltip-icon">?</i></h5>
+                    </div>
+                    <div class="dashboard-sidebar">
+                        <div class="course-selection card">
+                            <h5>학습 코스 선택</h5>
                             <div class="course-buttons">
                                 <button class="course-btn btn" data-duration="15">15분</button>
                                 <button class="course-btn btn active" data-duration="30">30분</button>
@@ -224,14 +284,13 @@
                                 <button class="course-btn btn" data-duration="120">120분</button>
                             </div>
                         </div>
-                        <button id="start-session-btn" class="btn btn-primary">새로운 지식 탐험하기 (메티스 세션)</button>
-                    </div>
-                    <div class="sub-book-shelf-container card">
-                        <h3>📚 관심 서재 (서브북)</h3>
-                        <div class="sub-book-shelf">
-                           <img src="https://image.aladin.co.kr/product/30883/29/cover500/k252830635_1.jpg" alt="Sub book cover" class="sub-book-cover">
-                           <img src="https://image.aladin.co.kr/product/10/3/cover500/8932917248_2.jpg" alt="Sub book cover" class="sub-book-cover">
-                           <img src="https://image.aladin.co.kr/product/33359/29/cover500/k252938250_1.jpg" alt="Sub book cover" class="sub-book-cover">
+                         <div class="sub-book-shelf-container card">
+                            <h3>관심 서재</h3>
+                            <div class="sub-book-shelf">
+                               <img src="https://image.aladin.co.kr/product/30883/29/cover500/k252830635_1.jpg" alt="Sub book cover" class="sub-book-cover">
+                               <img src="https://image.aladin.co.kr/product/10/3/cover500/8932917248_2.jpg" alt="Sub book cover" class="sub-book-cover">
+                               <img src="https://image.aladin.co.kr/product/33359/29/cover500/k252938250_1.jpg" alt="Sub book cover" class="sub-book-cover">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -239,17 +298,17 @@
             
             <div id="garden" class="view">
                  <header class="view-header">
-                    <h2>🌿 지식 정원</h2>
+                    <h2>지식 정원</h2>
                     <p>당신의 모든 지식 자산(식물)이 자라고 있습니다. 상태를 보고 관리해주세요.</p>
                 </header>
                 <div class="garden-container" id="garden-container">
-                    <p class="empty-message">아직 정원에 식물이 없습니다. 메티스 세션을 통해 첫 씨앗을 심어보세요!</p>
+                    <!-- Garden cards will be rendered here -->
                 </div>
             </div>
             
             <div id="journey" class="view">
                 <header class="view-header">
-                    <h2>🗺️ 지적 여정 맵</h2>
+                    <h2>지적 여정 맵</h2>
                     <p>당신의 지식들이 어떻게 연결되어 있는지 탐험하세요.</p>
                 </header>
                 <div id="journey-map-container">
@@ -259,69 +318,67 @@
             </div>
 
             <div id="metis-session-view" class="view">
-                <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
-                     <button id="back-to-dashboard-btn" class="btn btn-secondary">← 뒤로가기</button>
-                     <h2 style="margin:0;">🧠 메티스 학습 세션</h2>
+                 <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
+                     <button id="back-to-dashboard-btn" class="btn">뒤로가기</button>
+                     <h2 style="margin:0;">메티스 학습 세션</h2>
                      <p id="step-title" style="margin:0; min-width: 150px; text-align: right;"></p>
                  </header>
                  <div class="session-content">
                     <div id="session-goal-display" class="goal-display"></div>
-                     <div id="step-1" class="step active card">
+                    <div id="step-1" class="step card">
                         <div class="step-header">
-                            <h4>[1/8] 학습 예측 (Prediction)</h4>
+                            <h4>[1/8] 학습 예측</h4>
                             <div class="step-timer" id="timer-step-1">03:00</div>
                         </div>
                         <p>제한 시간 안에, 위 목표와 관련하여 책에서 어떤 내용을 다룰 것 같습니까? 핵심 내용을 예측해보세요.</p>
-                        <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고, 사람들의 비합리적 선택을 유도하는 사례를 보여줄 것 같다."></textarea>
+                        <textarea id="prediction-input" placeholder="예: 넛지의 개념을 설명하고..."></textarea>
                         <div id="prediction-options">
                             <p style="margin-bottom: 8px; font-weight: 500;">더 깊은 학습을 위해 예측 시간을 늘려보시겠어요?</p>
                             <button class="btn" id="deepen-prediction-btn" data-time="420">심화 예측 (7분)</button>
                         </div>
-                        <button class="btn btn-primary next-step-btn">예측 완료, 집중 독서 시작</button>
+                        <button class="btn btn-primary next-step-btn" style="width: 100%;">예측 완료, 집중 독서 시작</button>
                     </div>
                     <div id="step-2" class="step card">
-                         <h4>[2/8] 집중 독서 (Focused Reading)</h4>
+                         <h4>[2/8] 집중 독서</h4>
                          <p>목표에만 집중하여 책을 읽습니다. 중요한 문장을 발견하면 '클리핑' 하세요.</p>
                          <div id="timer-step-2" class="timer-display">00:00</div>
                          <button id="add-clipping-btn" class="btn" style="width: 100%; margin-bottom: 8px;">+ 현재 문단 클리핑하기</button>
                          <button class="btn btn-primary next-step-btn" style="width: 100%;">독서 완료</button>
                     </div>
-                     <div id="step-2-break" class="step card">
-                         <h4>[3/8] 두뇌 휴식 (Brain Break)</h4>
+                     <div id="step-2-break" class="step card" style="text-align: center;">
+                         <h4>[3/8] 두뇌 휴식</h4>
                          <p>잠시 학습을 멈추고 뇌를 쉬게 해주세요. 가벼운 스트레칭이나 명상이 좋습니다.</p>
                          <div id="timer-step-2-break" class="timer-display">05:00</div>
                          <button class="btn btn-primary next-step-btn">휴식 완료</button>
                     </div>
                     <div id="step-3" class="step card">
                         <div class="step-header">
-                            <h4>[4/8] 생각 기록 (Brain Dump)</h4>
+                            <h4>[4/8] 생각 기록</h4>
                             <div class="step-timer" id="timer-step-3">05:00</div>
                         </div>
                         <p>제한 시간 안에, 방금 읽은 내용과 그에 대한 당신의 생각을 자유롭게 기록하세요.</p>
                         <textarea id="braindump-input" placeholder="정리되지 않아도 괜찮습니다. 떠오르는 모든 것을 기록하세요."></textarea>
-                        <button class="btn btn-primary next-step-btn">기록 완료, AI 피드백 예측으로</button>
+                        <button class="btn btn-primary next-step-btn" style="width: 100%;">기록 완료</button>
                     </div>
                     <div id="step-4" class="step card">
                         <div class="step-header">
-                            <h4>[5/8] AI 피드백 예측 (Metacognition)</h4>
+                            <h4>[5/8] AI 피드백 예측</h4>
                             <div class="step-timer" id="timer-step-4">05:00</div>
                         </div>
                         <p>제한 시간 안에, AI가 당신의 기록에 대해 어떤 피드백을 줄 것 같습니까? 당신이 놓친 부분은 무엇일까요?</p>
-                        <textarea id="ai-prediction-input" placeholder="예: 개념 설명은 잘했지만, 각 요소가 어떻게 상호작용하는지에 대한 설명이 부족하다고 지적할 것 같다."></textarea>
-                        <button class="btn btn-primary next-step-btn">예측 완료, 비교 분석으로</button>
+                        <textarea id="ai-prediction-input" placeholder="예: 개념 설명은 잘했지만..."></textarea>
+                        <button class="btn btn-primary next-step-btn" style="width: 100%;">예측 완료</button>
                     </div>
                     <div id="step-5" class="step card">
-                        <div class="step-header">
-                            <h4>[6/8] 비교 분석 (The Reveal)</h4>
-                        </div>
+                        <h4>[6/8] 비교 분석</h4>
                         <p>자신의 이해도와 실제 이해도 사이의 격차(Gap)를 객관적으로 인지하세요.</p>
                         <div class="comparison-grid">
-                            <div class="comparison-col"><h5>🤔 내 생각</h5><div id="reveal-my-thoughts" class="comparison-content"></div></div>
-                            <div class="comparison-col"><h5>🤖 AI 피드백</h5><div id="reveal-ai-feedback" class="comparison-content"></div></div>
-                            <div class="comparison-col"><h5>🔮 내 예측</h5><div id="reveal-my-prediction" class="comparison-content"></div></div>
-                            <div class="comparison-col"><h5>⭐ 전문가 요약</h5><div id="reveal-expert-summary" class="comparison-content"></div></div>
+                            <div class="comparison-col"><h5>내 생각</h5><div id="reveal-my-thoughts" class="comparison-content"></div></div>
+                            <div class="comparison-col"><h5>AI 피드백</h5><div id="reveal-ai-feedback" class="comparison-content"></div></div>
+                            <div class="comparison-col"><h5>내 예측</h5><div id="reveal-my-prediction" class="comparison-content"></div></div>
+                            <div class="comparison-col"><h5>전문가 요약</h5><div id="reveal-expert-summary" class="comparison-content"></div></div>
                         </div>
-                        <button class="btn btn-primary next-step-btn">분석 완료, 질문 추출로</button>
+                        <button class="btn btn-primary next-step-btn" style="width: 100%;">분석 완료</button>
                     </div>
                     <div id="step-6" class="step card">
                         <div class="step-header">
@@ -329,47 +386,41 @@
                             <div class="step-timer" id="timer-step-6">05:00</div>
                         </div>
                         <p>제한 시간 안에, 당신의 생각과 AI의 분석 사이에서 발견한 '격차(Gap)'를 해소할 핵심 질문 하나를 뽑아보세요.</p>
-                        <textarea id="gap-input" placeholder="예: 나는 개념의 나열에 그쳤지만, AI는 '개념 간의 연결성 부족'을 지적했다. 그렇다면, 각 개념들은 어떻게 유기적으로 연결되는가?"></textarea>
-                        <button class="btn btn-primary next-step-btn">질문 추출 완료, 체화 글쓰기로</button>
+                        <textarea id="gap-input" placeholder="예: 각 개념들은 어떻게 유기적으로 연결되는가?"></textarea>
+                        <button class="btn btn-primary next-step-btn" style="width: 100%;">질문 추출 완료</button>
                     </div>
                     <div id="step-7" class="step card">
                         <div class="step-header">
-                             <h4>[8/8] 완벽한 체화를 위한 글쓰기</h4>
+                             <h4>[8/8] 체화 글쓰기</h4>
                              <div class="step-timer" id="timer-step-7">05:00</div>
                         </div>
                          <p>제한 시간 안에, 방금 추출한 질문에 대한 답을 스스로 설명하는 한 편의 글을 완성하세요.</p>
-                         <textarea id="final-writing-input" placeholder="6단계에서 뽑아낸 질문을 바탕으로, 오늘 배운 내용을 다른 사람에게 설명하듯 자유롭게 글을 작성해보세요."></textarea>
-                         <button id="finish-session-btn" class="btn btn-primary">글쓰기 완료, 지식 정제소로 보내기</button>
+                         <textarea id="final-writing-input" placeholder="오늘 배운 내용을 다른 사람에게 설명하듯 글을 작성해보세요."></textarea>
+                         <button id="finish-session-btn" class="btn btn-primary" style="width: 100%;">세션 완료</button>
                      </div>
                  </div>
             </div>
 
             <div id="clipping-review-view" class="view">
-                <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <button id="back-to-dashboard-from-review" class="btn btn-secondary">← 대시보드로 돌아가기</button>
+                 <header class="view-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <button id="back-to-dashboard-from-review" class="btn">뒤로가기</button>
                     <h2 style="margin:0;">지식 리뷰</h2>
                     <p id="clipping-review-header" style="margin:0;"></p>
                 </header>
                 <div id="clipping-review-content" class="card"></div>
-                <div class="modal-controls">
+                <div class="modal-controls" style="justify-content: flex-end;">
                     <button id="finish-review-btn" class="btn btn-primary">리뷰 완료</button>
                 </div>
             </div>
         </main>
     </div>
     
-    <div id="course-tooltip">
-        <h6>언제 어떤 코스를 선택할까요?</h6>
-        <p><strong>15분:</strong> 자투리 시간, 핵심 개념 1개만 빠르게 확인할 때</p>
-        <p><strong>30분:</strong> 출퇴근길, 집중해서 1~2개 소주제를 학습할 때 (기본)</p>
-        <p><strong>45분 ~ 120분:</strong> 주말 등 깊은 몰입이 필요할 때</p>
-    </div>
-
     <div id="loader" class="loader-overlay">
         <div class="loader"></div>
         <div class="loader-text">AI가 분석 중입니다...</div>
     </div>
 
+    <!-- Modals -->
     <div id="book-explorer-modal-overlay" class="modal-overlay">
         <div id="book-explorer-modal" class="modal-content"></div>
     </div>
@@ -383,7 +434,7 @@
         <div id="dashboard-modal-content" class="modal-content" style="max-width: 800px;"></div>
     </div>
     <div id="clipping-modal-overlay" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header"><h3>지식 조각 클리핑</h3><p>책에서 발견한 핵심 내용을 붙여넣으세요.</p></div>
             <div class="modal-body">
                 <textarea id="clipping-input" placeholder="여기에 중요한 문단을 복사-붙여넣기 하세요..."></textarea>
