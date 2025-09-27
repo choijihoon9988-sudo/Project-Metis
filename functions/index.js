@@ -1,30 +1,31 @@
 // functions/index.js
 
-const functions = require("firebase-functions");
+// 1. 최신 라이브러리에서 필요한 함수들을 가져옵니다.
+const {onCall} = require("firebase-functions/v2/https");
+const {setGlobalOptions} = require("firebase-functions/v2");
 const axios = require("axios");
-// 1. 필요한 라이브러리들을 가져옵니다.
 const {GoogleAuth} = require("google-auth-library");
 const {VertexAI} = require("@google-cloud/vertexai");
 
-// 2. Gemini AI 설정을 초기화합니다.
+// 2. 모든 함수가 서울 리전에서 실행되도록 전역 설정을 합니다.
+setGlobalOptions({region: "asia-northeast3"});
+
+// 3. Gemini AI 설정을 초기화합니다.
 const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
 const vertexAI = new VertexAI({
   project: process.env.GCLOUD_PROJECT,
-  location: "asia-northeast3", // 서울 리전
+  location: "asia-northeast3",
   auth: auth,
 });
+const model = vertexAI.getGenerativeModel({model: "gemini-1.0-pro"});
 
-const model = vertexAI.getGenerativeModel({
-  model: "gemini-1.0-pro",
-});
+const GOOGLE_BOOKS_API_KEY = "AIzaSyCULah5vm81WCnhcZuhumLO2cJ-82OJXJA";
 
-const GOOGLE_BOOKS_API_KEY = "AIzaSyCULah5vm81WCnhcZuhumLO2cJ-82OJXJA"; // 기존 API 키
-
-// 3. 서버의 위치(region)를 'asia-northeast3'(서울)으로 지정합니다.
-exports.getBookDetails = functions.region("asia-northeast3").https.onCall(async (data, context) => {
-  const bookTitle = data.bookTitle;
+// 4. 최신 방식(onCall)으로 함수를 정의합니다.
+exports.getBookDetails = onCall(async (request) => {
+  const bookTitle = request.data.bookTitle;
   if (!bookTitle) {
     throw new functions.https.HttpsError(
         "invalid-argument",
@@ -60,7 +61,6 @@ exports.getBookDetails = functions.region("asia-northeast3").https.onCall(async 
       const result = await model.generateContent(prompt);
       const aiResponse = await result.response;
       const text = aiResponse.text();
-      
       const cleanedJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
       const toc = JSON.parse(cleanedJson);
       return {toc: toc};
@@ -69,7 +69,6 @@ exports.getBookDetails = functions.region("asia-northeast3").https.onCall(async 
     }
   } catch (error) {
     console.error("서버 함수 실행 중 오류 발생:", error);
-    // 앱에서 에러를 쉽게 확인할 수 있도록 에러 메시지를 함께 반환합니다.
     throw new functions.https.HttpsError(
         "unknown",
         `목차 정보 분석 중 AI 또는 API 오류 발생: ${error.message}`,
