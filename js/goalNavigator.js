@@ -1,4 +1,4 @@
-// js/goalNavigator.js (수정된 최종 코드)
+// js/goalNavigator.js (최종 수정본)
 
 import { UI } from "./ui.js";
 // Firebase Functions 대신 Gemini AI 라이브러리를 직접 가져옵니다.
@@ -32,7 +32,8 @@ export const GoalNavigator = {
 
         try {
             // 서버 호출 대신 클라이언트에서 직접 Gemini API를 호출합니다.
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            // [오류 수정] 모델 이름을 최신 버전으로 변경
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
             const prompt = `
                 당신은 유능한 학습 설계 전문가입니다. 
