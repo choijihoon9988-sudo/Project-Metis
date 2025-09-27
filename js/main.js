@@ -6,24 +6,40 @@ import { Ebbinghaus } from './ebbinghaus.js';
 import { MetisSession } from './metisSession.js';
 import { BookExplorer } from './bookExplorer.js';
 import { GoalNavigator } from './goalNavigator.js';
-import { Refinement } from './refinement.js'; // 신규 임포트
+import { Refinement } from './refinement.js';
 
 const appState = {
   user: null,
   currentPlant: null,
-  currentRefinement: null, // 현재 리뷰 중인 정제 데이터
+  currentRefinement: null,
 };
+
+function loadMainBook() {
+    const savedBook = localStorage.getItem('mainBook');
+    if (savedBook) {
+        const book = JSON.parse(savedBook);
+        document.getElementById('main-book-cover').src = book.cover;
+        document.getElementById('main-book-title').textContent = book.title;
+        document.getElementById('main-book-author').textContent = book.author;
+        
+        const goal = JSON.parse(localStorage.getItem('mainGoal'));
+        if (goal) {
+            document.querySelector('#main-book-goal').innerHTML = `<strong>현재 목표 (레벨 ${goal.level})</strong><p>${goal.text}</p>`;
+        }
+    }
+}
 
 async function main() {
   const user = await ensureUserIsAuthenticated();
   if (user) {
     appState.user = user;
     Ebbinghaus.setUser(user.uid);
-    Refinement.setUser(user.uid); // Refinement 모듈에도 사용자 ID 설정
+    Refinement.setUser(user.uid);
+    loadMainBook(); // 페이지 로드 시 저장된 메인북 정보 불러오기
     UI.switchView('dashboard');
     setupEventListeners();
     await Ebbinghaus.initGarden();
-    await Refinement.load(); // 정제 데이터 로드
+    await Refinement.load();
   } else {
     console.error("Firebase 인증 실패. 앱을 초기화할 수 없습니다.");
     UI.showToast("사용자 인증에 실패했습니다. 새로고침 해주세요.", "error");
@@ -151,8 +167,6 @@ function setupEventListeners() {
         borderColor: 'rgba(66, 133, 244, 0.5)', borderDash: [5, 5], tension: 0.4, pointRadius: 0
       };
       UI.Dashboard.updateChart(simulatedData);
-      target.closest('#simulate-review-btn').disabled = true;
-      target.closest('#simulate-review-btn').textContent = '✅ 시뮬레이션 완료';
       return;
     }
     if (target.closest('#dashboard-start-review-btn')) {
@@ -166,16 +180,21 @@ function setupEventListeners() {
   // --- 커스텀 이벤트 리스너 ---
   document.addEventListener('bookSelected', (e) => {
     const book = e.detail;
+    localStorage.setItem('mainBook', JSON.stringify(book)); // 선택한 책 정보를 localStorage에 저장
     document.getElementById('main-book-cover').src = book.cover;
     document.getElementById('main-book-title').textContent = book.title;
     document.getElementById('main-book-author').textContent = book.author;
+    // 책이 바뀌면 목표는 초기화
+    localStorage.removeItem('mainGoal');
+    document.querySelector('#main-book-goal').innerHTML = `<p>새로운 목표를 설정해주세요.</p>`;
     UI.showToast(`'${book.title}'(으)로 메인북 변경!`, 'success');
     GoalNavigator.init(book);
   });
 
   document.addEventListener('goalSelected', (e) => {
-    const { level, text } = e.detail;
-    document.querySelector('#main-book-goal').innerHTML = `<strong>🎯 현재 목표 (레벨 ${level})</strong><p>${text}</p>`;
+    const goal = e.detail;
+    localStorage.setItem('mainGoal', JSON.stringify(goal)); // 선택한 목표 정보를 localStorage에 저장
+    document.querySelector('#main-book-goal').innerHTML = `<strong>현재 목표 (레벨 ${goal.level})</strong><p>${goal.text}</p>`;
     UI.showToast('새로운 학습 목표가 설정되었습니다.', 'success');
   });
 
@@ -188,3 +207,4 @@ function setupEventListeners() {
 }
 
 main();
+

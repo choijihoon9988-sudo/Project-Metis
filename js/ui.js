@@ -218,11 +218,11 @@ export const UI = {
                             </div>`;
                     break;
                 case 'quests':
-                    html = `<div class="modal-header"><h3>학습 퀘스트 제안</h3><p><strong>${data.chapter}</strong> 챕터에 대한 퀘스트입니다.</p></div>
+                    html = `<div class="modal-header"><h3>학습 퀘스트 제안</h3><p><strong>${data.chapter}</strong> 챕터에 대한 퀘스트입니다. 마음에 드는 퀘스트를 선택하세요.</p></div>
                             <div class="modal-body quest-selection-grid">
                                 ${data.quests.length > 0 ? data.quests.map(q => `
                                     <div class="quest-card" data-level="${q.level}" data-text="${q.text}">
-                                        <h5>${q.type} (Lv.${q.level})</h5>
+                                        <h5>${q.type} (Level ${q.level})</h5>
                                         <p>${q.text}</p>
                                     </div>
                                 `).join('') : '<p style="text-align:center;">이 챕터에 대한 추천 퀘스트가 없습니다.</p>'}
@@ -462,3 +462,4 @@ export const UI = {
         }
     },
 };
+

@@ -168,6 +168,26 @@ textarea { min-height: 150px; resize: vertical; }
 .modal-header h3 { font-size: 24px; margin-bottom: 8px; }
 .modal-controls { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; }
 
+/* Goal Navigator Modal */
+.quest-selection-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+.quest-card { 
+    border: 1px solid var(--border-color); 
+    padding: 16px; 
+    border-radius: var(--border-radius); 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    background-color: var(--surface-color);
+}
+.quest-card:hover { 
+    border-color: var(--accent-color); 
+    background-color: #f8f9fa; 
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.quest-card h5 { color: var(--primary-dark); margin-bottom: 8px; }
+.quest-card p { color: var(--text-color); font-size: 15px; }
+
+
 /* Metis Session */
 #metis-session-view { max-width: 800px; margin: 0 auto; }
 .goal-display { background-color: var(--surface-color); border-left: 4px solid var(--accent-color); padding: 20px; margin-bottom: 32px; border-radius: 0 var(--border-radius) var(--border-radius) 0; }
