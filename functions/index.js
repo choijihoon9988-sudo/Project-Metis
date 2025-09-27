@@ -1,8 +1,8 @@
 const functions = require("firebase-functions");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 
-// process.env.GEMINI_KEY 로 환경 변수에서 API 키를 안전하게 로드합니다.
-const genAI = new GoogleGenerativeAI(functions.config().gemini.key);
+// [오류 수정] process.env.GEMINI_KEY 로 환경 변수에서 API 키를 안전하게 로드합니다.
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 
 exports.generateQuestsForChapter = functions.https.onCall(async (data, context) => {
   const {bookTitle, chapterTitle} = data;
