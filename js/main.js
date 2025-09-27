@@ -13,6 +13,7 @@ const appState = {
   user: null,
   currentPlant: null,
   currentRefinement: null,
+  libraryCarouselIndex: 0,
 };
 
 function loadMainBook() {
@@ -96,6 +97,19 @@ function setupEventListeners() {
     if (libraryBook) {
         const bookId = libraryBook.dataset.bookId;
         Library.showBookDetail(bookId);
+    }
+    const shelfArrow = target.closest('.shelf-arrow');
+    if (shelfArrow) {
+        const direction = shelfArrow.dataset.direction;
+        const carousel = document.querySelector('.library-carousel');
+        const slideCount = document.querySelectorAll('.library-shelf').length;
+        
+        if (direction === 'next') {
+            appState.libraryCarouselIndex = (appState.libraryCarouselIndex + 1) % slideCount;
+        } else {
+            appState.libraryCarouselIndex = (appState.libraryCarouselIndex - 1 + slideCount) % slideCount;
+        }
+        carousel.style.transform = `translateX(-${appState.libraryCarouselIndex * 100}%)`;
     }
 
 
