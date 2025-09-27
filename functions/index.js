@@ -1,79 +1,105 @@
 // functions/index.js
 
-const {onCall} = require("firebase-functions/v2/https");
-const {setGlobalOptions} = require("firebase-functions/v2");
-const {GoogleAuth} = require("google-auth-library");
-const {VertexAI} = require("@google-cloud/vertexai");
+const { onCall } = require("firebase-functions/v2/https");
+const { setGlobalOptions } = require("firebase-functions/v2");
+const { VertexAI, HarmCategory, HarmBlockThreshold } = require("@google-cloud/vertexai");
 
-setGlobalOptions({region: "asia-northeast3"});
+// 모든 함수의 기본 지역을 서울로 설정
+setGlobalOptions({ region: "asia-northeast3" });
 
-const auth = new GoogleAuth({
-  scopes: "https://www.googleapis.com/auth/cloud-platform",
-});
+// Vertex AI 클라이언트 초기화 (인증 부분은 동일)
 const vertexAI = new VertexAI({
-  project: process.env.GCLOUD_PROJECT,
-  location: "asia-northeast3",
-  auth: auth,
+    project: process.env.GCLOUD_PROJECT,
+    location: "asia-northeast3",
 });
 
-const model = vertexAI.getGenerativeModel({
-  model: "gemini-1.0-pro",
+// AI 모델 설정 (Tool 기능은 모델 생성 시가 아닌, 요청 시에 직접 전달)
+const questGenerationModel = vertexAI.getGenerativeModel({
+    model: "gemini-1.5-flash-001", // 최신이고 더 빠른 모델로 변경
+    safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    ],
 });
 
-// v2 스타일로 함수를 내보낸다
-exports.generateQuestsForChapter = onCall(async (request) => {
-  const { bookTitle, chapterTitle } = request.data;
-
-  if (!bookTitle || !chapterTitle) {
-    throw new onCall.HttpsError(
-      "invalid-argument",
-      "책 제목(bookTitle)과 챕터 제목(chapterTitle)이 모두 필요합니다.",
-    );
-  }
-
-  // AI에게 인터넷 검색을 지시하고, 그 결과를 바탕으로 퀘스트를 생성하도록 하는 프롬프트
-  const prompt = `
-    너는 사용자의 학습 목표 설정을 돕는 전문 가이드야.
-    
-    1. 먼저, 인터넷에서 '${bookTitle}'라는 책의 '${chapterTitle}' 챕터(또는 소주제)가 어떤 내용을 다루고 있는지 핵심 내용을 검색해서 파악해.
-    2. 그 핵심 내용을 바탕으로, 아래 3가지 레벨의 학습 퀘스트를 생성해줘.
-    
-    - **레벨 1 (개념 분석):** 핵심 개념을 정의하거나 설명하는 질문.
-    - **레벨 2 (실용 적용):** 개념을 실생활이나 개인적인 경험에 적용해보는 질문.
-    - **레벨 3 (비판적 사고):** 개념의 한계, 반론, 또는 다른 아이디어와 연결하는 심화 질문.
-
-    다른 설명은 모두 제외하고, 반드시 아래와 같은 JSON 배열 형식으로만 응답해줘.
-    
-    [
-      { "level": 1, "type": "개념 분석", "text": "생성된 레벨 1 퀘스트 내용" },
-      { "level": 2, "type": "실용 적용", "text": "생성된 레벨 2 퀘스트 내용" },
-      { "level": 3, "type": "비판적 사고", "text": "생성된 레벨 3 퀘스트 내용" }
+// 1. AI에게 'google_search' 도구를 정의 (이 부분은 수정 없음)
+const googleSearchTool = {
+    functionDeclarations: [
+        {
+            name: "google_search",
+            description: "책 제목과 챕터(소주제)를 이용해 구글에서 관련 내용을 검색하고, 그 결과를 텍스트로 반환합니다.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    query: {
+                        type: "STRING",
+                        description: "검색할 쿼리. 책 제목과 챕터 제목을 포함해야 합니다."
+                    }
+                },
+                required: ["query"]
+            }
+        }
     ]
-  `;
+};
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    let quests = [];
-    try {
-      const cleanedJson = text.replace(/^```json\s*|```\s*$/g, "").trim();
-      quests = JSON.parse(cleanedJson);
-    } catch (parseError) {
-      console.error("AI 응답 JSON 파싱 실패:", parseError);
-      console.error("파싱 전 원본 AI 응답:", text);
-      // 파싱 실패 시 빈 배열 반환
-      return { quests: [] };
+exports.generateQuestsForChapter = onCall(async (request) => {
+    const { bookTitle, chapterTitle } = request.data;
+    if (!bookTitle || !chapterTitle) {
+        throw new onCall.HttpsError("invalid-argument", "책 제목과 챕터 제목이 필요합니다.");
     }
 
-    return { quests: quests };
+    try {
+        // 2. AI에게 대화를 시작하며 도구를 전달
+        const chat = questGenerationModel.startChat({
+            tools: [googleSearchTool],
+        });
 
-  } catch (error) {
-    console.error("서버 함수 실행 중 오류 발생:", error.message);
-    throw new onCall.HttpsError(
-        "unknown",
-        `AI 퀘스트 생성 중 오류 발생: ${error.message}`,
-    );
-  }
+        const prompt = `
+            '${bookTitle}' 책의 '${chapterTitle}' 챕터에 대한 학습 퀘스트 3개를 생성해줘.
+            
+            먼저 google_search 도구를 사용해서 해당 챕터의 핵심 내용을 딱 1~2개만 검색해서 그 내용을 완벽히 이해해야 해.
+            
+            그 다음, 이해한 내용을 바탕으로 아래 3가지 레벨의 퀘스트를 생성해줘.
+            - 레벨 1 (개념 분석): 핵심 개념 정의 또는 설명
+            - 레벨 2 (실용 적용): 개념을 실생활/경험에 적용
+            - 레벨 3 (비판적 사고): 개념의 한계, 반론, 심화 질문
+
+            다른 설명은 모두 제외하고, 반드시 아래 JSON 형식으로만 응답해줘.
+            [
+              { "level": 1, "type": "개념 분석", "text": "..." },
+              { "level": 2, "type": "실용 적용", "text": "..." },
+              { "level": 3, "type": "비판적 사고", "text": "..." }
+            ]
+        `;
+        
+        const result = await chat.sendMessage(prompt);
+        const response = result.response;
+
+        // 3. AI 응답에서 텍스트 부분만 정확히 추출
+        const text = response.candidates[0].content.parts[0].text;
+        
+        if (!text) {
+             console.error("AI가 텍스트를 반환하지 않았습니다.", response);
+             return { quests: [] };
+        }
+        
+        let quests = [];
+        try {
+            // AI 응답 앞뒤에 붙는 마크다운 코드 블록 제거
+            const cleanedJson = text.replace(/^```json\s*|```\s*$/g, "").trim();
+            quests = JSON.parse(cleanedJson);
+        } catch (parseError) {
+            console.error("AI 응답 JSON 파싱 실패:", parseError, "원본 응답:", text);
+            return { quests: [] }; // 파싱 실패 시 빈 배열 반환
+        }
+        
+        console.log("[퀘스트 생성 완료]", quests);
+        return { quests };
+
+    } catch (error) {
+        console.error("서버 함수 실행 중 오류 발생:", error);
+        throw new onCall.HttpsError("unknown", `AI 퀘스트 생성 중 오류가 발생했습니다.`);
+    }
 });
