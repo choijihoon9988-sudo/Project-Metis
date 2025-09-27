@@ -1,40 +1,33 @@
 // js/main.js
 
-// --- 1단계: 필요한 모듈들을 모두 가져옵니다 ---
 import { ensureUserIsAuthenticated } from './firebase.js';
 import { UI } from './ui.js';
 import { Ebbinghaus } from './ebbinghaus.js';
 import { MetisSession } from './metisSession.js';
-// 새로 만든 전문가 모듈들을 가져옵니다.
 import { BookExplorer } from './bookExplorer.js';
 import { GoalNavigator } from './goalNavigator.js';
 
-
-// --- 2단계: 앱의 전역 상태 ---
 const appState = {
   user: null,
+  currentPlant: null, // 현재 보고 있는 식물 정보를 저장
 };
 
-// --- 3단계: 앱 초기화 및 메인 로직 ---
 async function main() {
   const user = await ensureUserIsAuthenticated();
-
   if (user) {
     appState.user = user;
     UI.switchView('dashboard');
     setupEventListeners();
-    console.log(`메인 앱 초기화 완료! 사용자 UID: ${appState.user.uid}`);
   } else {
-    console.error("Firebase 인증 실패. 앱을 시작할 수 없습니다.");
+    console.error("Firebase 인증 실패.");
   }
 }
 
-// --- 4단계: 모든 사용자 상호작용(이벤트)을 처리하는 곳 ---
 function setupEventListeners() {
   document.body.addEventListener('click', (event) => {
     const target = event.target;
 
-    // 사이드바 네비게이션
+    // --- 사이드바 ---
     const navBtn = target.closest('.nav-btn');
     if (navBtn) {
       const viewName = navBtn.dataset.view;
@@ -43,61 +36,74 @@ function setupEventListeners() {
       return;
     }
 
-    // --- 대시보드 버튼들 ---
-    const dashboard = target.closest('#dashboard');
-    if(dashboard) {
-        if(target.closest('#start-session-btn')) {
-            UI.switchView('metis-session-view');
-            MetisSession.init();
-            return;
-        }
-        if(target.closest('#change-book-btn')) {
-            BookExplorer.init(); // 도서 탐색기 시작
-            return;
-        }
-        if(target.closest('#start-goal-navigator-btn')) {
-            const currentBookTitle = document.getElementById('main-book-title').textContent;
-            GoalNavigator.init(currentBookTitle); // 목표 내비게이터 시작
-            return;
-        }
+    // --- 대시보드 ---
+    if (target.closest('#dashboard')) {
+        if(target.closest('#start-session-btn')) { UI.switchView('metis-session-view'); MetisSession.init(); return; }
+        if(target.closest('#change-book-btn')) { BookExplorer.init(); return; }
+        if(target.closest('#start-goal-navigator-btn')) { GoalNavigator.init(document.getElementById('main-book-title').textContent); return; }
         if(target.closest('.course-btn')) {
             document.querySelectorAll('.course-btn').forEach(b => b.classList.remove('active'));
             target.closest('.course-btn').classList.add('active');
         }
     }
     
-    // --- 메티스 세션 버튼들 ---
-    const sessionView = target.closest('#metis-session-view');
-    if(sessionView) {
-        if (target.closest('.next-step-btn')) { MetisSession.proceed(); return; }
-        if (target.closest('#finish-reading-btn')) { MetisSession.proceed(); return; }
+    // --- 메티스 세션 ---
+    if(target.closest('#metis-session-view')) {
+        if (target.closest('.next-step-btn') || target.closest('#finish-reading-btn')) { MetisSession.proceed(); return; }
         if (target.closest('#finish-session-btn')) { MetisSession.complete(); return; }
+    }
+
+    // --- 지식 정원 (신규 추가) ---
+    const plantCard = target.closest('.plant-card');
+    if(plantCard) {
+        const plantId = plantCard.dataset.id;
+        appState.currentPlant = Ebbinghaus.getPlantById(plantId);
+        if (!appState.currentPlant) return;
+
+        // 상태에 따라 다른 행동
+        if (appState.currentPlant.status === 'healthy') {
+            const chartConfig = Ebbinghaus.createChartConfig(appState.currentPlant);
+            UI.Dashboard.show(appState.currentPlant, chartConfig);
+        } else {
+            Ebbinghaus.startReview(plantId);
+        }
+        return;
+    }
+    
+    // --- 대시보드 모달 (신규 추가) ---
+    if (target.closest('#dashboard-modal-overlay') && !target.closest('.modal-content')) { UI.Dashboard.hide(); return; }
+    const simulateBtn = target.closest('#simulate-review-btn');
+    if (simulateBtn) {
+        if(!appState.currentPlant) return;
+        const simulatedStrength = appState.currentPlant.strength + 1;
+        const simulatedData = {
+            label: '시뮬레이션: 오늘 복습 시',
+            data: Ebbinghaus.generateCurveData(new Date(), simulatedStrength),
+            borderColor: 'rgba(66, 133, 244, 0.5)', borderDash: [5, 5], tension: 0.4, pointRadius: 0
+        };
+        UI.Dashboard.updateChart(simulatedData);
+        simulateBtn.disabled = true;
+        simulateBtn.textContent = '✅ 시뮬레이션 완료';
+        return;
     }
   });
 
   // --- 커스텀 이벤트 리스너들 ---
-  // BookExplorer가 '책 선택 완료' 신호를 보냈을 때
   document.addEventListener('bookSelected', (e) => {
     const book = e.detail;
-    // 대시보드 UI 업데이트
     document.getElementById('main-book-cover').src = book.cover;
     document.getElementById('main-book-title').textContent = book.title;
     document.getElementById('main-book-author').textContent = book.author;
     UI.showToast(`${book.title}(으)로 메인북이 변경되었습니다!`, 'success');
-
-    // 자연스러운 흐름을 위해 바로 목표 설정 단계로 연결
     GoalNavigator.init(book.title);
   });
 
-  // GoalNavigator가 '목표 확정' 신호를 보냈을 때
   document.addEventListener('goalSelected', (e) => {
     const { level, text } = e.detail;
-    // 대시보드 UI 업데이트
     document.querySelector('#main-book-goal').innerHTML = `<strong>🎯 현재 목표 (레벨 ${level})</strong><p>${text}</p>`;
     UI.showToast('새로운 학습 목표가 설정되었습니다.', 'success');
   });
 
-  // MetisSession이 '세션 완료' 신호를 보냈을 때
   document.addEventListener('sessionComplete', (e) => {
     if (e.detail.finished) {
         Ebbinghaus.plantSeed(e.detail.data);
@@ -106,15 +112,7 @@ function setupEventListeners() {
     UI.switchView('garden');
     Ebbinghaus.initGarden();
   });
-
-  // 툴팁 이벤트
-  const tooltipIcon = document.getElementById('course-tooltip-icon');
-  if (tooltipIcon) {
-      tooltipIcon.addEventListener('mouseenter', () => UI.Tooltip.show(tooltipIcon));
-      tooltipIcon.addEventListener('mouseleave', () => UI.Tooltip.hide());
-  }
 }
 
-// --- 5단계: 앱 실행 ---
 main();
 

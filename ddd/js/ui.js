@@ -65,7 +65,6 @@ export const UI = {
      * @param {string} [type='success'] - 메시지 유형 ('success' 또는 'error')
      */
     showToast(message, type = 'success') {
-        // 기존 토스트 메시지가 있다면 제거
         const existingToast = document.querySelector('.toast');
         if (existingToast) {
             existingToast.remove();
@@ -113,7 +112,7 @@ export const UI = {
                 : `복습까지 ${plant.daysUntilReview}일`;
 
             el.innerHTML = `
-                <div class.ant-title">${plant.title}</div>
+                <div class="plant-title">${plant.title}</div>
                 <div class="plant-source">${plant.sourceBook}</div>
                 <div class="plant-status">${reviewText}</div>
             `;
@@ -121,9 +120,10 @@ export const UI = {
         });
     },
 
-    // --- 신규 추가된 모달 렌더링 객체들 ---
+    // --- 모달 렌더링 객체들 ---
 
     BookExplorer: {
+        // ... 기존 BookExplorer 코드 ...
         overlay: document.getElementById('book-explorer-modal-overlay'),
         content: document.getElementById('book-explorer-modal'),
         show() { this.overlay.style.display = 'flex'; },
@@ -166,6 +166,7 @@ export const UI = {
     },
 
     GoalNavigator: {
+        // ... 기존 GoalNavigator 코드 ...
         overlay: document.getElementById('goal-navigator-modal-overlay'),
         content: document.getElementById('goal-navigator-modal'),
         show() { this.overlay.style.display = 'flex'; },
@@ -210,6 +211,106 @@ export const UI = {
                     break;
             }
             this.content.innerHTML = html;
+        }
+    },
+
+    // --- 신규 추가 ---
+    Dashboard: {
+        overlay: document.getElementById('dashboard-modal-overlay'),
+        content: document.getElementById('dashboard-modal-content'),
+        chart: null,
+        show(plant, chartConfig) {
+            this.content.innerHTML = `
+                <div class="modal-header">
+                    <h3>"${plant.title}" 기억 곡선</h3>
+                    <p>출처: ${plant.sourceBook}</p>
+                </div>
+                <div class="modal-body" style="display: grid; grid-template-columns: 1fr 250px; gap: 24px;">
+                    <div class="chart-container" style="position: relative; height: 350px;">
+                        <canvas id="memoryCurveChart"></canvas>
+                    </div>
+                    <div class="analysis-panel">
+                        <h4>상태 분석</h4>
+                        <p>현재 이 지식은 '<strong>${plant.memoryStage}</strong>' 상태입니다. 기억 강도는 <strong>${plant.strength}</strong>입니다.</p>
+                        <hr style="margin: 16px 0;">
+                        <h4>시뮬레이션</h4>
+                        <p>지금 복습하면 미래의 기억 곡선이 어떻게 변할까요?</p>
+                        <button id="simulate-review-btn" class="btn btn-primary" style="width: 100%; margin-top: 8px;">오늘 복습 시뮬레이션</button>
+                    </div>
+                </div>`;
+            
+            const chartCanvas = this.content.querySelector('#memoryCurveChart');
+            if (this.chart) this.chart.destroy();
+            this.chart = new Chart(chartCanvas, chartConfig);
+            
+            this.overlay.style.display = 'flex';
+        },
+        hide() { this.overlay.style.display = 'none'; },
+        updateChart(newData) {
+            if (!this.chart) return;
+            const existingSimIndex = this.chart.data.datasets.findIndex(d => d.label.includes('시뮬레이션'));
+            if(existingSimIndex > -1) this.chart.data.datasets.splice(existingSimIndex, 1);
+            this.chart.data.datasets.push(newData);
+            this.chart.update();
+        }
+    },
+
+    // --- 신규 추가 ---
+    Challenge: {
+        overlay: document.getElementById('challenge-modal-overlay'),
+        content: document.getElementById('challenge-modal'),
+        show(challenge, onComplete) {
+            let challengeHTML = '';
+            switch (challenge.type) {
+                case 'connect':
+                    challengeHTML = `<h3 class="challenge-title">챌린지 Lv.2: 사례 연결</h3> <p class="challenge-description">이 지식을 설명할 수 있는 최근 뉴스 기사나 당신의 개인적인 경험 한 가지를 제시하세요.</p>`;
+                    break;
+                case 'critique':
+                    challengeHTML = `<h3 class="challenge-title">챌린지 Lv.3: 비판적 사고</h3> <p class="challenge-description">이 지식의 한계점이나 잠재적인 반론은 무엇일까요?</p>`;
+                    break;
+                default:
+                    challengeHTML = `<h3 class="challenge-title">챌린지 Lv.1: 핵심 내용 인출</h3> <p class="challenge-description">"${challenge.sourceBook}"에서 배운 내용을 떠올려보세요.</p>`;
+                    break;
+            }
+            this.content.innerHTML = `
+                <div class="modal-body">
+                    ${challengeHTML}
+                    <div class="challenge-prompt">${challenge.question.replace(/\n/g, '<br>')}</div>
+                    <textarea id="challenge-answer" placeholder="당신의 언어로 자유롭게 설명해보세요..."></textarea>
+                    <div class="confidence-rating">
+                        <p>이번 답변에 얼마나 확신했나요?</p>
+                        <div class="confidence-buttons">
+                            <button class="btn" data-confidence="confident">✅ 확신함</button>
+                            <button class="btn" data-confidence="unsure">🤔 긴가민가함</button>
+                            <button class="btn" data-confidence="guess">❓ 거의 추측함</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-controls">
+                    <button id="challenge-cancel-btn" class="btn">취소</button>
+                    <button id="challenge-submit-btn" class="btn btn-primary" disabled>복습 완료</button>
+                </div>`;
+            this.overlay.style.display = 'flex';
+            
+            let selectedConfidence = null;
+            const clickHandler = (e) => {
+                const target = e.target;
+                if(target.closest('.confidence-buttons .btn')){
+                    this.content.querySelectorAll('.confidence-buttons .btn').forEach(b => b.classList.remove('active'));
+                    target.closest('.btn').classList.add('active');
+                    selectedConfidence = target.closest('.btn').dataset.confidence;
+                    this.content.querySelector('#challenge-submit-btn').disabled = false;
+                } else if (target.id === 'challenge-cancel-btn' || target.id === 'challenge-submit-btn'){
+                    if (target.id === 'challenge-submit-btn' && selectedConfidence) {
+                        onComplete(selectedConfidence, document.getElementById('challenge-answer').value);
+                    }
+                    this.hide(e.currentTarget); // Pass the element to remove the listener from
+                }
+            };
+            this.content.addEventListener('click', clickHandler);
+        },
+        hide(listenerTarget) { 
+            if(this.overlay) this.overlay.style.display = 'none';
         }
     },
 };
