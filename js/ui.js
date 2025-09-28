@@ -267,35 +267,22 @@ export const UI = {
             const container = document.getElementById('library-carousel-container');
             if (!container) return;
 
-            const shelves = {
+            const shelvesData = {
                 reading: { title: '읽고 있는 책', books: books.filter(b => b.shelf === 'reading') },
                 toread: { title: '읽고 싶은 책', books: books.filter(b => b.shelf === 'toread') },
                 finished: { title: '다 읽은 책', books: books.filter(b => b.shelf === 'finished') },
             };
+            
+            const shelfKeys = ['reading', 'toread', 'finished'];
 
-            const finishedBookCount = shelves.finished.books.length;
-            
-            const finishedShelfHtml = `
-                <div class="library-shelf" data-shelf="finished">
-                    <div class="parallax-container">
-                        <div class="parallax-layer layer-space"></div>
-                        <div class="parallax-layer layer-bg"></div>
-                        <div class="parallax-layer layer-mid"></div>
-                        <div class="parallax-layer layer-fore"></div>
-                    </div>
-                    ${this.renderMilestones(finishedBookCount)}
-                    <div class="book-grid">
-                        ${finishedBookCount > 0 ? shelves.finished.books.map(b => this.renderBook(b)).join('') : '<p class="empty-message" style="color: #333;">이 선반에 책이 없습니다.</p>'}
-                    </div>
-                </div>
-            `;
-            
-            const otherShelvesHtml = ['reading', 'toread'].map(shelfKey => {
-                const shelf = shelves[shelfKey];
+            const allShelvesHtml = shelfKeys.map(key => {
+                const shelf = shelvesData[key];
                 return `
-                    <div class="library-shelf" data-shelf="${shelfKey}">
-                        <div class="book-grid">
-                            ${shelf.books.length > 0 ? shelf.books.map(b => this.renderBook(b)).join('') : '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
+                    <div class="library-shelf" data-shelf="${key}">
+                        <div class="bookshelf-container">
+                            <div class="book-grid">
+                                ${shelf.books.length > 0 ? shelf.books.map(b => this.renderBook(b)).join('') : '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -304,27 +291,13 @@ export const UI = {
             container.innerHTML = `
                 <div class="shelf-header">
                     <button class="shelf-arrow prev" data-direction="prev">&#10094;</button>
-                    <h3 class="shelf-title">${shelves.reading.title} (${shelves.reading.books.length})</h3>
+                    <h3 class="shelf-title">${shelvesData.reading.title} (${shelvesData.reading.books.length})</h3>
                     <button class="shelf-arrow next" data-direction="next">&#10095;</button>
                 </div>
                 <div class="library-carousel">
-                    ${otherShelvesHtml}
-                    ${finishedShelfHtml}
+                    ${allShelvesHtml}
                 </div>
             `;
-            
-            const finishedShelf = container.querySelector('.library-shelf[data-shelf="finished"]');
-            if (finishedShelf) {
-                const maxBooksForFullAltitude = 50;
-                const bookCount = shelves.finished.books.length;
-                
-                let altitudeHeight = '100vh';
-                if (bookCount > 0) {
-                    const dynamicHeight = 100 + Math.min(bookCount, maxBooksForFullAltitude) / maxBooksForFullAltitude * 300;
-                    altitudeHeight = `${dynamicHeight}vh`;
-                }
-                finishedShelf.style.minHeight = altitudeHeight;
-            }
             
             const statsContainer = document.getElementById('library-stats');
             const finishedThisMonth = books.filter(b => {
@@ -334,11 +307,10 @@ export const UI = {
                 return finishedDate.getFullYear() === now.getFullYear() && finishedDate.getMonth() === now.getMonth();
             }).length;
             
-            const altitude = finishedBookCount * 50;
             statsContainer.innerHTML = `
                 <h4>나의 독서 통계</h4>
                 <p>이번 달에 ${finishedThisMonth}권의 책을 완독하셨습니다!</p>
-                <p>현재 지식 고도: <strong>${altitude.toLocaleString()}m</strong></p>
+                <p>총 완독: <strong>${shelvesData.finished.books.length}권</strong></p>
                 <hr style="margin: 16px 0;">
                 <h4>이주의 챌린지</h4>
                 <p>이번 주, '자기계발' 분야 책 1권 읽기</p>
@@ -352,67 +324,6 @@ export const UI = {
                     <p>${book.title}</p>
                 </div>
             `;
-        },
-
-        renderMilestones(bookCount) {
-            const MILESTONES = [
-                { count: 5, text: '🕊️ 63빌딩 높이에 도달했습니다!', position: 15 },
-                { count: 15, text: '✈️ 에베레스트 산보다 높이 있습니다!', position: 35 },
-                { count: 30, text: '🎈 성층권에 진입했습니다!', position: 70 },
-                { count: 50, text: '🚀 우주에 오신 것을 환영합니다!', position: 95 },
-            ];
-            
-            return MILESTONES.map(m => {
-                if (bookCount >= m.count) {
-                    return `<div class="knowledge-milestone" data-position="${m.position}" style="bottom: ${m.position}%;">${m.text}</div>`;
-                }
-                return '';
-            }).join('');
-        },
-        
-        handleAltitudeScrollEffects(event) {
-            const mainContent = event.target;
-            const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
-            if (!shelf) return;
-
-            const layers = {
-                space: shelf.querySelector('.layer-space'),
-                bg: shelf.querySelector('.layer-bg'),
-                mid: shelf.querySelector('.layer-mid'),
-                fore: shelf.querySelector('.layer-fore')
-            };
-
-            const scrollableHeight = shelf.scrollHeight - mainContent.clientHeight;
-            if (scrollableHeight <= 0) return;
-
-            const scrollTop = mainContent.scrollTop;
-            const scrollPercentage = scrollTop / scrollableHeight;
-
-            // 각 레이어의 움직이는 속도 (값이 작을수록 멀리 있는 것처럼 천천히 움직임)
-            const speeds = {
-                space: 0.1,
-                bg: 0.3,
-                mid: 0.6,
-                fore: 1.0
-            };
-
-            // 스크롤에 따라 각 레이어의 Y 위치(transform)를 조절
-            for (const key in layers) {
-                if (layers[key]) {
-                    // 스크롤을 내릴수록(scrollPercentage ↑) 배경은 더 빠르게 위로 올라감(translateY ↓)
-                    const movement = -scrollPercentage * 100 * speeds[key];
-                    layers[key].style.transform = `translateY(${movement}vh)`;
-                }
-            }
-
-            // 마일스톤 가시성 로직
-            const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            // 고도는 스크롤과 반대 (위로 갈수록 높아짐)
-            const currentAltitudePercent = (1 - scrollPercentage) * 100; 
-            milestones.forEach(milestone => {
-                const triggerPercent = parseFloat(milestone.dataset.position);
-                milestone.classList.toggle('visible', currentAltitudePercent >= triggerPercent);
-            });
         },
 
         renderBookDetail(book, skills, recommendation) {
