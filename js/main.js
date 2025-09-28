@@ -72,13 +72,14 @@ function setupEventListeners() {
               const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"]');
               if (finishedShelf) {
                   const bookCount = Library.books.filter(b => b.shelf === 'finished').length;
-                  const maxBooksForTopStart = 50; // 이 수 이상의 책을 읽으면 우주에서 시작
+                  const maxBooksForTopStart = 30; // 이 수 이상의 책을 읽으면 우주에서 시작
 
                   if (bookCount > maxBooksForTopStart) {
                       mainContent.scrollTop = 0; // 우주에서 시작
                   } else {
                       mainContent.scrollTop = mainContent.scrollHeight; // 땅에서 시작
                   }
+                  // 초기 스크롤 위치 설정 후, 효과 함수를 한 번 호출하여 올바른 배경이 표시되게 함
                   UI.Library.handleAltitudeScrollEffects({ target: mainContent });
               }
           }, 150); // 렌더링 후 스크롤 계산을 위한 지연
@@ -141,7 +142,7 @@ function setupEventListeners() {
         // '다 읽은 책' 선반으로 전환될 때도 스크롤 위치 재설정
         if (appState.libraryCarouselIndex === 2) {
              const bookCount = shelfData[2].length;
-             const maxBooksForTopStart = 50;
+             const maxBooksForTopStart = 30;
              if (bookCount > maxBooksForTopStart) {
                  mainContent.scrollTop = 0;
              } else {
@@ -294,4 +295,4 @@ function setupEventListeners() {
   });
 }
 
-main();
+main();   
