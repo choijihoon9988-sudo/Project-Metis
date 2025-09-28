@@ -66,9 +66,23 @@ function setupEventListeners() {
       if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
       if (viewName === 'library') {
           await Library.load();
-          // "나의 서재"로 전환 시, 스크롤을 맨 위로 이동시켜 최고 고도에서 시작
-          mainContent.scrollTop = 0;
-          UI.Library.handleAltitudeScrollEffects({ target: mainContent });
+          
+          // === [START] '지식의 고도' 시작 스크롤 위치 동적 설정 ===
+          setTimeout(() => {
+              const finishedShelf = document.querySelector('.library-shelf[data-shelf="finished"]');
+              if (finishedShelf) {
+                  const bookCount = Library.books.filter(b => b.shelf === 'finished').length;
+                  const maxBooksForTopStart = 50; // 이 수 이상의 책을 읽으면 우주에서 시작
+
+                  if (bookCount > maxBooksForTopStart) {
+                      mainContent.scrollTop = 0; // 우주에서 시작
+                  } else {
+                      mainContent.scrollTop = mainContent.scrollHeight; // 땅에서 시작
+                  }
+                  UI.Library.handleAltitudeScrollEffects({ target: mainContent });
+              }
+          }, 150); // 렌더링 후 스크롤 계산을 위한 지연
+          // === [END] '지식의 고도' 시작 스크롤 위치 동적 설정 ===
       }
       return;
     }
@@ -124,9 +138,15 @@ function setupEventListeners() {
         const shelfData = [Library.books.filter(b=>b.shelf==='reading'), Library.books.filter(b=>b.shelf==='toread'), Library.books.filter(b=>b.shelf==='finished')];
         document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
         
-        // 선반이 '다 읽은 책'일 경우, 스크롤을 맨 위로 설정
+        // '다 읽은 책' 선반으로 전환될 때도 스크롤 위치 재설정
         if (appState.libraryCarouselIndex === 2) {
-            mainContent.scrollTop = 0;
+             const bookCount = shelfData[2].length;
+             const maxBooksForTopStart = 50;
+             if (bookCount > maxBooksForTopStart) {
+                 mainContent.scrollTop = 0;
+             } else {
+                 mainContent.scrollTop = mainContent.scrollHeight;
+             }
         }
         UI.Library.handleAltitudeScrollEffects({ target: mainContent });
         return;

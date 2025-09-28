@@ -262,6 +262,7 @@ export const UI = {
         content: document.getElementById('library-book-detail-modal'),
         show() { this.overlay.style.display = 'flex'; },
         hide() { if(this.overlay) this.overlay.style.display = 'none'; },
+        
         render(books, skills) {
             const container = document.getElementById('library-carousel-container');
             if (!container) return;
@@ -279,47 +280,28 @@ export const UI = {
                     <button class="shelf-arrow next" data-direction="next">&#10095;</button>
                 </div>
                 <div class="library-carousel">
-                    ${Object.entries(shelves).map(([shelfKey, shelf]) => {
-                        const bookCount = shelf.books.length;
-                        
-                        const parallaxHtml = shelfKey === 'finished' ? `
-                            <div class="parallax-container">
-                                <div class="parallax-layer" id="altitude-layer-space"></div>
-                                <div class="parallax-layer" id="altitude-layer-stars"></div>
-                                <div class="parallax-layer" id="altitude-layer-sunset"></div>
-                                <div class="parallax-layer" id="altitude-layer-sky"></div>
-                                <div class="parallax-layer" id="altitude-layer-ground"></div>
-                            </div>
-                        ` : '';
-
-                        return `
+                    ${Object.entries(shelves).map(([shelfKey, shelf]) => `
                         <div class="library-shelf" data-shelf="${shelfKey}">
-                             ${parallaxHtml}
-                             ${shelfKey === 'finished' ? this.renderMilestones(bookCount) : ''}
+                             ${shelfKey === 'finished' ? this.renderMilestones(shelf.books.length) : ''}
                             <div class="book-grid">
                                 ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
                             </div>
                         </div>
-                        `;
-                    }).join('')}
+                        `).join('')}
                 </div>
             `;
             
-            // '다 읽은 책' 선반 동적 높이 설정
             const finishedShelf = container.querySelector('.library-shelf[data-shelf="finished"]');
             if (finishedShelf) {
                 const bookCount = shelves.finished.books.length;
-                const maxBooks = 100;
-                const clampedBookCount = Math.min(bookCount, maxBooks);
+                const maxBooksForFullAltitude = 100;
                 
-                // 책이 1권이라도 있으면 최소 2배, 많아질수록 최대 4배까지 높이 증가
-                const heightMultiplier = bookCount > 0 ? 1.5 + (clampedBookCount / maxBooks) * 2.5 : 1;
+                const heightMultiplier = bookCount > 0 ? 1.5 + (Math.min(bookCount, maxBooksForFullAltitude) / maxBooksForFullAltitude) * 2.5 : 1;
                 const altitudeHeight = window.innerHeight * heightMultiplier;
                 finishedShelf.style.minHeight = `${altitudeHeight}px`;
 
                 const grid = finishedShelf.querySelector('.book-grid');
                 if (grid) {
-                    // 책 그리드를 스크롤 컨테이너의 맨 아래에 배치
                     grid.style.position = 'absolute';
                     grid.style.bottom = '5vh';
                     grid.style.left = '50%';
@@ -328,7 +310,6 @@ export const UI = {
                 }
             }
 
-            // Stats & Challenge
             const statsContainer = document.getElementById('library-stats');
             const finishedThisMonth = books.filter(b => {
                 if (!b.finishedAt) return false;
@@ -373,58 +354,39 @@ export const UI = {
             });
             return milestonesHTML;
         },
+
         handleAltitudeScrollEffects(event) {
             const mainContent = event.target;
             const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
             if (!shelf) return;
 
-            const layers = {
-                space: shelf.querySelector('#altitude-layer-space'),
-                stars: shelf.querySelector('#altitude-layer-stars'),
-                sunset: shelf.querySelector('#altitude-layer-sunset'),
-                sky: shelf.querySelector('#altitude-layer-sky'),
-                ground: shelf.querySelector('#altitude-layer-ground'),
-            };
-
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            if (!layers.ground) return;
-
-            const scrollHeight = mainContent.scrollHeight;
+            const scrollHeight = shelf.scrollHeight;
             const clientHeight = mainContent.clientHeight;
             
-            // 스크롤이 불가능하면 (책이 거의 없으면) 땅에 고정된 것처럼 보이게 함
+            // === [START] 수정된 로직 ===
+            // 스크롤이 불가능한 경우 (책이 거의 없거나 없는 경우)
             if (scrollHeight <= clientHeight) {
-                Object.values(layers).forEach(layer => {
-                    if(layer) layer.style.transform = 'translateY(0%)';
-                });
+                // 배경을 '땅' (그라데이션의 시작점, 0%)으로 고정합니다.
+                shelf.style.backgroundPosition = 'center 0%';
                 milestones.forEach(m => m.classList.remove('visible'));
                 return;
             }
+            // === [END] 수정된 로직 ===
 
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
             
-            // 스크롤을 내릴 때 (scrollTop 증가), 레이어를 아래로 이동시켜 하강하는 것처럼 보이게 합니다.
-            // 가까운 레이어(땅)는 더 빨리 움직여 원근감을 만듭니다.
-            const groundTranslate = scrollPercentage * (scrollHeight / 5) * 1.5;
-            const skyTranslate = scrollPercentage * (scrollHeight / 5) * 1.0;
-            const sunsetTranslate = scrollPercentage * (scrollHeight / 5) * 0.75;
-            const starsTranslate = scrollPercentage * (scrollHeight / 5) * 0.5;
-            const spaceTranslate = scrollPercentage * (scrollHeight / 5) * 0.2;
+            shelf.style.backgroundPosition = `center ${100 - scrollPercentage * 100}%`;
 
-            if (layers.ground) layers.ground.style.transform = `translateY(${groundTranslate}px)`;
-            if (layers.sky) layers.sky.style.transform = `translateY(${skyTranslate}px)`;
-            if (layers.sunset) layers.sunset.style.transform = `translateY(${sunsetTranslate}px)`;
-            if (layers.stars) layers.stars.style.transform = `translateY(${starsTranslate}px)`;
-            if (layers.space) layers.space.style.transform = `translateY(${spaceTranslate}px)`;
-            
-            // 이정표 등장 로직 (스크롤 위치에 따라)
             const viewPercentage = scrollPercentage * 100;
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.triggerPercent);
-                milestone.classList.toggle('visible', viewPercentage >= triggerPercent - 5 && viewPercentage <= triggerPercent + 5);
+                const effectivePercent = 100 - viewPercentage;
+                milestone.classList.toggle('visible', effectivePercent >= triggerPercent - 5 && effectivePercent <= triggerPercent + 5);
             });
         },
+
         renderBookDetail(book, skills, recommendation) {
             this.content.innerHTML = `
                 <button class="modal-close-btn">&times;</button>
