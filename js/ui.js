@@ -275,13 +275,11 @@ export const UI = {
 
             const finishedBookCount = shelves.finished.books.length;
             
-            // [수정] HTML 구조를 명확하게 하기 위해 parallax-container와 그 자식 레이어들을 생성합니다.
             const finishedShelfHtml = `
                 <div class="library-shelf" data-shelf="finished">
                     <div class="parallax-container">
+                        <div class="parallax-layer layer-space"></div>
                         <div class="parallax-layer layer-bg"></div>
-                        <div class="parallax-layer layer-stars1"></div>
-                        <div class="parallax-layer layer-stars2"></div>
                         <div class="parallax-layer layer-mid"></div>
                         <div class="parallax-layer layer-fore"></div>
                     </div>
@@ -378,9 +376,8 @@ export const UI = {
             if (!shelf) return;
 
             const layers = {
+                space: shelf.querySelector('.layer-space'),
                 bg: shelf.querySelector('.layer-bg'),
-                stars1: shelf.querySelector('.layer-stars1'),
-                stars2: shelf.querySelector('.layer-stars2'),
                 mid: shelf.querySelector('.layer-mid'),
                 fore: shelf.querySelector('.layer-fore')
             };
@@ -391,28 +388,27 @@ export const UI = {
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = scrollTop / scrollableHeight;
 
-            // [수정] 각 레이어에 다른 속도를 적용하여 패럴랙스 효과를 만듭니다.
-            // 값이 작을수록 멀리 있는 것처럼 보여 천천히 움직입니다.
+            // 각 레이어의 움직이는 속도 (값이 작을수록 멀리 있는 것처럼 천천히 움직임)
             const speeds = {
-                bg: 0.1,
-                stars1: 0.15,
-                stars2: 0.25,
-                mid: 0.4,
-                fore: 0.7
+                space: 0.1,
+                bg: 0.3,
+                mid: 0.6,
+                fore: 1.0
             };
 
-            // [수정] 스크롤 위치에 따라 각 레이어의 Y 위치를 계산합니다.
-            // 스크롤을 내릴수록(scrollPercentage가 1에 가까워질수록) 배경은 위로 올라갑니다(translateY가 음수가 됨).
+            // 스크롤에 따라 각 레이어의 Y 위치(transform)를 조절
             for (const key in layers) {
                 if (layers[key]) {
+                    // 스크롤을 내릴수록(scrollPercentage ↑) 배경은 더 빠르게 위로 올라감(translateY ↓)
                     const movement = -scrollPercentage * 100 * speeds[key];
-                    layers[key].style.transform = `translateY(${movement}%)`;
+                    layers[key].style.transform = `translateY(${movement}vh)`;
                 }
             }
 
-            // [수정] 마일스톤 가시성 로직을 스크롤 방향에 맞게 수정합니다.
+            // 마일스톤 가시성 로직
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            const currentAltitudePercent = (1 - scrollPercentage) * 100; // 고도는 스크롤과 반대 (위로 갈수록 높아짐)
+            // 고도는 스크롤과 반대 (위로 갈수록 높아짐)
+            const currentAltitudePercent = (1 - scrollPercentage) * 100; 
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.position);
                 milestone.classList.toggle('visible', currentAltitudePercent >= triggerPercent);
