@@ -1,4 +1,4 @@
-// js/library.js (신규 파일)
+// js/library.js (테스트 코드가 추가된 버전)
 import { db } from './firebase.js';
 import { collection, doc, getDocs, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { UI } from './ui.js';
@@ -17,7 +17,32 @@ export const Library = {
         if (!this.userId) return;
 
         // =================================================================
-        // 지식의 고도 테스트용 코드 블록을 삭제합니다.
+        // [시작] 지식의 고도 테스트를 위한 100권의 책 추가 코드
+        // =================================================================
+        const testBooksAdded = localStorage.getItem('testBooksAdded');
+        if (!testBooksAdded) {
+            console.log("테스트용 도서 100권을 추가합니다. 이 메시지는 한 번만 나타나야 합니다.");
+            UI.showLoader(true, '테스트용 도서 100권을 추가하는 중...');
+            for (let i = 1; i <= 100; i++) {
+                const newBook = {
+                    id: String(Date.now() + i),
+                    title: `지식의 고도 테스트 ${i}`,
+                    author: "자동 생성",
+                    cover: `https://picsum.photos/seed/${i}/200/300`, // 각기 다른 커버 이미지
+                    shelf: 'finished',
+                    category: '자기계발',
+                    skillFocus: `이 책을 통해 ${i}번째 스킬을 얻게 됩니다.`,
+                    finishedAt: new Date().toISOString()
+                };
+                const bookRef = doc(db, 'users', this.userId, 'library', newBook.id);
+                await setDoc(bookRef, newBook);
+            }
+            localStorage.setItem('testBooksAdded', 'true'); // 다시 실행되지 않도록 플래그 설정
+            UI.showLoader(false);
+            console.log("테스트용 도서 추가 완료.");
+        }
+        // =================================================================
+        // [끝] 테스트 코드
         // =================================================================
 
         const booksCol = collection(db, 'users', this.userId, 'library');

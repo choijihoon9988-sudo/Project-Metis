@@ -35,12 +35,19 @@ export const GoogleBooksAPI = {
             }
             const data = await response.json();
             
-            return (data.items || []).map(item => ({
-                id: item.id,
-                title: item.volumeInfo.title,
-                author: (item.volumeInfo.authors || ['저자 정보 없음']).join(', '),
-                cover: item.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192.png?text=No+Cover'
-            }));
+           return (data.items || []).map(item => {
+                let coverUrl = item.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192.png?text=No+Cover';
+                // URL에 zoom=1이 포함되어 있으면 zoom=0으로 변경하여 고화질 이미지를 요청합니다.
+                if (coverUrl.includes('zoom=1')) {
+                    coverUrl = coverUrl.replace('zoom=1', 'zoom=0');
+                }
+                return {
+                    id: item.id,
+                    title: item.volumeInfo.title,
+                    author: (item.volumeInfo.authors || ['저자 정보 없음']).join(', '),
+                    cover: coverUrl
+                };
+            });
         } catch (error) {
             console.error("Google Books API 호출 중 오류 발생:", error);
             UI.showToast("책 검색 중 오류가 발생했습니다. API 키와 설정을 확인해주세요.", "error");
