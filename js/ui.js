@@ -341,9 +341,10 @@ export const UI = {
         },
 
         renderBook(book) {
+            // [수정] <img> 태그 대신, background-image를 사용하는 div로 변경
             return `
                 <div class="library-book" data-book-id="${book.id}">
-                    <img src="${book.cover}" alt="${book.title}">
+                    <div class="library-book-cover" style="background-image: url('${book.cover}')"></div>
                     <p>${book.title}</p>
                 </div>
             `;

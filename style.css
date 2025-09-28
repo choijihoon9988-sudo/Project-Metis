@@ -619,30 +619,6 @@ textarea {
     background-position: center bottom; /* 초기 위치는 땅 */
 }
 
-/* --- [START] Focus & Context 인터랙션 스타일 --- */
-
-/* 3. 배경을 어둡게 만드는 가상 요소 추가 */
-.parallax-container::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* 검은색 반투명 오버레이 */
-    opacity: 0; /* 기본 상태에서는 숨김 */
-    transition: opacity 0.3s ease-in-out;
-    z-index: 2; /* 배경 이미지 위에 위치 */
-}
-
-/* 4. 책 그리드에 마우스를 올렸을 때 배경을 어둡게 처리 */
-.book-grid:hover ~ .parallax-container::after {
-    opacity: 1; /* 오버레이를 나타나게 함 */
-}
-
-/* --- [END] Focus & Context 인터랙션 스타일 --- */
-
-
 .knowledge-milestone {
     position: absolute;
     left: 50%;
@@ -729,30 +705,24 @@ textarea {
     transition: transform 0.3s ease;
 }
 
-/* --- [START] Focus & Context 인터랙션 스타일 --- */
 
-/* 1. 기본 상태에서 책 이미지를 흐릿하게 처리 */
-.library-book img {
+/* [신규] 배경 이미지를 위한 스타일 추가 */
+.library-book-cover {
     width: 100%;
     aspect-ratio: 2 / 3;
-    object-fit: cover;
-    background-color: var(--border-color);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    opacity: 0.3; /* 이미지를 반투명하게 만듭니다 */
-    filter: blur(3px); /* 이미지를 흐릿하게 만듭니다 */
-    transition: all 0.3s ease-in-out; /* 부드러운 전환 효과 */
+    transition: all 0.3s ease-in-out;
 }
 
-/* 2. 책 그리드에 마우스를 올렸을 때의 변화 */
-.book-grid:hover .library-book img {
-    opacity: 1; /* 이미지를 선명하게 표시 */
-    filter: blur(0); /* 흐림 효과 제거 */
-    transform: translateY(-8px) scale(1.05); /* 기존 호버 효과 유지 */
+/* [수정] 마우스 오버 효과를 .library-book-cover에 적용 */
+.library-book:hover .library-book-cover {
+    transform: translateY(-8px) scale(1.05);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
-
-/* --- [END] Focus & Context 인터랙션 스타일 --- */
 
 
 .library-book p {
