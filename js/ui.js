@@ -341,7 +341,6 @@ export const UI = {
         },
 
         renderBook(book) {
-            // [수정] <img> 태그 대신, background-image를 사용하는 div로 변경
             return `
                 <div class="library-book" data-book-id="${book.id}">
                     <div class="library-book-cover" style="background-image: url('${book.cover}')"></div>
@@ -360,13 +359,14 @@ export const UI = {
             
             return MILESTONES.map(m => {
                 if (bookCount >= m.count) {
-                    return `<div class="knowledge-milestone" data-position="${m.position}" style="bottom: ${m.position}%;">${m.text}</div>`;
+                    // [수정] 마일스톤의 bottom 위치를 스크롤 방향에 맞게 반전 (100 - position)
+                    const invertedPosition = 100 - m.position;
+                    return `<div class="knowledge-milestone" data-position="${m.position}" style="bottom: ${invertedPosition}%;">${m.text}</div>`;
                 }
                 return '';
             }).join('');
         },
         
-        // === [START] 최종 수정된 스크롤 효과 함수 (단일 이미지 버전) ===
         handleAltitudeScrollEffects(event) {
             const mainContent = event.target;
             const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
@@ -376,33 +376,30 @@ export const UI = {
 
             const scrollableHeight = shelf.scrollHeight - mainContent.clientHeight;
             
-            // 스크롤이 불가능하면 (책이 거의 없으면) 무조건 땅(bottom)을 보여줌
             if (scrollableHeight <= 0) {
-                parallaxBg.style.backgroundPosition = 'center 100%'; // 'bottom'
+                parallaxBg.style.backgroundPosition = 'center 100%';
                 return;
             }
 
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = scrollTop / scrollableHeight;
 
-            // 스크롤을 맨 아래(땅)로 내리면 scrollTop은 최대값, scrollPercentage는 1
-            // 스크롤을 맨 위(우주)로 올리면 scrollTop은 0, scrollPercentage는 0
-            // 배경 이미지의 Y 위치는 스크롤과 반대로 움직여야 함 (땅: 100%, 우주: 0%)
-            const backgroundYPosition = 100 - (scrollPercentage * 100);
+            // [수정] 스크롤 계산 로직을 정방향으로 변경합니다.
+            // 스크롤 최상단(우주) = 0%, 최하단(땅) = 100%
+            const backgroundYPosition = scrollPercentage * 100;
             
             parallaxBg.style.backgroundPosition = `center ${backgroundYPosition}%`;
 
             // 마일스톤 가시성 처리
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            // 현재 고도는 스크롤 위치와 반대
-            const currentAltitudePercent = (1 - scrollPercentage) * 100;
+            // [수정] 현재 고도 계산을 스크롤 위치와 동일하게 변경
+            const currentAltitudePercent = scrollPercentage * 100;
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.position);
-                // 현재 고도가 마일스톤 위치보다 높아지면 보이도록 처리
-                milestone.classList.toggle('visible', currentAltitudePercent >= triggerPercent);
+                // [수정] 마일스톤 트리거 로직을 반전 (마일스톤 위치를 지나쳤을 때 보이도록)
+                milestone.classList.toggle('visible', currentAltitudePercent <= (100 - triggerPercent));
             });
         },
-        // === [END] 최종 수정된 스크롤 효과 함수 (단일 이미지 버전) ===
 
         renderBookDetail(book, skills, recommendation) {
             this.content.innerHTML = `

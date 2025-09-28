@@ -596,7 +596,6 @@ textarea {
 	border-radius: var(--border-radius);
 }
 
-/* === [START] 최종 수정된 '지식의 고도' 스타일 === */
 .library-shelf[data-shelf="finished"] {
 	padding: 0;
     overflow: hidden;
@@ -613,10 +612,47 @@ textarea {
     width: 100%;
     height: 100%;
     z-index: 1;
-    background-image: url('./images/altitude-background.jpg');
+
+    /* [수정] 이미지 대신 코드로 배경을 그립니다. */
+    background:
+        /* 3. 작은 별 (느리게 반짝임) */
+        radial-gradient(1px 1px at 20% 30%, white, transparent),
+        radial-gradient(1px 1px at 75% 20%, white, transparent),
+        radial-gradient(1.5px 1.5px at 90% 45%, white, transparent),
+        radial-gradient(1.5px 1.5px at 40% 55%, white, transparent),
+        
+        /* 2. 큰 별 (빠르게 반짝임) */
+        radial-gradient(2px 2px at 50% 15%, white, transparent),
+        radial-gradient(2.5px 2.5px at 25% 60%, white, transparent),
+        radial-gradient(3px 3px at 5% 5%, white, transparent),
+        radial-gradient(2px 2px at 80% 35%, white, transparent),
+        
+        /* 1. 메인 배경 그라데이션 (땅 -> 우주) */
+        linear-gradient(to top, 
+            #34190c 0%,    /* 깊은 땅 */
+            #59381f 5%,    /* 흙 */
+            #4a542b 10%,   /* 잔디 뿌리 */
+            #628b3c 15%,   /* 잔디 */
+            #fde194 25%,   /* 지평선 노을 */
+            #f48b5f 30%,   /* 주황색 노을 */
+            #c05b63 35%,   /* 붉은 노을 */
+            #3a4a75 45%,   /* 해질녘 하늘 */
+            #1e2a4a 60%,   /* 깊은 밤하늘 */
+            #0f121e 80%,   /* 우주 */
+            #000000 100%   /* 깊은 우주 */
+        );
+
+    /* 배경 레이어별 스크롤 및 애니메이션 설정 */
     background-repeat: no-repeat;
-    background-size: cover; 
-    background-position: center bottom; /* 초기 위치는 땅 */
+    background-size: 
+        100% 100%, 100% 100%, 100% 100%, 100% 100%, /* 작은 별 */
+        100% 100%, 100% 100%, 100% 100%, 100% 100%, /* 큰 별 */
+        100% 400%; /* 메인 배경 (스크롤을 위해 높이를 4배로 설정) */
+        
+    background-position: center bottom;
+    animation: 
+        twinkle-slow 5s linear infinite, 
+        twinkle-fast 2.5s linear infinite;
 }
 
 .knowledge-milestone {
@@ -651,8 +687,6 @@ textarea {
 	padding: 24px;
     margin-bottom: 5vh; 
 }
-/* === [END] 최종 수정된 '지식의 고도' 스타일 === */
-
 
 .shelf-header {
     display: flex;
@@ -705,8 +739,6 @@ textarea {
     transition: transform 0.3s ease;
 }
 
-
-/* [신규] 배경 이미지를 위한 스타일 추가 */
 .library-book-cover {
     width: 100%;
     aspect-ratio: 2 / 3;
@@ -718,12 +750,10 @@ textarea {
     transition: all 0.3s ease-in-out;
 }
 
-/* [수정] 마우스 오버 효과를 .library-book-cover에 적용 */
 .library-book:hover .library-book-cover {
     transform: translateY(-8px) scale(1.05);
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
-
 
 .library-book p {
     margin-top: 12px;
@@ -855,4 +885,15 @@ textarea {
 	100% {
 		transform: rotate(360deg);
 	}
+}
+
+/* 별 반짝임 효과를 위한 애니메이션 */
+@keyframes twinkle-fast {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+@keyframes twinkle-slow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
