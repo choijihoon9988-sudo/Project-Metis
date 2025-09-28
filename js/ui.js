@@ -404,14 +404,20 @@ export const UI = {
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
             
-            // 스크롤을 내릴수록 (상승할수록) 각 레이어를 다른 속도로 '위로' 이동시켜 하강하는 것처럼 보이게 함
-            // 가까운 배경(ground)이 가장 느리게, 먼 배경(space)이 가장 빠르게 움직여야 원근감 생성
-            if(layers.ground) layers.ground.style.transform = `translateY(-${scrollPercentage * 10}%)`;
-            if(layers.sky) layers.sky.style.transform = `translateY(-${scrollPercentage * 30}%)`;
-            if(layers.sunset) layers.sunset.style.transform = `translateY(-${scrollPercentage * 55}%)`;
-            if(layers.stars) layers.stars.style.transform = `translateY(-${scrollPercentage * 75}%)`;
-            // space는 움직이지 않음
+            // 스크롤을 내릴 때 (scrollTop 증가), 레이어를 아래로 이동시켜 하강하는 것처럼 보이게 합니다.
+            // 가까운 레이어(땅)는 더 빨리 움직여 원근감을 만듭니다.
+            const groundTranslate = scrollPercentage * (scrollHeight / 5) * 1.5;
+            const skyTranslate = scrollPercentage * (scrollHeight / 5) * 1.0;
+            const sunsetTranslate = scrollPercentage * (scrollHeight / 5) * 0.75;
+            const starsTranslate = scrollPercentage * (scrollHeight / 5) * 0.5;
+            const spaceTranslate = scrollPercentage * (scrollHeight / 5) * 0.2;
 
+            if (layers.ground) layers.ground.style.transform = `translateY(${groundTranslate}px)`;
+            if (layers.sky) layers.sky.style.transform = `translateY(${skyTranslate}px)`;
+            if (layers.sunset) layers.sunset.style.transform = `translateY(${sunsetTranslate}px)`;
+            if (layers.stars) layers.stars.style.transform = `translateY(${starsTranslate}px)`;
+            if (layers.space) layers.space.style.transform = `translateY(${spaceTranslate}px)`;
+            
             // 이정표 등장 로직 (스크롤 위치에 따라)
             const viewPercentage = scrollPercentage * 100;
             milestones.forEach(milestone => {
