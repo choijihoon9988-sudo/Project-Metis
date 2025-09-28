@@ -313,7 +313,7 @@ export const UI = {
                 const clampedBookCount = Math.min(bookCount, maxBooks);
                 
                 // 책이 1권이라도 있으면 최소 2배, 많아질수록 최대 4배까지 높이 증가
-                const heightMultiplier = bookCount > 0 ? 2 + (clampedBookCount / maxBooks) * 2 : 1;
+                const heightMultiplier = bookCount > 0 ? 1.5 + (clampedBookCount / maxBooks) * 2.5 : 1;
                 const altitudeHeight = window.innerHeight * heightMultiplier;
                 finishedShelf.style.minHeight = `${altitudeHeight}px`;
 
@@ -377,7 +377,7 @@ export const UI = {
             const mainContent = event.target;
             const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
             if (!shelf) return;
-        
+
             const layers = {
                 space: shelf.querySelector('#altitude-layer-space'),
                 stars: shelf.querySelector('#altitude-layer-stars'),
@@ -385,14 +385,14 @@ export const UI = {
                 sky: shelf.querySelector('#altitude-layer-sky'),
                 ground: shelf.querySelector('#altitude-layer-ground'),
             };
-        
+
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            if (!layers.space) return;
-        
+            if (!layers.ground) return;
+
             const scrollHeight = mainContent.scrollHeight;
             const clientHeight = mainContent.clientHeight;
-        
-            // 스크롤이 불가능하면 (책이 적으면) 땅에 고정
+            
+            // 스크롤이 불가능하면 (책이 거의 없으면) 땅에 고정된 것처럼 보이게 함
             if (scrollHeight <= clientHeight) {
                 Object.values(layers).forEach(layer => {
                     if(layer) layer.style.transform = 'translateY(0%)';
@@ -400,20 +400,20 @@ export const UI = {
                 milestones.forEach(m => m.classList.remove('visible'));
                 return;
             }
-        
+
             const scrollTop = mainContent.scrollTop;
-            const scrollPercentage = (scrollTop / (scrollHeight - clientHeight));
-        
-            // 스크롤을 내릴수록(%) 각 레이어를 다른 속도로 아래로(translateY) 이동시켜 하강 효과 구현
-            // 먼 배경(space)일수록 조금, 가까운 배경(ground)일수록 많이 움직임
-            if(layers.space) layers.space.style.transform = `translateY(${scrollPercentage * 10}%)`;
-            if(layers.stars) layers.stars.style.transform = `translateY(${scrollPercentage * 25}%)`;
-            if(layers.sunset) layers.sunset.style.transform = `translateY(${scrollPercentage * 45}%)`;
-            if(layers.sky) layers.sky.style.transform = `translateY(${scrollPercentage * 70}%)`;
-            if(layers.ground) layers.ground.style.transform = `translateY(${scrollPercentage * 100}%)`;
+            const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
             
+            // 스크롤을 내릴수록 (상승할수록) 각 레이어를 다른 속도로 '위로' 이동시켜 하강하는 것처럼 보이게 함
+            // 가까운 배경(ground)이 가장 느리게, 먼 배경(space)이 가장 빠르게 움직여야 원근감 생성
+            if(layers.ground) layers.ground.style.transform = `translateY(-${scrollPercentage * 10}%)`;
+            if(layers.sky) layers.sky.style.transform = `translateY(-${scrollPercentage * 30}%)`;
+            if(layers.sunset) layers.sunset.style.transform = `translateY(-${scrollPercentage * 55}%)`;
+            if(layers.stars) layers.stars.style.transform = `translateY(-${scrollPercentage * 75}%)`;
+            // space는 움직이지 않음
+
             // 이정표 등장 로직 (스크롤 위치에 따라)
-            const viewPercentage = (1 - scrollPercentage) * 100;
+            const viewPercentage = scrollPercentage * 100;
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.triggerPercent);
                 milestone.classList.toggle('visible', viewPercentage >= triggerPercent - 5 && viewPercentage <= triggerPercent + 5);
