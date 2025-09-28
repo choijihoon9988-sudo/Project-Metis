@@ -38,7 +38,7 @@ async function main() {
     Ebbinghaus.setUser(user.uid);
     Refinement.setUser(user.uid);
     Library.setUser(user.uid);
-    loadMainBook(); // 페이지 로드 시 저장된 메인북 정보 불러오기
+    loadMainBook();
     UI.switchView('dashboard');
     setupEventListeners();
     await Ebbinghaus.initGarden();
@@ -51,7 +51,6 @@ async function main() {
 }
 
 function setupEventListeners() {
-  // 메인 콘텐츠 영역의 스크롤 이벤트를 감지
   const mainContent = document.querySelector('.main-content');
   mainContent.addEventListener('scroll', UI.Library.handleAltitudeScrollEffects);
 
@@ -67,7 +66,8 @@ function setupEventListeners() {
       if (viewName === 'journey') await Ebbinghaus.initJourneyMap();
       if (viewName === 'library') {
           await Library.load();
-          // 뷰 전환 시 고도 배경 즉시 업데이트
+          // "나의 서재"로 전환 시, 스크롤을 맨 위로 이동시켜 최고 고도에서 시작
+          mainContent.scrollTop = 0;
           UI.Library.handleAltitudeScrollEffects({ target: mainContent });
       }
       return;
@@ -123,8 +123,11 @@ function setupEventListeners() {
         const shelfTitles = ['읽고 있는 책', '읽고 싶은 책', '다 읽은 책'];
         const shelfData = [Library.books.filter(b=>b.shelf==='reading'), Library.books.filter(b=>b.shelf==='toread'), Library.books.filter(b=>b.shelf==='finished')];
         document.querySelector('.shelf-title').textContent = `${shelfTitles[appState.libraryCarouselIndex]} (${shelfData[appState.libraryCarouselIndex].length})`;
-
-        // 선반 변경 시 고도 배경 즉시 업데이트
+        
+        // 선반이 '다 읽은 책'일 경우, 스크롤을 맨 위로 설정
+        if (appState.libraryCarouselIndex === 2) {
+            mainContent.scrollTop = 0;
+        }
         UI.Library.handleAltitudeScrollEffects({ target: mainContent });
         return;
     }
