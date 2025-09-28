@@ -275,9 +275,16 @@ export const UI = {
 
             const finishedBookCount = shelves.finished.books.length;
             
+            // [수정] HTML 구조를 명확하게 하기 위해 parallax-container와 그 자식 레이어들을 생성합니다.
             const finishedShelfHtml = `
                 <div class="library-shelf" data-shelf="finished">
-                    <div class="parallax-container"></div>
+                    <div class="parallax-container">
+                        <div class="parallax-layer layer-bg"></div>
+                        <div class="parallax-layer layer-stars1"></div>
+                        <div class="parallax-layer layer-stars2"></div>
+                        <div class="parallax-layer layer-mid"></div>
+                        <div class="parallax-layer layer-fore"></div>
+                    </div>
                     ${this.renderMilestones(finishedBookCount)}
                     <div class="book-grid">
                         ${finishedBookCount > 0 ? shelves.finished.books.map(b => this.renderBook(b)).join('') : '<p class="empty-message" style="color: #333;">이 선반에 책이 없습니다.</p>'}
@@ -359,9 +366,7 @@ export const UI = {
             
             return MILESTONES.map(m => {
                 if (bookCount >= m.count) {
-                    // [수정] 마일스톤의 bottom 위치를 스크롤 방향에 맞게 반전 (100 - position)
-                    const invertedPosition = 100 - m.position;
-                    return `<div class="knowledge-milestone" data-position="${m.position}" style="bottom: ${invertedPosition}%;">${m.text}</div>`;
+                    return `<div class="knowledge-milestone" data-position="${m.position}" style="bottom: ${m.position}%;">${m.text}</div>`;
                 }
                 return '';
             }).join('');
@@ -370,34 +375,47 @@ export const UI = {
         handleAltitudeScrollEffects(event) {
             const mainContent = event.target;
             const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
-            const parallaxBg = shelf ? shelf.querySelector('.parallax-container') : null;
+            if (!shelf) return;
 
-            if (!parallaxBg) return;
+            const layers = {
+                bg: shelf.querySelector('.layer-bg'),
+                stars1: shelf.querySelector('.layer-stars1'),
+                stars2: shelf.querySelector('.layer-stars2'),
+                mid: shelf.querySelector('.layer-mid'),
+                fore: shelf.querySelector('.layer-fore')
+            };
 
             const scrollableHeight = shelf.scrollHeight - mainContent.clientHeight;
-            
-            if (scrollableHeight <= 0) {
-                parallaxBg.style.backgroundPosition = 'center 100%';
-                return;
-            }
+            if (scrollableHeight <= 0) return;
 
             const scrollTop = mainContent.scrollTop;
             const scrollPercentage = scrollTop / scrollableHeight;
 
-            // [수정] 스크롤 계산 로직을 정방향으로 변경합니다.
-            // 스크롤 최상단(우주) = 0%, 최하단(땅) = 100%
-            const backgroundYPosition = scrollPercentage * 100;
-            
-            parallaxBg.style.backgroundPosition = `center ${backgroundYPosition}%`;
+            // [수정] 각 레이어에 다른 속도를 적용하여 패럴랙스 효과를 만듭니다.
+            // 값이 작을수록 멀리 있는 것처럼 보여 천천히 움직입니다.
+            const speeds = {
+                bg: 0.1,
+                stars1: 0.15,
+                stars2: 0.25,
+                mid: 0.4,
+                fore: 0.7
+            };
 
-            // 마일스톤 가시성 처리
+            // [수정] 스크롤 위치에 따라 각 레이어의 Y 위치를 계산합니다.
+            // 스크롤을 내릴수록(scrollPercentage가 1에 가까워질수록) 배경은 위로 올라갑니다(translateY가 음수가 됨).
+            for (const key in layers) {
+                if (layers[key]) {
+                    const movement = -scrollPercentage * 100 * speeds[key];
+                    layers[key].style.transform = `translateY(${movement}%)`;
+                }
+            }
+
+            // [수정] 마일스톤 가시성 로직을 스크롤 방향에 맞게 수정합니다.
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            // [수정] 현재 고도 계산을 스크롤 위치와 동일하게 변경
-            const currentAltitudePercent = scrollPercentage * 100;
+            const currentAltitudePercent = (1 - scrollPercentage) * 100; // 고도는 스크롤과 반대 (위로 갈수록 높아짐)
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.position);
-                // [수정] 마일스톤 트리거 로직을 반전 (마일스톤 위치를 지나쳤을 때 보이도록)
-                milestone.classList.toggle('visible', currentAltitudePercent <= (100 - triggerPercent));
+                milestone.classList.toggle('visible', currentAltitudePercent >= triggerPercent);
             });
         },
 

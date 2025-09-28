@@ -605,7 +605,7 @@ textarea {
     justify-content: flex-end;
 }
 
-/* === [START] 최종 '지식의 고도' 배경 스타일 === */
+/* === [START] 최종 '지식의 고도' 배경 스타일 (다중 레이어 방식) === */
 .parallax-container {
     position: absolute;
     top: 0;
@@ -613,65 +613,85 @@ textarea {
     width: 100%;
     height: 100%;
     z-index: 1;
-    
-    /* 레이어 10: 아주 희미한 배경 별 (가장 느리게 움직임) */
-    background: 
-        radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,0.3), transparent),
-        radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.3), transparent),
-    /* 레이어 9: 중간 크기 배경 별 */
-        radial-gradient(1.5px 1.5px at 50% 30%, rgba(255,255,255,0.4), transparent),
-        radial-gradient(1.5px 1.5px at 30% 5%, rgba(255,255,255,0.4), transparent),
-    /* 레이어 8: 가장 밝은 전경 별 (가장 빠르게 움직임) */
-        radial-gradient(2px 2px at 60% 40%, white, transparent),
-        radial-gradient(2.5px 2.5px at 40% 15%, white, transparent),
-    /* 레이어 7: 오로라 효과 */
-        radial-gradient(ellipse at 50% 100%, rgba(50, 150, 100, 0.1), transparent 50%),
-    /* 레이어 6: 지평선 빛 효과 */
-        radial-gradient(ellipse at 50% 100%, rgba(253, 225, 148, 0.2), transparent 70%),
-    /* 레이어 5: 풀 표현 */
-        linear-gradient(to top, 
-            rgba(98, 139, 60, 1) 0%,   /* 진한 풀 */
-            rgba(110, 150, 70, 1) 1.5%,
-            transparent 1.5%
-        ),
-    /* 레이어 4: 땅 표면 질감 (돌멩이) */
-        radial-gradient(circle at 25% 100%, #5a4e44 1px, transparent 1px),
-        radial-gradient(circle at 75% 100%, #6b5a4e 2px, transparent 2px),
-    /* 레이어 3: 땅 속 질감 (어두운 부분) */
-        linear-gradient(to top, #34190c 0%, #412613 2%),
-    /* 레이어 2: 흙 질감 (밝은 부분) */
-        linear-gradient(to top, #59381f, #6b4a2f),
-    /* 레이어 1: 기본 하늘 그라데이션 */
-        linear-gradient(to top,
-            #fde194 18%,   /* 지평선 노을 */
-            #f48b5f 23%,   /* 주황색 노을 */
-            #c05b63 28%,   /* 붉은 노을 */
-            #3a4a75 40%,   /* 해질녘 하늘 */
-            #1e2a4a 60%,   /* 깊은 밤하늘 */
-            #0f121e 80%,   /* 우주 */
-            #000000 100%   /* 깊은 우주 */
-        );
-
-    background-repeat: repeat-x, repeat-x, repeat-x, repeat-x, no-repeat, no-repeat, no-repeat, no-repeat, repeat-x, repeat-x, no-repeat;
-    background-size: 1000px 1000px, 800px 800px, 600px 600px, 400px 400px, 100% 100%, 100% 100%, 100% 20px, 100% 15px, 20px 20px, 30px 30px, 100% 400%;
-    background-position: center bottom;
-    animation: twinkle 4s linear infinite;
+    overflow: hidden;
+    background-color: #000; /* 기본 우주 배경색 */
 }
 
-@keyframes twinkle {
-    0%, 100% {
-        background-position: 
-            0 0, 0 0, 0 0, 0 0, /* 별 위치는 고정 */
-            center bottom, center bottom, center bottom, center bottom, /* 효과 위치 고정 */
-            center bottom, center bottom, center bottom;
-    }
-    50% {
-        background-position: 
-            100px 50px, -50px 100px, 50px -50px, -100px 0, /* 별 위치 미세 이동 */
-            center bottom, center bottom, center bottom, center bottom, /* 효과 위치 고정 */
-            center bottom, center bottom, center bottom;
-        opacity: 0.8;
-    }
+.parallax-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 400%; /* JS가 제어할 수 있도록 넉넉한 높이를 줍니다. */
+    background-repeat: no-repeat;
+    background-position: center top; /* 기준점을 위쪽으로 변경 */
+    transition: transform 0.2s ease-out; /* 움직임을 부드럽게 */
+}
+
+/* 레이어 1: 가장 먼 배경 (우주-노을-하늘 그라데이션) */
+.layer-bg {
+    z-index: 2;
+    background: linear-gradient(to top, 
+        #fde194 0%,   /* 지평선 노을 */
+        #f48b5f 5%,  /* 주황색 노을 */
+        #c05b63 10%,  /* 붉은 노을 */
+        #3a4a75 20%,  /* 해질녘 하늘 */
+        #1e2a4a 40%,  /* 깊은 밤하늘 */
+        #0f121e 60%,  /* 우주 */
+        #000000 100%  /* 깊은 우주 */
+    );
+    background-size: 100% 100%; /* 레이어 자체의 높이를 채움 */
+}
+
+/* 레이어 2: 희미하고 작은 별들 (느리게 움직임) */
+.layer-stars1 {
+    z-index: 3;
+    background: 
+        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1px 1px at 75% 20%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(1.5px 1.5px at 90% 45%, rgba(255,255,255,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 40% 55%, rgba(255,255,255,0.5), transparent);
+    animation: twinkle-slow 8s linear infinite;
+}
+
+/* 레이어 3: 밝고 큰 별들 (조금 더 빠르게 움직임) */
+.layer-stars2 {
+    z-index: 4;
+    background: 
+        radial-gradient(2px 2px at 50% 15%, white, transparent),
+        radial-gradient(2.5px 2.5px at 25% 60%, white, transparent),
+        radial-gradient(3px 3px at 5% 5%, white, transparent),
+        radial-gradient(2px 2px at 80% 35%, white, transparent);
+    animation: twinkle-fast 4s linear infinite;
+}
+
+/* 레이어 4: 중간 배경 (먼 산) - 그라데이션으로 표현 */
+.layer-mid {
+    z-index: 5;
+    background: linear-gradient(to top, 
+        #1e2a4a 0%, 
+        transparent 5%
+    );
+}
+
+/* 레이어 5: 가까운 배경 (땅, 풀) - 그라데이션으로 표현 */
+.layer-fore {
+    z-index: 6;
+    background: linear-gradient(to top, 
+        #34190c 0%,    /* 깊은 땅 */
+        #59381f 3%,   /* 흙 */
+        #628b3c 4%,   /* 풀 */
+        transparent 5%
+    );
+}
+
+@keyframes twinkle-fast {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+}
+@keyframes twinkle-slow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 /* === [END] 최종 '지식의 고도' 배경 스타일 === */
 
