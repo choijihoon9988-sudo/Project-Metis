@@ -28,7 +28,7 @@ export const Library = {
                     id: String(Date.now() + i),
                     title: `지식의 고도 테스트 ${i}`,
                     author: "자동 생성",
-                    cover: `https://picsum.photos/seed/${i}/200/300`, // 각기 다른 커버 이미지
+                    cover: `https://picsum.photos/seed/${i}/600/900`, // 각기 다른 커버 이미지 (고화질로 수정)
                     shelf: 'finished',
                     category: '자기계발',
                     skillFocus: `이 책을 통해 ${i}번째 스킬을 얻게 됩니다.`,
