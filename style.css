@@ -618,7 +618,10 @@ textarea {
     background-image: url('./images/altitude-background.jpg');
     
     background-repeat: no-repeat;
-    background-size: cover; 
+    
+    /* 이 부분을 cover에서 100% 100%로 변경합니다! */
+    background-size: 100% 100%; 
+    
     background-position: center bottom; /* 초기 위치는 땅 */
 }
 
