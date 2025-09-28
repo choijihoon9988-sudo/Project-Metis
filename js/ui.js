@@ -281,14 +281,20 @@ export const UI = {
                 <div class="library-carousel">
                     ${Object.entries(shelves).map(([shelfKey, shelf]) => {
                         const bookCount = shelf.books.length;
-                        let starsHtml = '';
-                        if (shelfKey === 'finished' && bookCount >= 70) { // 70권 이상부터 별 표시
-                             starsHtml = '<div class="stars"></div><div class="stars2"></div><div class="stars3"></div>';
-                        }
                         
+                        const parallaxHtml = shelfKey === 'finished' ? `
+                            <div class="parallax-container">
+                                <div class="parallax-layer" id="altitude-layer-space"></div>
+                                <div class="parallax-layer" id="altitude-layer-stars"></div>
+                                <div class="parallax-layer" id="altitude-layer-sunset"></div>
+                                <div class="parallax-layer" id="altitude-layer-sky"></div>
+                                <div class="parallax-layer" id="altitude-layer-ground"></div>
+                            </div>
+                        ` : '';
+
                         return `
                         <div class="library-shelf" data-shelf="${shelfKey}">
-                             ${shelfKey === 'finished' ? `<div class="altitude-background"></div>${starsHtml}` : ''}
+                             ${parallaxHtml}
                              ${shelfKey === 'finished' ? this.renderMilestones(bookCount) : ''}
                             <div class="book-grid">
                                 ${shelf.books.map(b => this.renderBook(b)).join('') || '<p class="empty-message">이 선반에 책이 없습니다.</p>'}
@@ -368,32 +374,42 @@ export const UI = {
             const shelf = document.querySelector('.library-shelf[data-shelf="finished"]');
             if (!shelf) return;
         
-            const background = shelf.querySelector('.altitude-background');
+            const layers = {
+                space: shelf.querySelector('#altitude-layer-space'),
+                stars: shelf.querySelector('#altitude-layer-stars'),
+                sunset: shelf.querySelector('#altitude-layer-sunset'),
+                sky: shelf.querySelector('#altitude-layer-sky'),
+                ground: shelf.querySelector('#altitude-layer-ground'),
+            };
+        
             const milestones = shelf.querySelectorAll('.knowledge-milestone');
-            if (!background) return;
+            if (!layers.space) return;
         
             const scrollHeight = mainContent.scrollHeight;
             const clientHeight = mainContent.clientHeight;
         
             if (scrollHeight <= clientHeight) {
-                // 스크롤이 없으면 (책이 적으면) 항상 땅(100%)을 보여줌
-                background.style.backgroundPosition = 'center 100%';
+                Object.values(layers).forEach(layer => {
+                    if(layer) layer.style.transform = 'translateY(0%)';
+                });
                 milestones.forEach(m => m.classList.remove('visible'));
                 return;
             }
         
             const scrollTop = mainContent.scrollTop;
-            const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+            const scrollPercentage = (scrollTop / (scrollHeight - clientHeight));
         
-            // 배경 위치 계산: 스크롤 0% (최상단) -> 배경 0% (우주), 스크롤 100% (최하단) -> 배경 100% (땅)
-            const backgroundYPosition = scrollPercentage;
-            background.style.backgroundPosition = `center ${backgroundYPosition}%`;
+            // 각 레이어에 다른 속도를 적용하여 패럴랙스 효과 생성
+            if(layers.stars) layers.stars.style.transform = `translateY(${scrollPercentage * 20}%)`;
+            if(layers.sunset) layers.sunset.style.transform = `translateY(${scrollPercentage * 40}%)`;
+            if(layers.sky) layers.sky.style.transform = `translateY(${scrollPercentage * 60}%)`;
+            if(layers.ground) layers.ground.style.transform = `translateY(${scrollPercentage * 80}%)`;
 
-            // 이정표 등장 로직 수정
+            // 이정표 등장 로직
+            const viewPercentage = (1 - scrollPercentage) * 100;
             milestones.forEach(milestone => {
                 const triggerPercent = parseFloat(milestone.dataset.triggerPercent);
-                // 스크롤이 이정표의 위치(top %)를 지났을 때 보이도록 함
-                milestone.classList.toggle('visible', (100 - scrollPercentage) <= (100 - triggerPercent + 5));
+                milestone.classList.toggle('visible', viewPercentage >= triggerPercent - 5 && viewPercentage <= triggerPercent + 5);
             });
         },
         renderBookDetail(book, skills, recommendation) {

@@ -1,6 +1,6 @@
 // js/library.js (신규 파일)
 import { db } from './firebase.js';
-import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { collection, doc, getDocs, setDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { UI } from './ui.js';
 import { geminiModel, geminiTextModel } from './api.js';
 
@@ -17,42 +17,13 @@ export const Library = {
         if (!this.userId) return;
 
         // =================================================================
-        // 지식의 고도 테스트용 코드 블록
+        // 지식의 고도 테스트용 코드 블록을 삭제합니다.
         // =================================================================
-        const isTestingAltitude = true; // 🚀 이 값을 true로 바꾸면 테스트 모드 활성화
-
-        if (isTestingAltitude) {
-            console.log("🚀 '지식의 고도' 테스트 모드가 활성화되었습니다.");
-            const testBooks = [];
-            for (let i = 0; i < 101; i++) { // 100권을 넘어 우주로 가기 위해 101권 생성
-                testBooks.push({
-                    id: `test_${i}`,
-                    title: `테스트용 도서 ${i + 1}`,
-                    author: "가상 저자",
-                    cover: `https://via.placeholder.com/128x192.png?text=Book+${i+1}`,
-                    shelf: 'finished' // 모두 '다 읽은 책'으로 설정
-                });
-            }
-            this.books = testBooks;
-            UI.Library.render(this.books, this.skills);
-            
-            // 뷰가 완전히 렌더링 된 후 스크롤 계산을 위해 약간의 지연을 줍니다.
-            setTimeout(() => {
-                const mainContent = document.querySelector('.main-content');
-                UI.Library.updateFinishedShelfBackground({ target: mainContent });
-            }, 100);
-            
-            return; // 테스트 모드에서는 실제 데이터 로드를 중단합니다.
-        }
-        // =================================================================
-        // 테스트가 끝나면 이 블록을 삭제하거나 isTestingAltitude를 false로 바꾸세요.
-        // =================================================================
-
 
         const booksCol = collection(db, 'users', this.userId, 'library');
         const snapshot = await getDocs(booksCol);
         this.books = snapshot.docs.map(doc => doc.data());
-        
+
         const skillsDocRef = doc(db, 'users', this.userId, 'skills', 'summary');
         const skillsSnapshot = await getDoc(skillsDocRef);
         if (skillsSnapshot.exists()) {
@@ -60,13 +31,21 @@ export const Library = {
         }
 
         UI.Library.render(this.books, this.skills);
+
+        // 뷰가 완전히 렌더링 된 후 스크롤 계산을 위해 약간의 지연을 줍니다.
+        setTimeout(() => {
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                 UI.Library.handleAltitudeScrollEffects({ target: mainContent });
+            }
+        }, 100);
     },
 
     async addBook(book, shelf) {
         if (!this.userId) return;
-        
+
         UI.showLoader(true, 'AI가 책을 분석하고 서재에 추가하는 중...');
-        
+
         const newBook = {
             id: String(Date.now()),
             ...book,
@@ -79,7 +58,7 @@ export const Library = {
         const bookRef = doc(db, 'users', this.userId, 'library', newBook.id);
         await setDoc(bookRef, newBook);
         this.books.push(newBook);
-        
+
         UI.showLoader(false);
         UI.showToast(`'${book.title}'을(를) '${shelf}' 선반에 추가했습니다.`, 'success');
         UI.Library.render(this.books, this.skills);
@@ -90,14 +69,14 @@ export const Library = {
         if (!book) return;
 
         UI.showLoader(true, 'AI가 책의 상세 정보를 분석 중입니다...');
-        
+
         const relatedBookRec = await this.getAIRelatedBookRecommendation(book, this.books);
-        
+
         UI.showLoader(false);
         UI.Library.renderBookDetail(book, this.skills, relatedBookRec);
         UI.Library.show();
     },
-    
+
     // --- AI Helper Functions ---
     async getAIBookCategory(title) {
         const prompt = `'${title}' 책의 핵심 카테고리를 '자기계발', '심리학', '뇌과학', '인문', '경제/경영', '기술' 중에서 하나만 골라주세요. 다른 설명 없이 카테고리 이름만 정확히 출력해주세요.`;
