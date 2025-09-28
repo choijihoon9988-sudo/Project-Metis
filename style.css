@@ -614,13 +614,11 @@ textarea {
     height: 100%;
     z-index: 1;
     
-    /* 최종적으로 합쳐진 단일 이미지 경로 */
     background-image: url('./images/altitude-background.jpg');
-    
     background-repeat: no-repeat;
     
-    /* 이 부분을 cover에서 100% 100%로 변경합니다! */
-    background-size: 100% 100%; 
+    /* 결정적인 수정! 너비만 100%로 맞추고 높이는 자동으로 조절합니다. */
+    background-size: 100% auto; 
     
     background-position: center bottom; /* 초기 위치는 땅 */
 }
